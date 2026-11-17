@@ -1,0 +1,51 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Test output
+playwright-report/
+test-results/
+blob-report/
+
+# Environment and secrets (the app has none; never commit any)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editor and OS files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+tmp/
+.tmp/
+
+# Media is never committed (privacy rule). Tiny generated/CC0 fixtures live under fixtures/.
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.webm
+*.m4v
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.heic
+*.raw
+*.cr2
+*.nef
+*.arw
+*.psd
+!/fixtures/**
+!/apps/web/public/**

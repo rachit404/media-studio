@@ -1,0 +1,44 @@
+{
+  "name": "media-studio",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Privacy-first image and video editor that runs entirely in the browser.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "packageManager": "pnpm@10.17.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @media-studio/web dev",
+    "build": "pnpm --filter @media-studio/web build",
+    "preview": "pnpm --filter @media-studio/web preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r --if-present typecheck && tsc --noEmit -p e2e/tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "pnpm build && playwright test -c e2e/playwright.config.ts",
+    "check:boundaries": "depcruise apps packages --config .dependency-cruiser.cjs",
+    "check:licences": "node scripts/check-licences.mjs",
+    "check:notices": "node scripts/check-licences.mjs --write-notices",
+    "check:theme": "node scripts/check-theme-contrast.mjs",
+    "check:size": "node scripts/check-bundle-size.mjs",
+    "check:audit": "pnpm audit --prod --audit-level high",
+    "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm check:boundaries && pnpm check:theme && pnpm test && pnpm build && pnpm check:size && pnpm check:licences"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
+    "@types/node": "24.19.2",
+    "@vitest/coverage-v8": "5.1.0",
+    "dependency-cruiser": "18.8.0",
+    "eslint": "10.15.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "prettier": "3.10.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.0"
+  }
+}
