@@ -28,6 +28,7 @@
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm check:boundaries && pnpm check:theme && pnpm test && pnpm build && pnpm check:size && pnpm check:licences"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.65.1",
     "@types/node": "24.19.2",
