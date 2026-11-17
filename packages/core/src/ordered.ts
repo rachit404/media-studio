@@ -15,6 +15,9 @@ export interface Ordered<T extends OrderedItem> {
   byId: Record<string, T>;
 }
 
+/** `Omit<T, 'key'>` applied to every member of a union. */
+export type WithoutKey<T> = T extends unknown ? Omit<T, 'key'> : never;
+
 export function createOrdered<T extends OrderedItem>(): Ordered<T> {
   return { byId: {} };
 }
@@ -48,7 +51,7 @@ function clampIndex(index: number, length: number): number {
 /** Insert one item so that it ends up at `index` (0 = first, length = last). */
 export function insertAt<T extends OrderedItem>(
   collection: Ordered<T>,
-  item: Omit<T, 'key'>,
+  item: WithoutKey<T>,
   index: number,
 ): void {
   if (item.id in collection.byId) throw new RangeError(`Item ${item.id} already exists`);
@@ -61,7 +64,7 @@ export function insertAt<T extends OrderedItem>(
 /** Append many items at the end with one call; keys are generated together. */
 export function appendItems<T extends OrderedItem>(
   collection: Ordered<T>,
-  newItems: readonly Omit<T, 'key'>[],
+  newItems: readonly WithoutKey<T>[],
 ): void {
   if (newItems.length === 0) return;
   for (const item of newItems) {

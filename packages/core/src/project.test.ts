@@ -50,7 +50,7 @@ describe('createProject', () => {
   it('creates a valid project with a trimmed name and matching content', () => {
     const project = newProject();
     expect(project.name).toBe('My project');
-    expect(project.content).toEqual({ kind: 'image' });
+    expect(project.content).toMatchObject({ kind: 'image', width: 1920, height: 1080 });
     expect(project.assets.byId).toEqual({});
   });
 

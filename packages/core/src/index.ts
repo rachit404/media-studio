@@ -55,3 +55,51 @@ export type {
   ProjectFile,
   ProjectType,
 } from './project';
+export {
+  BLEND_MODES,
+  applyAdjustment,
+  blendChannel,
+  compositeOver,
+  defaultAdjustment,
+  linearToSrgb,
+  srgbToLinear,
+} from './color';
+export type { Adjustment, AdjustmentKind, BlendMode, Rgba } from './color';
+export {
+  MAX_CANVAS_SIZE,
+  adjustmentLayerSchema,
+  adjustmentSchema,
+  emptyImageContent,
+  imageContentSchema,
+  imageLayerSchema,
+  layerSchema,
+  transformSchema,
+} from './image-document';
+export type { AdjustmentLayer, ImageContent, ImageLayer, Layer, Transform } from './image-document';
+export {
+  IDENTITY,
+  applyAffine,
+  layerMatrix,
+  multiplyAffine,
+  normalizeDegrees,
+} from './image-geometry';
+export type { Affine, Rect } from './image-geometry';
+export {
+  addAdjustmentLayer,
+  addImageLayer,
+  cropCanvas,
+  flipCanvas,
+  moveLayer,
+  removeLayer,
+  renameLayer,
+  resizeCanvas,
+  rotateCanvas,
+  setAdjustmentParams,
+  setBackground,
+  setLayerBlendMode,
+  setLayerOpacity,
+  setLayerTransform,
+  setLayerVisible,
+} from './image-commands';
+export type { LayerAssetRef } from './image-commands';
+export type { WithoutKey } from './ordered';

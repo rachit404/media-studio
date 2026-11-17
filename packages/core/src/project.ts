@@ -1,24 +1,11 @@
 import { z } from 'zod';
 import { AppError } from './errors';
 import type { Command } from './history';
+import { emptyImageContent, imageContentSchema } from './image-document';
 import { appendItems, createOrdered, removeItem } from './ordered';
+import { idSchema, orderedSchema, relativePathSchema } from './schema-common';
 
-// Zod's JIT would probe `new Function`, which a strict Content Security Policy reports as a violation.
-// Validation here is not a hot path, so run without it and never touch eval (SEC-2).
-z.config({ jitless: true });
-
-/** Identifiers become folder and file names, so they are restricted to a safe alphabet. */
-export const idSchema = z.string().regex(/^[A-Za-z0-9-]{1,64}$/, 'invalid id');
-
-/** Paths inside a project package: relative, no traversal, no odd characters. */
-export const relativePathSchema = z
-  .string()
-  .max(200)
-  .regex(/^[A-Za-z0-9][A-Za-z0-9._/-]*$/, 'invalid path')
-  .refine(
-    (p) => !p.split('/').some((part) => part === '' || part === '.' || part === '..'),
-    'invalid path',
-  );
+export { idSchema, relativePathSchema };
 
 export const assetSchema = z.strictObject({
   id: idSchema,
@@ -36,16 +23,11 @@ export const assetSchema = z.strictObject({
 });
 export type Asset = z.infer<typeof assetSchema>;
 
-const assetsSchema = z
-  .strictObject({ byId: z.record(idSchema, assetSchema) })
-  .refine(
-    (c) => Object.entries(c.byId).every(([id, asset]) => id === asset.id),
-    'asset id mismatch',
-  );
+const assetsSchema = orderedSchema(assetSchema);
 
-/** Content of the editors. Format v1 only records the kind; the image and video documents arrive with their editors. */
+/** Content of the editors: the image document (v2), or just the kind for video until step 6. */
 const contentSchema = z.discriminatedUnion('kind', [
-  z.strictObject({ kind: z.literal('image') }),
+  imageContentSchema,
   z.strictObject({ kind: z.literal('video') }),
 ]);
 
@@ -62,7 +44,7 @@ export const projectSchema = z
 export type ProjectDocument = z.infer<typeof projectSchema>;
 export type ProjectType = ProjectDocument['type'];
 
-export const CURRENT_FORMAT_VERSION = 1;
+export const CURRENT_FORMAT_VERSION = 2;
 export const PROJECT_FORMAT = 'media-studio-project';
 
 export const projectFileSchema = z.strictObject({
@@ -78,7 +60,19 @@ export type ProjectFile = z.infer<typeof projectFileSchema>;
 
 /** Migration from version N to N+1, keyed by N. Pure: receives and returns plain JSON. */
 export type Migration = (raw: Record<string, unknown>) => Record<string, unknown>;
-export const MIGRATIONS: Readonly<Record<number, Migration>> = {};
+/** v1 -> v2: image projects gain the image document (canvas size, background, layers). */
+function migrateV1ToV2(raw: Record<string, unknown>): Record<string, unknown> {
+  const project = raw['project'];
+  if (typeof project === 'object' && project !== null) {
+    const content = (project as { content?: { kind?: unknown } }).content;
+    if (content?.kind === 'image') {
+      (project as { content: unknown }).content = emptyImageContent();
+    }
+  }
+  return raw;
+}
+
+export const MIGRATIONS: Readonly<Record<number, Migration>> = { 1: migrateV1ToV2 };
 
 function invalidProject(cause?: unknown): AppError {
   return new AppError({
@@ -144,7 +138,7 @@ export function createProject(init: NewProjectInit): ProjectDocument {
     type: init.type,
     createdAt: init.createdAt,
     assets: createOrdered<Asset>(),
-    content: { kind: init.type },
+    content: init.type === 'image' ? emptyImageContent() : { kind: 'video' },
   });
 }
 
