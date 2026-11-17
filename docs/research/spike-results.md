@@ -17,6 +17,9 @@ lock only covered the spike agents, not the rest of the machine.
 | **S6 probe** | **Answered for this machine only** | Headless branded Chrome 157 has working VideoEncoder, H.264 (hardware and software), VP9, AAC, Opus, and hardware-backed WebGL2/WebGPU. Linux and GitHub-runner cells **UNVERIFIED** | ADR-0012: keep, scope claims to "verified on Windows + Iris Xe" |
 | **S7 memory/proxy** | **PASS on stated criteria; one serious unresolved concern** | JS heap 37-86 MB flat; all VideoFrames closed; proxy 1080p to 540p 7.3x realtime, 4K 2.5x; scrubbing p95 96 ms; **GPU process memory grew 634 to 1,686 MB over 90 s with balanced counters (leak vs lazy reclaim unknown)** | ADR-0007: frame cache design changes, soak test needed |
 
+## Follow-up measurements
+- **S5 re-run on the normalised model (M2, 2026-11-18):** with ordered collections stored as a map plus fractional-index keys, a move or insert changes one item. On a 1,000-layer / 2,000-clip document with 800 random structural commands: execute p50 1.4 ms / p95 2.5 ms / max 5.8 ms; undo p50 0.3 ms / p95 0.6 ms / max 1.1 ms; redo p50 0.2 ms / p95 0.4 ms / max 1.2 ms. This clears the 50 ms criterion that spike S5 left inconclusive. The benchmark is `scripts/perf-undo.test.mjs` and runs in CI.
+
 ## Findings that change the architecture
 1. **The hardware decoder stalls when about 8 `VideoFrame`s are held** (S1 hold test). The frame cache must hold copies (e.g. `ImageBitmap`), never decoder-owned frames. A VideoFrame cache of 30-120 frames is not feasible. (S7 reasoning from the S1 hold test; the VideoFrame-cache run itself was not completed.)
 2. **JS heap is not a valid health metric.** The GPU process grew ~1 GB in 90 s while every counter balanced. Memory budgets must include GPU/process memory, and a longer soak test is required before claiming long-session stability.

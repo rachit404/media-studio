@@ -15,6 +15,9 @@ WASM binaries, fonts and AI model weights are listed separately below when they 
 | aria-hidden | 1.2.6 | MIT |
 | client-only | 0.0.1 | MIT |
 | clsx | 2.1.1 | MIT |
+| fflate | 0.8.3 | MIT |
+| fractional-indexing | 4.0.0 | CC0-1.0 |
+| immer | 11.2.10 | MIT |
 | react | 19.3.1 | MIT |
 | react-aria | 3.53.1 | Apache-2.0 |
 | react-aria-components | 1.22.1 | Apache-2.0 |
@@ -23,6 +26,7 @@ WASM binaries, fonts and AI model weights are listed separately below when they 
 | scheduler | 0.28.0 | MIT |
 | tslib | 2.9.1 | 0BSD |
 | use-sync-external-store | 1.7.0 | MIT |
+| zod | 4.6.7 | MIT |
 
 ## Fonts, WASM binaries and models
 

@@ -64,6 +64,7 @@
 **Known limitations:** no project or editing features yet; capability results for Safari/Firefox come from manual checks.
 
 ## M2: Storage, project format, undo core (L)
+**Status: done** (branch `feat/m2-storage-project`). Delivered as designed except: (1) files are always copied into OPFS; referencing originals in place via the File System Access API (PROJ-5, Chromium) moves to step 6 (M5), where large video files make it matter; (2) the persisted-handle and relink flow (ASSET-6) moves with it; (3) SVG import moves to step 4 with the renderer. PERF-5 re-measured on the normalised model: execute p95 2.5 ms / max 5.8 ms, undo and redo p95 under 1 ms / max 1.2 ms (spike S5 had structural undo at up to 79 ms). Zod runs without JIT so the strict CSP never sees an eval attempt.
 **Scope:** everything needed to create, edit, persist and recover a project, independent of any editor.
 **Files/modules:** `storage`, `core` (document base types, schemas, migrations, commands, history, journal), `capabilities` (write probe), home screen project list, asset ingest for images.
 **Implementation plan:**
