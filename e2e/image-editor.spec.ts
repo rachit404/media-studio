@@ -109,6 +109,106 @@ test.describe('image editor: layers and export (IMG-1, IMG-3, IMG-4, IMG-13)', (
     expectNear(pixelAt(plain, 4, 4), [180, 120, 60, 255], 1);
   });
 
+  test('levels and black & white match the reference within 2/255', async ({ page }) => {
+    await createImageProject(page, 'Levels');
+    await addLayers(page, [{ name: 'base.png', bytes: solidPng(8, 8, [180, 120, 60, 255]) }]);
+
+    await page.getByRole('button', { name: 'Levels', exact: true }).click();
+    await setRange(page.getByRole('slider', { name: 'Input black' }), 30);
+    await setRange(page.getByRole('slider', { name: 'Input white' }), 230);
+    await setRange(page.getByRole('slider', { name: 'Gamma' }), 1.6);
+    await setRange(page.getByRole('slider', { name: 'Output black' }), 10);
+    await setRange(page.getByRole('slider', { name: 'Output white' }), 245);
+    const levels = {
+      kind: 'levels',
+      inBlack: 30 / 255,
+      inWhite: 230 / 255,
+      gamma: 1.6,
+      outBlack: 10 / 255,
+      outWhite: 245 / 255,
+    } as const;
+    const afterLevels = applyAdjustment(rgba(180, 120, 60), levels);
+    const first = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(first, 4, 4), [...to255(afterLevels), 255], 2, 'levels');
+
+    await page.getByRole('button', { name: 'Black & White', exact: true }).click();
+    await setRange(page.getByRole('slider', { name: 'Amount' }), 60);
+    const afterBw = applyAdjustment(afterLevels, { kind: 'black-white', amount: 0.6 });
+    const second = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(second, 4, 4), [...to255(afterBw), 255], 2, 'black & white');
+  });
+
+  test('blur softens an edge, keeps flat areas and stays inside the canvas', async ({ page }) => {
+    await createImageProject(page, 'Blur');
+    await addLayers(page, [
+      {
+        name: 'edge.png',
+        bytes: encodePng(64, 32, (x) => (x < 32 ? [0, 0, 0, 255] : [255, 255, 255, 255])),
+      },
+    ]);
+    const sharp = await decodeImage(page, await exportAs(page));
+    expect(pixelAt(sharp, 31, 16)[0]).toBe(0);
+    expect(pixelAt(sharp, 32, 16)[0]).toBe(255);
+
+    await page.getByRole('button', { name: 'Blur', exact: true }).click();
+    await setRange(page.getByRole('slider', { name: 'Radius' }), 8);
+    const soft = await decodeImage(page, await exportAs(page));
+    const left = pixelAt(soft, 31, 16);
+    const right = pixelAt(soft, 32, 16);
+    expect(left[0]).toBeGreaterThan(40);
+    expect(left[0]).toBeLessThan(128);
+    expect(right[0]).toBeGreaterThan(128);
+    expect(right[0]).toBeLessThan(215);
+    expect(left[0] + right[0]).toBeGreaterThanOrEqual(250); // symmetric around the edge
+    expect(left[0] + right[0]).toBeLessThanOrEqual(260);
+    expectNear(pixelAt(soft, 2, 16), [0, 0, 0, 255], 1, 'far from the edge');
+    expectNear(pixelAt(soft, 61, 16), [255, 255, 255, 255], 1, 'far from the edge');
+    // Nothing transparent bleeds in from outside the canvas, so the corners stay opaque.
+    expect(pixelAt(soft, 0, 0)[3]).toBe(255);
+    expect(pixelAt(soft, 63, 31)[3]).toBe(255);
+  });
+
+  test('sharpen adds contrast at an edge and leaves flat areas alone', async ({ page }) => {
+    await createImageProject(page, 'Sharpen');
+    await addLayers(page, [
+      {
+        name: 'soft.png',
+        bytes: encodePng(64, 32, (x) => (x < 32 ? [100, 100, 100, 255] : [150, 150, 150, 255])),
+      },
+    ]);
+    await page.getByRole('button', { name: 'Sharpen', exact: true }).click();
+    await setRange(page.getByRole('slider', { name: 'Amount' }), 2);
+    await setRange(page.getByRole('slider', { name: 'Radius' }), 4);
+    const image = await decodeImage(page, await exportAs(page));
+    expect(pixelAt(image, 31, 16)[0]).toBeLessThan(95);
+    expect(pixelAt(image, 32, 16)[0]).toBeGreaterThan(155);
+    expectNear(pixelAt(image, 3, 16), [100, 100, 100, 255], 1, 'flat left');
+    expectNear(pixelAt(image, 60, 16), [150, 150, 150, 255], 1, 'flat right');
+  });
+
+  test('a filter preset adds editable adjustment layers in one undo step', async ({ page }) => {
+    await createImageProject(page, 'Presets');
+    await addLayers(page, [{ name: 'base.png', bytes: solidPng(8, 8, [180, 120, 60, 255]) }]);
+    await page.getByRole('button', { name: 'Mono', exact: true }).click();
+
+    let expected = applyAdjustment(rgba(180, 120, 60), { kind: 'black-white', amount: 1 });
+    expected = applyAdjustment(expected, {
+      kind: 'brightness-contrast',
+      brightness: 0,
+      contrast: 0.1,
+    });
+    const image = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(image, 4, 4), [...to255(expected), 255], 2, 'mono');
+    const layers = page.getByRole('region', { name: 'Layers' });
+    await expect(layers.getByRole('button', { name: /^Mono\(adjustment\)/ })).toBeVisible();
+    await expect(layers.getByRole('button', { name: /^Mono contrast/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(layers.getByRole('button', { name: /^Mono contrast/ })).toHaveCount(0);
+    const plain = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(plain, 4, 4), [180, 120, 60, 255], 1, 'after undo');
+  });
+
   test('layers can be hidden, reordered, deleted and restored with undo', async ({ page }) => {
     await createImageProject(page, 'Stack');
     await addLayers(page, [

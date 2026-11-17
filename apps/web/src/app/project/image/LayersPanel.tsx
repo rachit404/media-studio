@@ -1,6 +1,7 @@
 import {
   SHAPES,
   addAdjustmentLayer,
+  addAdjustmentLayers,
   addShapeLayer,
   addTextLayer,
   moveLayer,
@@ -10,6 +11,7 @@ import {
   type AdjustmentKind,
   type ImageContent,
 } from '@media-studio/core';
+import { FILTER_PRESETS } from '@media-studio/engine-image';
 import { Button } from '@media-studio/ui';
 import type { ProjectSession } from '../project-session';
 
@@ -17,6 +19,10 @@ const ADJUSTMENTS: readonly { kind: AdjustmentKind; label: string }[] = [
   { kind: 'brightness-contrast', label: 'Brightness/Contrast' },
   { kind: 'exposure', label: 'Exposure' },
   { kind: 'saturation', label: 'Saturation' },
+  { kind: 'levels', label: 'Levels' },
+  { kind: 'black-white', label: 'Black & White' },
+  { kind: 'blur', label: 'Blur' },
+  { kind: 'sharpen', label: 'Sharpen' },
 ];
 
 export interface LayersPanelProps {
@@ -139,6 +145,26 @@ export function LayersPanel({ session, content, selectedId, onSelect }: LayersPa
             }}
           >
             {adjustment.label}
+          </Button>
+        ))}
+      </div>
+      <h3 className="mt-3 text-xs font-medium text-fg-muted">Filter presets</h3>
+      <div className="mt-1 flex flex-wrap gap-1">
+        {FILTER_PRESETS.map((preset) => (
+          <Button
+            key={preset.id}
+            variant="secondary"
+            onPress={() => {
+              const items = preset.adjustments.map((item) => ({
+                id: crypto.randomUUID(),
+                name: item.name,
+                adjustment: item.adjustment,
+              }));
+              session.history.execute(addAdjustmentLayers(items, `Apply ${preset.name}`));
+              onSelect(items[items.length - 1]?.id ?? null);
+            }}
+          >
+            {preset.name}
           </Button>
         ))}
       </div>
