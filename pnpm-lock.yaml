@@ -56,6 +56,12 @@ importers:
       '@media-studio/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@media-studio/media-io':
+        specifier: workspace:*
+        version: link:../../packages/media-io
+      '@media-studio/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@media-studio/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -90,17 +96,38 @@ importers:
 
   packages/capabilities: {}
 
-  packages/core: {}
+  packages/core:
+    dependencies:
+      fractional-indexing:
+        specifier: 4.0.0
+        version: 4.0.0
+      immer:
+        specifier: 11.2.10
+        version: 11.2.10
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
 
   packages/engine-image: {}
 
   packages/engine-video: {}
 
-  packages/media-io: {}
+  packages/media-io:
+    dependencies:
+      '@media-studio/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/render: {}
 
-  packages/storage: {}
+  packages/storage:
+    dependencies:
+      '@media-studio/core':
+        specifier: workspace:*
+        version: link:../core
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
 
   packages/testing: {}
 
@@ -881,6 +908,9 @@ packages:
       picomatch:
         optional: true
 
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
+
   file-entry-cache@11.1.5:
     resolution: {integrity: sha512-+PFTHITI08JIGhnNpGNI8T8inUpgZfk3GNEqfT9R2zZV2iFXg3CvqzSl/uEhs7TSGujYRELEANyDvS8Fj7+S7Q==}
 
@@ -893,6 +923,10 @@ packages:
 
   flatted@3.4.4:
     resolution: {integrity: sha512-5+ybhBZANEJxaH3X5evAFatUxLfEHSr7n6kYJ+1Qd0mUqr4eu9gIf6GDbWHf8RJijHrjjO8G+la14SlL2SeS1Q==}
+
+  fractional-indexing@4.0.0:
+    resolution: {integrity: sha512-Nr2P1Yyaj2sy1Qdt/wI3GcByxrUdbSKg5+cGvw8f18hT2SkQt6V72iOjBpk7IO3UkzBsdlGRs2a4z6dLrJprgw==}
+    engines: {node: ^14.13.1 || >=16.0.0}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -956,6 +990,9 @@ packages:
   ignore@7.0.16:
     resolution: {integrity: sha512-52N+Y4HRMOJmbLmr+DqO4iSRyyB7N52gm7PWCT6h0p978+oKbqHCB7gIJIwZvBUsjlSdWbrBFqUSmIFNZMpn0A==}
     engines: {node: '>= 4'}
+
+  immer@11.2.10:
+    resolution: {integrity: sha512-pzANBj+0A9u+prdhBJ14DVi44vCvVUQzBa8DKt6I0AMCokPHtt722BK9IX5bFC70xUSU9TnzLRIJLTGqIzjEFw==}
 
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
@@ -2245,6 +2282,8 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.7
 
+  fflate@0.8.3: {}
+
   file-entry-cache@11.1.5:
     dependencies:
       flat-cache: 6.1.23
@@ -2261,6 +2300,8 @@ snapshots:
       hookified: 1.15.1
 
   flatted@3.4.4: {}
+
+  fractional-indexing@4.0.0: {}
 
   fsevents@2.3.3:
     optional: true
@@ -2306,6 +2347,8 @@ snapshots:
   ignore@7.0.14: {}
 
   ignore@7.0.16: {}
+
+  immer@11.2.10: {}
 
   imurmurhash@0.1.4: {}
 
