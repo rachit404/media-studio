@@ -36,7 +36,7 @@
 
   /* Interaction */
   --color-ring: oklch(0.78 0.13 255);
-  --color-selection: oklch(0.4 0.1 255);
+  --color-selection: oklch(0.34 0.09 255);
 
   /* Editor surfaces */
   --color-track-video: oklch(0.6 0.12 255);

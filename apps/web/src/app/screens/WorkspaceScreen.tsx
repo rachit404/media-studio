@@ -18,10 +18,21 @@ export interface WorkspaceScreenProps {
   toolbar?: ReactNode;
   /** Content of the left panel. */
   leftContent?: ReactNode;
+  /** Replaces the "editor in development" notice in the middle. */
+  centerContent?: ReactNode;
+  /** Content of the right panel. */
+  rightContent?: ReactNode;
 }
 
 /** Workspace layout with resizable, collapsible panels. The editors themselves are built in later steps. */
-export function WorkspaceScreen({ kind, heading, toolbar, leftContent }: WorkspaceScreenProps) {
+export function WorkspaceScreen({
+  kind,
+  heading,
+  toolbar,
+  leftContent,
+  centerContent,
+  rightContent,
+}: WorkspaceScreenProps) {
   const config = WORKSPACES[kind];
   const [leftSize, setLeftSize] = usePanelSize(LEFT.key, LEFT.initial, LEFT.min, LEFT.max);
   const [rightSize, setRightSize] = usePanelSize(RIGHT.key, RIGHT.initial, RIGHT.min, RIGHT.max);
@@ -77,21 +88,27 @@ export function WorkspaceScreen({ kind, heading, toolbar, leftContent }: Workspa
           </>
         )}
 
-        <section
-          aria-label="Canvas"
-          className="flex min-w-0 flex-1 items-center justify-center bg-canvas p-6"
-        >
-          <div className="max-w-md rounded-lg border border-line bg-surface-raised p-6 text-center">
-            <h2 className="text-lg font-semibold">Editor in development</h2>
-            <p className="mt-2 text-sm text-fg-muted">
-              This is the final workspace layout so panel resizing and keyboard use can be verified.
-              The {kind} editor itself is built in {config.step} of the plan.
-            </p>
-            <a className="mt-4 inline-block text-sm text-accent underline" href="#/">
-              Back to home
-            </a>
-          </div>
-        </section>
+        {centerContent ? (
+          <section aria-label="Canvas" className="flex min-h-0 min-w-0 flex-1 flex-col">
+            {centerContent}
+          </section>
+        ) : (
+          <section
+            aria-label="Canvas"
+            className="flex min-w-0 flex-1 items-center justify-center bg-canvas p-6"
+          >
+            <div className="max-w-md rounded-lg border border-line bg-surface-raised p-6 text-center">
+              <h2 className="text-lg font-semibold">Editor in development</h2>
+              <p className="mt-2 text-sm text-fg-muted">
+                This is the final workspace layout so panel resizing and keyboard use can be
+                verified. The {kind} editor itself is built in {config.step} of the plan.
+              </p>
+              <a className="mt-4 inline-block text-sm text-accent underline" href="#/">
+                Back to home
+              </a>
+            </div>
+          </section>
+        )}
 
         {rightOpen && (
           <>
@@ -108,8 +125,12 @@ export function WorkspaceScreen({ kind, heading, toolbar, leftContent }: Workspa
               className="overflow-auto bg-surface p-4"
               style={{ width: rightSize }}
             >
-              <h2 className="text-sm font-semibold">Inspector</h2>
-              <p className="mt-2 text-sm text-fg-muted">Nothing selected.</p>
+              {rightContent ?? (
+                <>
+                  <h2 className="text-sm font-semibold">Inspector</h2>
+                  <p className="mt-2 text-sm text-fg-muted">Nothing selected.</p>
+                </>
+              )}
             </aside>
           </>
         )}

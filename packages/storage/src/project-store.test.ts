@@ -306,7 +306,7 @@ describe('archives', () => {
   it('keeps project.json readable text', async () => {
     await store.create(project('p1'));
     const text = decodeText((await fs.read('projects/p1/project.json')) as Uint8Array);
-    expect(JSON.parse(text)).toMatchObject({ format: 'media-studio-project', formatVersion: 1 });
+    expect(JSON.parse(text)).toMatchObject({ format: 'media-studio-project', formatVersion: 2 });
     void renameProject;
   });
 });

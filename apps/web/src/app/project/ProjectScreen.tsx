@@ -7,6 +7,7 @@ import { isMacPlatform } from '../platform';
 import { WorkspaceScreen } from '../screens/WorkspaceScreen';
 import { useGlobalShortcuts } from '../use-shortcuts';
 import { AssetLibrary } from './AssetLibrary';
+import { ImageWorkspace } from './image/ImageWorkspace';
 import type { ProjectSession } from './project-session';
 import { useProjectSession, useSessionVersion } from './use-project-session';
 
@@ -64,33 +65,41 @@ function OpenProject({ session }: { session: ProjectSession }) {
     };
   }, [session]);
 
+  const heading = <ProjectName session={session} name={project.name} />;
+  const toolbar = (
+    <>
+      <Button
+        variant="ghost"
+        isDisabled={!history.canUndo}
+        aria-label={`Undo${history.undoLabel ? ` ${history.undoLabel}` : ''}${hint('edit.undo')}`}
+        onPress={() => history.undo()}
+      >
+        Undo
+      </Button>
+      <Button
+        variant="ghost"
+        isDisabled={!history.canRedo}
+        aria-label={`Redo${history.redoLabel ? ` ${history.redoLabel}` : ''}${hint('edit.redo')}`}
+        onPress={() => history.redo()}
+      >
+        Redo
+      </Button>
+      <span role="status" className="text-xs text-fg-muted">
+        {SAVE_LABEL[session.status]}
+      </span>
+    </>
+  );
+
+  if (project.type === 'image') {
+    return (
+      <ImageWorkspace session={session} project={project} heading={heading} toolbar={toolbar} />
+    );
+  }
   return (
     <WorkspaceScreen
       kind={project.type}
-      heading={<ProjectName session={session} name={project.name} />}
-      toolbar={
-        <>
-          <Button
-            variant="ghost"
-            isDisabled={!history.canUndo}
-            aria-label={`Undo${history.undoLabel ? ` ${history.undoLabel}` : ''}${hint('edit.undo')}`}
-            onPress={() => history.undo()}
-          >
-            Undo
-          </Button>
-          <Button
-            variant="ghost"
-            isDisabled={!history.canRedo}
-            aria-label={`Redo${history.redoLabel ? ` ${history.redoLabel}` : ''}${hint('edit.redo')}`}
-            onPress={() => history.redo()}
-          >
-            Redo
-          </Button>
-          <span role="status" className="text-xs text-fg-muted">
-            {SAVE_LABEL[session.status]}
-          </span>
-        </>
-      }
+      heading={heading}
+      toolbar={toolbar}
       leftContent={<AssetLibrary session={session} project={project} />}
     />
   );

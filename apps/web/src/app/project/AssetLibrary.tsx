@@ -1,5 +1,6 @@
 import {
   addAssets,
+  addImageLayer,
   removeAsset,
   sortedItems,
   type AppError,
@@ -29,14 +30,25 @@ function isEditable(target: EventTarget | null): boolean {
 export function AssetLibrary({
   session,
   project,
+  onAddedAsLayer,
 }: {
   session: ProjectSession;
   project: ProjectDocument;
+  /** Image projects: called with the new layer id after "Add as layer". */
+  onAddedAsLayer?: (layerId: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const assets = sortedItems(project.assets);
+  // Assets still used by a layer cannot be removed (removing the layer first keeps the document consistent).
+  const usedAssetIds = new Set(
+    project.content.kind === 'image'
+      ? Object.values(project.content.layers.byId).flatMap((layer) =>
+          layer.type === 'image' ? [layer.assetId] : [],
+        )
+      : [],
+  );
 
   const runImport = async (files: File[]) => {
     if (files.length === 0) return;
@@ -124,28 +136,43 @@ export function AssetLibrary({
       ) : (
         <ul aria-label="Project assets" className="min-h-0 flex-1 space-y-2 overflow-auto">
           {assets.map((asset) => (
-            <li
-              key={asset.id}
-              className="flex items-center gap-2 rounded-md border border-line bg-surface-raised p-2"
-            >
-              <AssetThumb
-                projectId={session.id}
-                path={asset.thumb}
-                className="size-12 shrink-0 rounded-sm"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm">{asset.name}</span>
-                <span className="block text-xs text-fg-muted">
-                  {String(asset.width)} × {String(asset.height)}
+            <li key={asset.id} className="rounded-md border border-line bg-surface-raised p-2">
+              <div className="flex items-center gap-2">
+                <AssetThumb
+                  projectId={session.id}
+                  path={asset.thumb}
+                  className="size-12 shrink-0 rounded-sm"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{asset.name}</span>
+                  <span className="block text-xs text-fg-muted">
+                    {String(asset.width)} × {String(asset.height)}
+                  </span>
                 </span>
-              </span>
-              <Button
-                variant="ghost"
-                aria-label={`Remove ${asset.name}`}
-                onPress={() => session.history.execute(removeAsset(asset.id))}
-              >
-                Remove
-              </Button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {onAddedAsLayer && (
+                  <Button
+                    variant="secondary"
+                    aria-label={`Add as layer: ${asset.name}`}
+                    onPress={() => {
+                      const layerId = crypto.randomUUID();
+                      session.history.execute(addImageLayer(layerId, asset));
+                      onAddedAsLayer(layerId);
+                    }}
+                  >
+                    Add as layer
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  aria-label={`Remove ${asset.name}`}
+                  isDisabled={usedAssetIds.has(asset.id)}
+                  onPress={() => session.history.execute(removeAsset(asset.id))}
+                >
+                  Remove
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
