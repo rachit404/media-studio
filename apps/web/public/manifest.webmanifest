@@ -1,0 +1,11 @@
+{
+  "name": "Media Studio",
+  "short_name": "Media Studio",
+  "description": "A privacy-first image and video editor that runs entirely in your browser.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1f2430",
+  "theme_color": "#1f2430",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

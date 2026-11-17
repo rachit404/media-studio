@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Workspace packages sit outside this app's folder, so Tailwind must be told to scan their classes. */
+@source '../../../../packages/ui/src';
+
 /*
  * THE single source of truth for the design system.
  * Change a value here and the whole app changes. Components use semantic names only
