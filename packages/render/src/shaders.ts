@@ -50,15 +50,62 @@ uniform float uOpacity;
 in vec2 vUv;
 out vec4 outColor;
 
+// ---- separable blend functions (one channel); uMode indices follow BLEND_MODES in core/color.ts ----
+float hardLight(float cb, float cs) {
+  return cs <= 0.5 ? cb * 2.0 * cs : cb + (2.0 * cs - 1.0) - cb * (2.0 * cs - 1.0);
+}
+float softLight(float cb, float cs) {
+  if (cs <= 0.5) return cb - (1.0 - 2.0 * cs) * cb * (1.0 - cb);
+  float d = cb <= 0.25 ? ((16.0 * cb - 12.0) * cb + 4.0) * cb : sqrt(cb);
+  return cb + (2.0 * cs - 1.0) * (d - cb);
+}
+float dodge(float cb, float cs) {
+  if (cb == 0.0) return 0.0;
+  return cs >= 1.0 ? 1.0 : min(1.0, cb / (1.0 - cs));
+}
+float burn(float cb, float cs) {
+  if (cb >= 1.0) return 1.0;
+  return cs <= 0.0 ? 0.0 : 1.0 - min(1.0, (1.0 - cb) / cs);
+}
+float separable(int mode, float cb, float cs) {
+  if (mode == 1) return cb * cs;
+  if (mode == 2) return cb + cs - cb * cs;
+  if (mode == 3) return hardLight(cs, cb);          // overlay = hard-light with the layers swapped
+  if (mode == 4) return min(cb, cs);
+  if (mode == 5) return max(cb, cs);
+  if (mode == 6) return dodge(cb, cs);
+  if (mode == 7) return burn(cb, cs);
+  if (mode == 8) return hardLight(cb, cs);
+  if (mode == 9) return softLight(cb, cs);
+  if (mode == 10) return abs(cb - cs);
+  if (mode == 11) return cb + cs - 2.0 * cb * cs;
+  return cs;                                         // normal
+}
+
+// ---- non-separable (HSL) blend functions ----
+float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
+vec3 clipColor(vec3 c) {
+  float l = lum(c);
+  float n = min(min(c.r, c.g), c.b);
+  float x = max(max(c.r, c.g), c.b);
+  if (n < 0.0) c = l + (c - l) * l / (l - n);
+  if (x > 1.0) c = l + (c - l) * (1.0 - l) / (x - l);
+  return c;
+}
+vec3 setLum(vec3 c, float l) { return clipColor(c + (l - lum(c))); }
+float sat(vec3 c) { return max(max(c.r, c.g), c.b) - min(min(c.r, c.g), c.b); }
+vec3 setSat(vec3 c, float s) {
+  float mx = max(max(c.r, c.g), c.b);
+  float mn = min(min(c.r, c.g), c.b);
+  return mx > mn ? (c - mn) * s / (mx - mn) : vec3(0.0);
+}
+
 vec3 blendFn(vec3 cb, vec3 cs) {
-  if (uMode == 1) return cb * cs;                       // multiply
-  if (uMode == 2) return cb + cs - cb * cs;             // screen
-  if (uMode == 3) {                                     // overlay = hard-light with the layers swapped
-    vec3 low = cs * 2.0 * cb;
-    vec3 high = cs + (2.0 * cb - 1.0) - cs * (2.0 * cb - 1.0);
-    return mix(low, high, step(0.5, cb));
-  }
-  return cs;                                            // normal
+  if (uMode == 12) return setLum(setSat(cs, sat(cb)), lum(cb));   // hue
+  if (uMode == 13) return setLum(setSat(cb, sat(cs)), lum(cb));   // saturation
+  if (uMode == 14) return setLum(cs, lum(cb));                     // color
+  if (uMode == 15) return setLum(cb, lum(cs));                     // luminosity
+  return vec3(separable(uMode, cb.r, cs.r), separable(uMode, cb.g, cs.g), separable(uMode, cb.b, cs.b));
 }
 
 void main() {

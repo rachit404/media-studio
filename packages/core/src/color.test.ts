@@ -3,6 +3,7 @@ import {
   BLEND_MODES,
   applyAdjustment,
   blendChannel,
+  blendRgb,
   compositeOver,
   defaultAdjustment,
   linearToSrgb,
@@ -24,19 +25,108 @@ describe('blendChannel (W3C formulas)', () => {
     expect(blendChannel('overlay', 0.75, 0.5)).toBeCloseTo(0.75); // screen branch: 0.5 + 0.5 - 0.25
   });
 
+  it('matches hand-computed values for the remaining separable modes', () => {
+    expect(blendChannel('darken', 0.3, 0.6)).toBe(0.3);
+    expect(blendChannel('lighten', 0.3, 0.6)).toBe(0.6);
+    expect(blendChannel('difference', 0.8, 0.3)).toBeCloseTo(0.5);
+    expect(blendChannel('exclusion', 0.5, 0.5)).toBeCloseTo(0.5);
+    expect(blendChannel('hard-light', 0.5, 0.25)).toBeCloseTo(0.25);
+    expect(blendChannel('hard-light', 0.5, 0.75)).toBeCloseTo(0.75);
+    expect(blendChannel('color-dodge', 0.5, 0.5)).toBe(1);
+    expect(blendChannel('color-dodge', 0, 0.9)).toBe(0);
+    expect(blendChannel('color-dodge', 0.4, 1)).toBe(1);
+    expect(blendChannel('color-burn', 0.5, 0.5)).toBe(0);
+    expect(blendChannel('color-burn', 1, 0.2)).toBe(1);
+    expect(blendChannel('color-burn', 0.4, 0)).toBe(0);
+    expect(blendChannel('soft-light', 0.5, 0.25)).toBeCloseTo(0.375);
+    expect(blendChannel('soft-light', 0.5, 0.75)).toBeCloseTo(0.5 + 0.5 * (Math.sqrt(0.5) - 0.5));
+    expect(blendChannel('soft-light', 0.2, 0.75)).toBeCloseTo(
+      0.2 + 0.5 * (((16 * 0.2 - 12) * 0.2 + 4) * 0.2 - 0.2),
+    );
+  });
+
+  it('refuses to treat HSL modes as separable', () => {
+    for (const mode of ['hue', 'saturation', 'color', 'luminosity'] as const) {
+      expect(() => blendChannel(mode, 0.2, 0.3)).toThrow(RangeError);
+    }
+  });
+
   it('has the expected identities for every mode', () => {
     for (const mode of BLEND_MODES) {
       for (const v of [0, 0.2, 0.5, 0.9, 1]) {
-        const result = blendChannel(mode, v, v);
-        expect(result).toBeGreaterThanOrEqual(0);
-        expect(result).toBeLessThanOrEqual(1);
+        for (const c of blendRgb(mode, [v, v, v], [v, 1 - v, 0.5])) {
+          expect(c).toBeGreaterThanOrEqual(-1e-9);
+          expect(c).toBeLessThanOrEqual(1 + 1e-9);
+        }
       }
     }
     expect(blendChannel('multiply', 0.7, 1)).toBeCloseTo(0.7); // white is neutral
     expect(blendChannel('screen', 0.7, 0)).toBeCloseTo(0.7); // black is neutral
     expect(blendChannel('overlay', 0.6, 0.5)).toBeCloseTo(0.6); // mid grey is neutral
+    expect(blendChannel('soft-light', 0.6, 0.5)).toBeCloseTo(0.6);
+    expect(blendChannel('difference', 0.6, 0.6)).toBe(0);
     expect(blendChannel('multiply', 0.7, 0)).toBe(0);
     expect(blendChannel('screen', 0.7, 1)).toBe(1);
+  });
+});
+
+describe('non-separable (HSL) modes', () => {
+  const lum = (c: readonly number[]) => 0.3 * (c[0] ?? 0) + 0.59 * (c[1] ?? 0) + 0.11 * (c[2] ?? 0);
+  const backdrop = [0.78, 0.39, 0.2] as const;
+  const source = [0.2, 0.59, 0.98] as const;
+
+  it("'color' keeps the backdrop luminosity and takes the source hue and saturation", () => {
+    const result = blendRgb('color', backdrop, source);
+    expect(lum(result)).toBeCloseTo(lum(backdrop), 6);
+    expect(result[2]).toBeGreaterThan(result[0]); // blue-ish like the source
+  });
+
+  it("'luminosity' keeps the backdrop colour and takes the source luminosity", () => {
+    const result = blendRgb('luminosity', backdrop, source);
+    expect(lum(result)).toBeCloseTo(lum(source), 6);
+    expect(result[0]).toBeGreaterThan(result[2]); // still orange-ish like the backdrop
+  });
+
+  it("'hue' and 'saturation' keep the backdrop luminosity", () => {
+    expect(lum(blendRgb('hue', backdrop, source))).toBeCloseTo(lum(backdrop), 6);
+    expect(lum(blendRgb('saturation', backdrop, source))).toBeCloseTo(lum(backdrop), 6);
+  });
+
+  it('a grey source removes all colour in hue and saturation modes', () => {
+    for (const mode of ['hue', 'saturation'] as const) {
+      const [r, g, b] = blendRgb(mode, backdrop, [0.4, 0.4, 0.4]);
+      expect(r).toBeCloseTo(g, 9);
+      expect(g).toBeCloseTo(b, 9);
+      expect(r).toBeCloseTo(lum(backdrop), 6);
+    }
+  });
+
+  it('blending a colour with itself leaves it unchanged', () => {
+    for (const mode of ['color', 'luminosity', 'hue', 'saturation'] as const) {
+      const result = blendRgb(mode, backdrop, backdrop);
+      result.forEach((value, index) => expect(value).toBeCloseTo(backdrop[index] ?? NaN, 6));
+    }
+  });
+
+  it('stays inside the colour gamut (clip step)', () => {
+    for (const mode of ['color', 'luminosity', 'hue', 'saturation'] as const) {
+      for (const cs of [
+        [1, 0, 0],
+        [0, 1, 1],
+        [0.9, 0.1, 0.95],
+      ] as const) {
+        for (const cb of [
+          [0.05, 0.9, 0.1],
+          [0.99, 0.99, 0.01],
+          [0.5, 0.5, 0.5],
+        ] as const) {
+          for (const c of blendRgb(mode, cb, cs)) {
+            expect(c).toBeGreaterThanOrEqual(-1e-9);
+            expect(c).toBeLessThanOrEqual(1 + 1e-9);
+          }
+        }
+      }
+    }
   });
 });
 

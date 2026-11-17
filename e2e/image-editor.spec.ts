@@ -1,9 +1,4 @@
-import {
-  applyAdjustment,
-  compositeOver,
-  type BlendMode,
-  type Rgba,
-} from '../packages/core/src/index';
+import { BLEND_MODES, applyAdjustment, compositeOver, type Rgba } from '../packages/core/src/index';
 import { expect, test } from '@playwright/test';
 import {
   addLayers,
@@ -38,7 +33,7 @@ test.describe('image editor: layers and export (IMG-1, IMG-3, IMG-4, IMG-13)', (
   });
 
   test('blend modes and opacity match the W3C reference within 2/255', async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(300_000);
     const base = [200, 100, 50] as const;
     const top = [50, 150, 250] as const;
     await createImageProject(page, 'Blend');
@@ -47,12 +42,7 @@ test.describe('image editor: layers and export (IMG-1, IMG-3, IMG-4, IMG-13)', (
       { name: 'top.png', bytes: solidPng(8, 8, [...top, 255]) },
     ]);
 
-    for (const mode of [
-      'normal',
-      'multiply',
-      'screen',
-      'overlay',
-    ] as const satisfies readonly BlendMode[]) {
+    for (const mode of BLEND_MODES) {
       for (const opacity of [100, 50]) {
         await page.getByRole('combobox', { name: 'Blend mode' }).selectOption(mode);
         await setRange(page.getByRole('slider', { name: 'Opacity' }), opacity);

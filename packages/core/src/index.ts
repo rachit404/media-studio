@@ -59,12 +59,13 @@ export {
   BLEND_MODES,
   applyAdjustment,
   blendChannel,
+  blendRgb,
   compositeOver,
   defaultAdjustment,
   linearToSrgb,
   srgbToLinear,
 } from './color';
-export type { Adjustment, AdjustmentKind, BlendMode, Rgba } from './color';
+export type { Adjustment, AdjustmentKind, BlendMode, Rgba, Vec3 } from './color';
 export {
   MAX_CANVAS_SIZE,
   adjustmentLayerSchema,
