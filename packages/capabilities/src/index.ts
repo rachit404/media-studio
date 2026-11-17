@@ -1,4 +1,6 @@
-// @media-studio/capabilities
-// Runtime capability probes (codecs, WebGL2, OPFS, file pickers, write capacity) and the typed capability report.
-// Public API of this package is exported from here only. Implementation arrives in the milestone listed in docs/engineering/roadmap.md.
-export {};
+// @media-studio/capabilities: runtime feature probes and support-tier classification.
+export { getBrowserEnv } from './browser-env';
+export { classify } from './classify';
+export { probeCapabilities } from './probe';
+export type { CapabilityEnv } from './probe';
+export type { CapabilityIssue, CapabilityReport, CodecSupport, SupportTier } from './types';
