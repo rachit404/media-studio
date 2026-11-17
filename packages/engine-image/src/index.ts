@@ -10,6 +10,8 @@ export {
   planExport,
 } from './export-plan';
 export type { ExportFormat, ExportPlan, ExportSettings } from './export-plan';
+export { FILTER_PRESETS } from './presets';
+export type { FilterPreset } from './presets';
 export { buildScene, parseHexColor } from './scene';
 export type { BuiltScene } from './scene';
 export {
