@@ -31,7 +31,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
       await page.goto('/');
       await page.getByRole('button', { name: 'Settings' }).click();
       const dialog = page.getByRole('dialog', { name: 'Settings' });
-      for (const tab of ['Appearance', 'Shortcuts', 'Diagnostics']) {
+      for (const tab of ['Appearance', 'Shortcuts', 'Storage', 'Diagnostics']) {
         await dialog.getByRole('tab', { name: tab }).click();
         await expect(dialog.getByRole('tab', { name: tab, selected: true })).toBeVisible();
         await expectNoViolations(page);
