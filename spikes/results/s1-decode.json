@@ -1,0 +1,1402 @@
+{
+  "env": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "cores": 16,
+    "deviceMemoryGB": 16,
+    "webgl2": true,
+    "glRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "webgpu": true,
+    "crossOriginIsolated": false,
+    "secureContext": true
+  },
+  "fixtures": {
+    "h264": {
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "duration": 60,
+      "bytes": 61393736,
+      "codec": "avc1.640028",
+      "w": 1920,
+      "h": 1080,
+      "packetStats": {
+        "packetCount": 1800,
+        "averagePacketRate": 30,
+        "averageBitrate": 8048791.066666666
+      }
+    },
+    "k4": {
+      "file": "h264_4k30_gop2s_20s.mp4",
+      "duration": 20,
+      "bytes": 76048692,
+      "codec": "avc1.42c033",
+      "w": 3840,
+      "h": 2160,
+      "packetStats": {
+        "packetCount": 600,
+        "averagePacketRate": 30,
+        "averageBitrate": 30283996.8
+      }
+    },
+    "vp9": {
+      "file": "f1080p30_vp9_opus_10s.webm",
+      "duration": 10,
+      "bytes": 5995763,
+      "codec": "vp09.00.40.08.01.02.02.02.00",
+      "w": 1920,
+      "h": 1080,
+      "packetStats": {
+        "packetCount": 300,
+        "averagePacketRate": 30,
+        "averageBitrate": 4678866.4
+      }
+    },
+    "hevc": {
+      "file": "hevc_1080p30_10s.mp4",
+      "duration": 10,
+      "bytes": 4524159,
+      "codec": "hvc1.1.6.L120.90",
+      "w": 1920,
+      "h": 1080,
+      "packetStats": {
+        "packetCount": 300,
+        "averagePacketRate": 30,
+        "averageBitrate": 3613501.6
+      }
+    },
+    "gop10": {
+      "file": "h264_1080p30_gop10s_30s.mp4",
+      "duration": 30,
+      "bytes": 22407214,
+      "codec": "avc1.640028",
+      "w": 1920,
+      "h": 1080,
+      "packetStats": {
+        "packetCount": 900,
+        "averagePacketRate": 30,
+        "averageBitrate": 5838009.6
+      }
+    }
+  },
+  "support": {
+    "h264": {
+      "codec": "avc1.640028",
+      "coded": "1920x1080",
+      "prefer-hardware": true,
+      "prefer-software": true
+    },
+    "k4": {
+      "codec": "avc1.42c033",
+      "coded": "3840x2160",
+      "prefer-hardware": true,
+      "prefer-software": true
+    },
+    "vp9": {
+      "codec": "vp09.00.40.08.01.02.02.02.00",
+      "coded": "1920x1080",
+      "prefer-hardware": true,
+      "prefer-software": true
+    },
+    "hevc": {
+      "codec": "hvc1.1.6.L120.90",
+      "coded": "1920x1080",
+      "prefer-hardware": true,
+      "prefer-software": false
+    },
+    "gop10": {
+      "codec": "avc1.640028",
+      "coded": "1920x1080",
+      "prefer-hardware": true,
+      "prefer-software": true
+    }
+  },
+  "seq": [
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-hardware",
+      "frames": 1800,
+      "packets": 1800,
+      "decodeMs": 2420.600000000093,
+      "demuxMs": 124.9000000001397,
+      "fps": 743.6172849706398,
+      "realtimeX": 24.78724283235466,
+      "mediaDuration": 60,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "h264",
+      "rep": 0
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-hardware",
+      "frames": 1800,
+      "packets": 1800,
+      "decodeMs": 2093.1999999999534,
+      "demuxMs": 176.4000000001397,
+      "fps": 859.9273839098223,
+      "realtimeX": 28.66424613032741,
+      "mediaDuration": 60,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "h264",
+      "rep": 1
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-software",
+      "frames": 1800,
+      "packets": 1800,
+      "decodeMs": 7207.300000000047,
+      "demuxMs": 94.9000000001397,
+      "fps": 249.74678451014782,
+      "realtimeX": 8.324892817004928,
+      "mediaDuration": 60,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "h264",
+      "rep": 0
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-software",
+      "frames": 1800,
+      "packets": 1800,
+      "decodeMs": 7250.800000000047,
+      "demuxMs": 101.5999999998603,
+      "fps": 248.24846913443875,
+      "realtimeX": 8.274948971147959,
+      "mediaDuration": 60,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "h264",
+      "rep": 1
+    },
+    {
+      "status": "OK",
+      "file": "h264_4k30_gop2s_20s.mp4",
+      "hw": "prefer-hardware",
+      "frames": 600,
+      "packets": 600,
+      "decodeMs": 1933.5,
+      "demuxMs": 92.89999999990687,
+      "fps": 310.3180760279286,
+      "realtimeX": 10.34393586759762,
+      "mediaDuration": 20,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "k4",
+      "rep": 0
+    },
+    {
+      "status": "OK",
+      "file": "h264_4k30_gop2s_20s.mp4",
+      "hw": "prefer-hardware",
+      "frames": 600,
+      "packets": 600,
+      "decodeMs": 1865.8000000000466,
+      "demuxMs": 90.30000000004657,
+      "fps": 321.57787544216154,
+      "realtimeX": 10.719262514738718,
+      "mediaDuration": 20,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "k4",
+      "rep": 1
+    },
+    {
+      "status": "OK",
+      "file": "h264_4k30_gop2s_20s.mp4",
+      "hw": "prefer-software",
+      "frames": 600,
+      "packets": 600,
+      "decodeMs": 1437.5,
+      "demuxMs": 82.39999999990687,
+      "fps": 417.39130434782606,
+      "realtimeX": 13.91304347826087,
+      "mediaDuration": 20,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "k4",
+      "rep": 0
+    },
+    {
+      "status": "OK",
+      "file": "h264_4k30_gop2s_20s.mp4",
+      "hw": "prefer-software",
+      "frames": 600,
+      "packets": 600,
+      "decodeMs": 1428,
+      "demuxMs": 131.5,
+      "fps": 420.16806722689074,
+      "realtimeX": 14.005602240896359,
+      "mediaDuration": 20,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "k4",
+      "rep": 1
+    },
+    {
+      "status": "OK",
+      "file": "f1080p30_vp9_opus_10s.webm",
+      "hw": "prefer-hardware",
+      "frames": 300,
+      "packets": 300,
+      "decodeMs": 188.5,
+      "demuxMs": 46.199999999953434,
+      "fps": 1591.5119363395224,
+      "realtimeX": 53.05039787798408,
+      "mediaDuration": 10,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "vp9",
+      "rep": 0
+    },
+    {
+      "status": "OK",
+      "file": "f1080p30_vp9_opus_10s.webm",
+      "hw": "prefer-hardware",
+      "frames": 300,
+      "packets": 300,
+      "decodeMs": 188.4000000001397,
+      "demuxMs": 8.300000000046566,
+      "fps": 1592.3566878969084,
+      "realtimeX": 53.07855626323028,
+      "mediaDuration": 10,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "vp9",
+      "rep": 1
+    },
+    {
+      "status": "OK",
+      "file": "f1080p30_vp9_opus_10s.webm",
+      "hw": "prefer-software",
+      "frames": 300,
+      "packets": 300,
+      "decodeMs": 1079.2000000001863,
+      "demuxMs": 21.800000000046566,
+      "fps": 277.9836916233768,
+      "realtimeX": 9.26612305411256,
+      "mediaDuration": 10,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "vp9",
+      "rep": 0
+    },
+    {
+      "status": "OK",
+      "file": "f1080p30_vp9_opus_10s.webm",
+      "hw": "prefer-software",
+      "frames": 300,
+      "packets": 300,
+      "decodeMs": 940.1000000000931,
+      "demuxMs": 11.900000000139698,
+      "fps": 319.1149877672272,
+      "realtimeX": 10.637166258907573,
+      "mediaDuration": 10,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "vp9",
+      "rep": 1
+    },
+    {
+      "status": "OK",
+      "file": "hevc_1080p30_10s.mp4",
+      "hw": "prefer-hardware",
+      "frames": 300,
+      "packets": 300,
+      "decodeMs": 262.69999999995343,
+      "demuxMs": 6.099999999860302,
+      "fps": 1141.9870574802176,
+      "realtimeX": 38.066235249340586,
+      "mediaDuration": 10,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "hevc",
+      "rep": 0
+    },
+    {
+      "status": "OK",
+      "file": "hevc_1080p30_10s.mp4",
+      "hw": "prefer-hardware",
+      "frames": 300,
+      "packets": 300,
+      "decodeMs": 245.9000000001397,
+      "demuxMs": 5.300000000046566,
+      "fps": 1220.008133386863,
+      "realtimeX": 40.6669377795621,
+      "mediaDuration": 10,
+      "leak": 0,
+      "maxQueue": 8,
+      "key": "hevc",
+      "rep": 1
+    },
+    {
+      "status": "UNSUPPORTED",
+      "file": "hevc_1080p30_10s.mp4",
+      "hw": "prefer-software",
+      "key": "hevc",
+      "rep": 0
+    }
+  ],
+  "seqMB": [
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-hardware",
+      "frames": 1800,
+      "decodeMs": 2118.8000000000466,
+      "fps": 849.5374740418919,
+      "realtimeX": 28.317915801396396,
+      "key": "h264"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-software",
+      "frames": 1800,
+      "decodeMs": 7302.100000000093,
+      "fps": 246.50443023239578,
+      "realtimeX": 8.216814341079859,
+      "key": "h264"
+    },
+    {
+      "status": "OK",
+      "file": "f1080p30_vp9_opus_10s.webm",
+      "hw": "prefer-hardware",
+      "frames": 300,
+      "decodeMs": 199.4000000001397,
+      "fps": 1504.5135406208115,
+      "realtimeX": 50.15045135402705,
+      "key": "vp9"
+    },
+    {
+      "status": "OK",
+      "file": "f1080p30_vp9_opus_10s.webm",
+      "hw": "prefer-software",
+      "frames": 300,
+      "decodeMs": 983.5999999998603,
+      "fps": 305.0020333469323,
+      "realtimeX": 10.166734444897743,
+      "key": "vp9"
+    }
+  ],
+  "seek": [
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-hardware",
+      "impl": "raw WebCodecs, reused decoder",
+      "latencyMs": {
+        "n": 30,
+        "p50": 37.89999999990687,
+        "p95": 82.5999999998603,
+        "max": 98.69999999995343,
+        "mean": 39.56666666666667,
+        "min": 12
+      },
+      "packetsDecodedPerSeek": {
+        "n": 30,
+        "p50": 29,
+        "p95": 60,
+        "max": 60,
+        "mean": 28.066666666666666,
+        "min": 1
+      },
+      "leak": 0,
+      "samples": [
+        {
+          "t": 36.5,
+          "findMs": 3.9000000001396984,
+          "totalMs": 24.9000000001397,
+          "fed": 17
+        },
+        {
+          "t": 54.733333333333334,
+          "findMs": 0.10000000009313226,
+          "totalMs": 25.699999999953434,
+          "fed": 23
+        },
+        {
+          "t": 3.8333333333333335,
+          "findMs": 5.300000000046566,
+          "totalMs": 65.69999999995343,
+          "fed": 57
+        },
+        {
+          "t": 50.63333333333333,
+          "findMs": 3.2000000001862645,
+          "totalMs": 21.300000000046566,
+          "fed": 21
+        },
+        {
+          "t": 21.933333333333334,
+          "findMs": 12.299999999813735,
+          "totalMs": 98.69999999995343,
+          "fed": 60
+        },
+        {
+          "t": 4.066666666666666,
+          "findMs": 0.30000000004656613,
+          "totalMs": 25.100000000093132,
+          "fed": 3
+        },
+        {
+          "t": 4.966666666666667,
+          "findMs": 0.19999999995343387,
+          "totalMs": 40.699999999953434,
+          "fed": 32
+        },
+        {
+          "t": 58.06666666666667,
+          "findMs": 5,
+          "totalMs": 15.199999999953434,
+          "fed": 3
+        },
+        {
+          "t": 57.4,
+          "findMs": 7.100000000093132,
+          "totalMs": 46.199999999953434,
+          "fed": 43
+        },
+        {
+          "t": 31.8,
+          "findMs": 4.199999999953434,
+          "totalMs": 48.10000000009313,
+          "fed": 55
+        },
+        {
+          "t": 27.2,
+          "findMs": 7.7000000001862645,
+          "totalMs": 43.700000000186265,
+          "fed": 34
+        },
+        {
+          "t": 32.766666666666666,
+          "findMs": 5.199999999953434,
+          "totalMs": 37.199999999953434,
+          "fed": 25
+        },
+        {
+          "t": 36.06666666666667,
+          "findMs": 8.800000000046566,
+          "totalMs": 25.699999999953434,
+          "fed": 3
+        },
+        {
+          "t": 46.06666666666667,
+          "findMs": 9.399999999906868,
+          "totalMs": 18.100000000093132,
+          "fed": 3
+        },
+        {
+          "t": 46.2,
+          "findMs": 0.10000000009313226,
+          "totalMs": 12,
+          "fed": 7
+        },
+        {
+          "t": 25.233333333333334,
+          "findMs": 8.199999999953434,
+          "totalMs": 37.89999999990687,
+          "fed": 40
+        },
+        {
+          "t": 28.466666666666665,
+          "findMs": 6.2000000001862645,
+          "totalMs": 24.200000000186265,
+          "fed": 15
+        },
+        {
+          "t": 50.4,
+          "findMs": 3.6000000000931323,
+          "totalMs": 12.800000000046566,
+          "fed": 10
+        },
+        {
+          "t": 22,
+          "findMs": 3,
+          "totalMs": 16.699999999953434,
+          "fed": 1
+        },
+        {
+          "t": 28.9,
+          "findMs": 3.5,
+          "totalMs": 38.0999999998603,
+          "fed": 29
+        },
+        {
+          "t": 6.3,
+          "findMs": 10.100000000093132,
+          "totalMs": 28,
+          "fed": 12
+        },
+        {
+          "t": 44.43333333333333,
+          "findMs": 6.899999999906868,
+          "totalMs": 33.39999999990687,
+          "fed": 16
+        },
+        {
+          "t": 49.36666666666667,
+          "findMs": 8.800000000046566,
+          "totalMs": 46.4000000001397,
+          "fed": 44
+        },
+        {
+          "t": 21.766666666666666,
+          "findMs": 7.300000000046566,
+          "totalMs": 74.5999999998603,
+          "fed": 56
+        },
+        {
+          "t": 11.366666666666667,
+          "findMs": 6.399999999906868,
+          "totalMs": 69.89999999990687,
+          "fed": 44
+        },
+        {
+          "t": 57.93333333333333,
+          "findMs": 15.599999999860302,
+          "totalMs": 82.5999999998603,
+          "fed": 60
+        },
+        {
+          "t": 8.066666666666666,
+          "findMs": 2.800000000046566,
+          "totalMs": 26.700000000186265,
+          "fed": 3
+        },
+        {
+          "t": 27.366666666666667,
+          "findMs": 5.899999999906868,
+          "totalMs": 58.39999999990687,
+          "fed": 44
+        },
+        {
+          "t": 27.466666666666665,
+          "findMs": 0.30000000004656613,
+          "totalMs": 42.199999999953434,
+          "fed": 42
+        },
+        {
+          "t": 7.233333333333333,
+          "findMs": 4.800000000046566,
+          "totalMs": 46.800000000046566,
+          "fed": 40
+        }
+      ],
+      "key": "gop2"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-software",
+      "impl": "raw WebCodecs, reused decoder",
+      "latencyMs": {
+        "n": 30,
+        "p50": 109.5999999998603,
+        "p95": 325,
+        "max": 333.10000000009313,
+        "mean": 138.09000000002172,
+        "min": 14.5
+      },
+      "packetsDecodedPerSeek": {
+        "n": 30,
+        "p50": 29,
+        "p95": 60,
+        "max": 60,
+        "mean": 28.066666666666666,
+        "min": 1
+      },
+      "leak": 0,
+      "samples": [
+        {
+          "t": 36.5,
+          "findMs": 5.100000000093132,
+          "totalMs": 100.10000000009313,
+          "fed": 17
+        },
+        {
+          "t": 54.733333333333334,
+          "findMs": 1.6999999999534339,
+          "totalMs": 126.29999999981374,
+          "fed": 23
+        },
+        {
+          "t": 3.8333333333333335,
+          "findMs": 3.3999999999068677,
+          "totalMs": 109.5999999998603,
+          "fed": 57
+        },
+        {
+          "t": 50.63333333333333,
+          "findMs": 6.5,
+          "totalMs": 149.5,
+          "fed": 21
+        },
+        {
+          "t": 21.933333333333334,
+          "findMs": 7.900000000139698,
+          "totalMs": 325,
+          "fed": 60
+        },
+        {
+          "t": 4.066666666666666,
+          "findMs": 1.5,
+          "totalMs": 14.5,
+          "fed": 3
+        },
+        {
+          "t": 4.966666666666667,
+          "findMs": 2.7000000001862645,
+          "totalMs": 94,
+          "fed": 32
+        },
+        {
+          "t": 58.06666666666667,
+          "findMs": 8,
+          "totalMs": 72.80000000004657,
+          "fed": 3
+        },
+        {
+          "t": 57.4,
+          "findMs": 7.600000000093132,
+          "totalMs": 285.30000000004657,
+          "fed": 43
+        },
+        {
+          "t": 31.8,
+          "findMs": 7.600000000093132,
+          "totalMs": 333.10000000009313,
+          "fed": 55
+        },
+        {
+          "t": 27.2,
+          "findMs": 5.300000000046566,
+          "totalMs": 200.89999999990687,
+          "fed": 34
+        },
+        {
+          "t": 32.766666666666666,
+          "findMs": 3.5,
+          "totalMs": 139.5,
+          "fed": 25
+        },
+        {
+          "t": 36.06666666666667,
+          "findMs": 6.599999999860302,
+          "totalMs": 66.19999999995343,
+          "fed": 3
+        },
+        {
+          "t": 46.06666666666667,
+          "findMs": 5.600000000093132,
+          "totalMs": 52.4000000001397,
+          "fed": 3
+        },
+        {
+          "t": 46.2,
+          "findMs": 1.6999999999534339,
+          "totalMs": 79.30000000004657,
+          "fed": 7
+        },
+        {
+          "t": 25.233333333333334,
+          "findMs": 4.900000000139698,
+          "totalMs": 192.9000000001397,
+          "fed": 40
+        },
+        {
+          "t": 28.466666666666665,
+          "findMs": 6.900000000139698,
+          "totalMs": 104,
+          "fed": 15
+        },
+        {
+          "t": 50.4,
+          "findMs": 5.5,
+          "totalMs": 92.79999999981374,
+          "fed": 10
+        },
+        {
+          "t": 22,
+          "findMs": 3.199999999953434,
+          "totalMs": 57.9000000001397,
+          "fed": 1
+        },
+        {
+          "t": 28.9,
+          "findMs": 2.2999999998137355,
+          "totalMs": 146.5,
+          "fed": 29
+        },
+        {
+          "t": 6.3,
+          "findMs": 5.600000000093132,
+          "totalMs": 28.200000000186265,
+          "fed": 12
+        },
+        {
+          "t": 44.43333333333333,
+          "findMs": 5.699999999953434,
+          "totalMs": 100.30000000004657,
+          "fed": 16
+        },
+        {
+          "t": 49.36666666666667,
+          "findMs": 5.099999999860302,
+          "totalMs": 183.19999999995343,
+          "fed": 44
+        },
+        {
+          "t": 21.766666666666666,
+          "findMs": 5.5,
+          "totalMs": 233.10000000009313,
+          "fed": 56
+        },
+        {
+          "t": 11.366666666666667,
+          "findMs": 3.8999999999068677,
+          "totalMs": 99.39999999990687,
+          "fed": 44
+        },
+        {
+          "t": 57.93333333333333,
+          "findMs": 6.2999999998137355,
+          "totalMs": 243,
+          "fed": 60
+        },
+        {
+          "t": 8.066666666666666,
+          "findMs": 3.800000000046566,
+          "totalMs": 15.800000000046566,
+          "fed": 3
+        },
+        {
+          "t": 27.366666666666667,
+          "findMs": 4,
+          "totalMs": 219.70000000018626,
+          "fed": 44
+        },
+        {
+          "t": 27.466666666666665,
+          "findMs": 0.4000000001396984,
+          "totalMs": 187.9000000001397,
+          "fed": 42
+        },
+        {
+          "t": 7.233333333333333,
+          "findMs": 4.2000000001862645,
+          "totalMs": 89.5,
+          "fed": 40
+        }
+      ],
+      "key": "gop2"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop10s_30s.mp4",
+      "hw": "prefer-hardware",
+      "impl": "raw WebCodecs, reused decoder",
+      "latencyMs": {
+        "n": 30,
+        "p50": 160.5999999998603,
+        "p95": 315,
+        "max": 330.10000000009313,
+        "mean": 171.36333333333022,
+        "min": 33.39999999990687
+      },
+      "packetsDecodedPerSeek": {
+        "n": 30,
+        "p50": 126,
+        "p95": 254,
+        "max": 255,
+        "mean": 134.2,
+        "min": 31
+      },
+      "leak": 0,
+      "samples": [
+        {
+          "t": 18.133333333333333,
+          "findMs": 1.8000000000465661,
+          "totalMs": 274.4000000001397,
+          "fed": 242
+        },
+        {
+          "t": 26.933333333333334,
+          "findMs": 1.3000000000465661,
+          "totalMs": 259.80000000004657,
+          "fed": 206
+        },
+        {
+          "t": 2.3666666666666667,
+          "findMs": 4.7000000001862645,
+          "totalMs": 121.30000000004657,
+          "fed": 73
+        },
+        {
+          "t": 24.933333333333334,
+          "findMs": 4.599999999860302,
+          "totalMs": 217.89999999990687,
+          "fed": 146
+        },
+        {
+          "t": 11.1,
+          "findMs": 4.300000000046566,
+          "totalMs": 34.300000000046566,
+          "fed": 36
+        },
+        {
+          "t": 2.466666666666667,
+          "findMs": 2.4000000001396984,
+          "totalMs": 137.9000000001397,
+          "fed": 75
+        },
+        {
+          "t": 2.9,
+          "findMs": 0.5,
+          "totalMs": 155.39999999990687,
+          "fed": 89
+        },
+        {
+          "t": 28.533333333333335,
+          "findMs": 4.300000000046566,
+          "totalMs": 330.10000000009313,
+          "fed": 254
+        },
+        {
+          "t": 28.233333333333334,
+          "findMs": 0.30000000004656613,
+          "totalMs": 315,
+          "fed": 249
+        },
+        {
+          "t": 15.866666666666667,
+          "findMs": 3.6000000000931323,
+          "totalMs": 207,
+          "fed": 174
+        },
+        {
+          "t": 13.633333333333333,
+          "findMs": 0.10000000009313226,
+          "totalMs": 116.5,
+          "fed": 112
+        },
+        {
+          "t": 16.333333333333332,
+          "findMs": 0.09999999986030161,
+          "totalMs": 207,
+          "fed": 191
+        },
+        {
+          "t": 17.933333333333334,
+          "findMs": 0.09999999986030161,
+          "totalMs": 286.89999999990687,
+          "fed": 239
+        },
+        {
+          "t": 22.766666666666666,
+          "findMs": 3.699999999953434,
+          "totalMs": 100.5,
+          "fed": 85
+        },
+        {
+          "t": 22.833333333333332,
+          "findMs": 0.19999999995343387,
+          "totalMs": 105.89999999990687,
+          "fed": 88
+        },
+        {
+          "t": 12.7,
+          "findMs": 0.09999999986030161,
+          "totalMs": 105,
+          "fed": 84
+        },
+        {
+          "t": 14.266666666666667,
+          "findMs": 0,
+          "totalMs": 160.5999999998603,
+          "fed": 126
+        },
+        {
+          "t": 24.833333333333332,
+          "findMs": 0.30000000004656613,
+          "totalMs": 190.5,
+          "fed": 148
+        },
+        {
+          "t": 11.133333333333333,
+          "findMs": 0.10000000009313226,
+          "totalMs": 33.39999999990687,
+          "fed": 35
+        },
+        {
+          "t": 14.466666666666667,
+          "findMs": 0.10000000009313226,
+          "totalMs": 155.39999999990687,
+          "fed": 135
+        },
+        {
+          "t": 3.566666666666667,
+          "findMs": 5.2000000001862645,
+          "totalMs": 182.5,
+          "fed": 109
+        },
+        {
+          "t": 21.966666666666665,
+          "findMs": 6.300000000046566,
+          "totalMs": 78.5,
+          "fed": 61
+        },
+        {
+          "t": 24.333333333333332,
+          "findMs": 1.5,
+          "totalMs": 157.4000000001397,
+          "fed": 131
+        },
+        {
+          "t": 11,
+          "findMs": 7.5,
+          "totalMs": 68.80000000004657,
+          "fed": 31
+        },
+        {
+          "t": 6,
+          "findMs": 7.800000000046566,
+          "totalMs": 241.60000000009313,
+          "fed": 178
+        },
+        {
+          "t": 28.466666666666665,
+          "findMs": 3,
+          "totalMs": 269.80000000004657,
+          "fed": 255
+        },
+        {
+          "t": 4.4,
+          "findMs": 7.100000000093132,
+          "totalMs": 184,
+          "fed": 130
+        },
+        {
+          "t": 13.733333333333333,
+          "findMs": 4.100000000093132,
+          "totalMs": 119.89999999990687,
+          "fed": 110
+        },
+        {
+          "t": 13.766666666666667,
+          "findMs": 0.2999999998137355,
+          "totalMs": 145.0999999998603,
+          "fed": 116
+        },
+        {
+          "t": 4,
+          "findMs": 1.6000000000931323,
+          "totalMs": 178.5,
+          "fed": 118
+        }
+      ],
+      "key": "gop10"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop10s_30s.mp4",
+      "hw": "prefer-software",
+      "impl": "raw WebCodecs, reused decoder",
+      "latencyMs": {
+        "n": 30,
+        "p50": 558.5,
+        "p95": 1097.0999999998603,
+        "max": 1187.8999999999069,
+        "mean": 549.1399999999907,
+        "min": 79.39999999990687
+      },
+      "packetsDecodedPerSeek": {
+        "n": 30,
+        "p50": 126,
+        "p95": 254,
+        "max": 255,
+        "mean": 134.2,
+        "min": 31
+      },
+      "leak": 0,
+      "samples": [
+        {
+          "t": 18.133333333333333,
+          "findMs": 6,
+          "totalMs": 703.8000000000466,
+          "fed": 242
+        },
+        {
+          "t": 26.933333333333334,
+          "findMs": 2,
+          "totalMs": 683,
+          "fed": 206
+        },
+        {
+          "t": 2.3666666666666667,
+          "findMs": 5,
+          "totalMs": 612.1000000000931,
+          "fed": 73
+        },
+        {
+          "t": 24.933333333333334,
+          "findMs": 5.899999999906868,
+          "totalMs": 558.5,
+          "fed": 146
+        },
+        {
+          "t": 11.1,
+          "findMs": 7,
+          "totalMs": 99.19999999995343,
+          "fed": 36
+        },
+        {
+          "t": 2.466666666666667,
+          "findMs": 2.7999999998137355,
+          "totalMs": 637.5999999998603,
+          "fed": 75
+        },
+        {
+          "t": 2.9,
+          "findMs": 0.30000000004656613,
+          "totalMs": 792,
+          "fed": 89
+        },
+        {
+          "t": 28.533333333333335,
+          "findMs": 9.099999999860302,
+          "totalMs": 1097.0999999998603,
+          "fed": 254
+        },
+        {
+          "t": 28.233333333333334,
+          "findMs": 0.10000000009313226,
+          "totalMs": 895.5,
+          "fed": 249
+        },
+        {
+          "t": 15.866666666666667,
+          "findMs": 6,
+          "totalMs": 511.30000000004657,
+          "fed": 174
+        },
+        {
+          "t": 13.633333333333333,
+          "findMs": 0.19999999995343387,
+          "totalMs": 391,
+          "fed": 112
+        },
+        {
+          "t": 16.333333333333332,
+          "findMs": 0.19999999995343387,
+          "totalMs": 724,
+          "fed": 191
+        },
+        {
+          "t": 17.933333333333334,
+          "findMs": 0.20000000018626451,
+          "totalMs": 744.6000000000931,
+          "fed": 239
+        },
+        {
+          "t": 22.766666666666666,
+          "findMs": 1.8000000000465661,
+          "totalMs": 367.5,
+          "fed": 85
+        },
+        {
+          "t": 22.833333333333332,
+          "findMs": 0.20000000018626451,
+          "totalMs": 394.4000000001397,
+          "fed": 88
+        },
+        {
+          "t": 12.7,
+          "findMs": 0.09999999986030161,
+          "totalMs": 212,
+          "fed": 84
+        },
+        {
+          "t": 14.266666666666667,
+          "findMs": 0,
+          "totalMs": 335.19999999995343,
+          "fed": 126
+        },
+        {
+          "t": 24.833333333333332,
+          "findMs": 0.30000000004656613,
+          "totalMs": 509.89999999990687,
+          "fed": 148
+        },
+        {
+          "t": 11.133333333333333,
+          "findMs": 0.09999999986030161,
+          "totalMs": 79.39999999990687,
+          "fed": 35
+        },
+        {
+          "t": 14.466666666666667,
+          "findMs": 0.10000000009313226,
+          "totalMs": 332.89999999990687,
+          "fed": 135
+        },
+        {
+          "t": 3.566666666666667,
+          "findMs": 9.100000000093132,
+          "totalMs": 687.1000000000931,
+          "fed": 109
+        },
+        {
+          "t": 21.966666666666665,
+          "findMs": 5.600000000093132,
+          "totalMs": 246.80000000004657,
+          "fed": 61
+        },
+        {
+          "t": 24.333333333333332,
+          "findMs": 1.3000000000465661,
+          "totalMs": 474,
+          "fed": 131
+        },
+        {
+          "t": 11,
+          "findMs": 5.300000000046566,
+          "totalMs": 93.69999999995343,
+          "fed": 31
+        },
+        {
+          "t": 6,
+          "findMs": 5.899999999906868,
+          "totalMs": 857.6999999999534,
+          "fed": 178
+        },
+        {
+          "t": 28.466666666666665,
+          "findMs": 5.599999999860302,
+          "totalMs": 1187.8999999999069,
+          "fed": 255
+        },
+        {
+          "t": 4.4,
+          "findMs": 7.399999999906868,
+          "totalMs": 906.5999999998603,
+          "fed": 130
+        },
+        {
+          "t": 13.733333333333333,
+          "findMs": 1,
+          "totalMs": 257.5,
+          "fed": 110
+        },
+        {
+          "t": 13.766666666666667,
+          "findMs": 0.10000000009313226,
+          "totalMs": 291.70000000018626,
+          "fed": 116
+        },
+        {
+          "t": 4,
+          "findMs": 1.2999999998137355,
+          "totalMs": 790.1999999999534,
+          "fed": 118
+        }
+      ],
+      "key": "gop10"
+    }
+  ],
+  "seekMB": [
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-hardware",
+      "impl": "mediabunny VideoSampleSink.getSample",
+      "latencyMs": {
+        "n": 30,
+        "p50": 60.5999999998603,
+        "p95": 130.30000000004657,
+        "max": 163.29999999981374,
+        "mean": 69.88666666667753,
+        "min": 41.10000000009313
+      },
+      "key": "gop2"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-software",
+      "impl": "mediabunny VideoSampleSink.getSample",
+      "latencyMs": {
+        "n": 30,
+        "p50": 129,
+        "p95": 243.80000000004657,
+        "max": 264.30000000004657,
+        "mean": 128.29333333332713,
+        "min": 17.0999999998603
+      },
+      "key": "gop2"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop10s_30s.mp4",
+      "hw": "prefer-hardware",
+      "impl": "mediabunny VideoSampleSink.getSample",
+      "latencyMs": {
+        "n": 30,
+        "p50": 204.4000000001397,
+        "p95": 352,
+        "max": 397.5,
+        "mean": 210.026666666676,
+        "min": 47.199999999953434
+      },
+      "key": "gop10"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop10s_30s.mp4",
+      "hw": "prefer-software",
+      "impl": "mediabunny VideoSampleSink.getSample",
+      "latencyMs": {
+        "n": 30,
+        "p50": 588.5999999998603,
+        "p95": 928.6999999999534,
+        "max": 952.8000000000466,
+        "mean": 533.673333333324,
+        "min": 117.69999999995343
+      },
+      "key": "gop10"
+    }
+  ],
+  "gopCache": [
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-hardware",
+      "stepSec": 1.5,
+      "impl": "GOP-interval cache (decode whole GOP to next keyframe, keep ImageBitmap copies)",
+      "uncachedMs": {
+        "n": 30,
+        "p50": 85,
+        "p95": 126.5999999998603,
+        "max": 142.19999999995343,
+        "mean": 79.28333333332557,
+        "min": 33.300000000046566
+      },
+      "cachedMs": {
+        "n": 30,
+        "p50": 0,
+        "p95": 408.79999999981374,
+        "max": 423.10000000009313,
+        "mean": 147.11999999999534,
+        "min": 0
+      },
+      "hitRate": 0.6,
+      "peakCachedFrames": 60,
+      "approxBitmapMBperFrame": 8.2944,
+      "key": "gop2"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop10s_30s.mp4",
+      "hw": "prefer-hardware",
+      "stepSec": 1.5,
+      "impl": "GOP-interval cache (decode whole GOP to next keyframe, keep ImageBitmap copies)",
+      "uncachedMs": {
+        "n": 30,
+        "p50": 339.80000000004657,
+        "p95": 434.39999999990687,
+        "max": 444.69999999995343,
+        "mean": 347.063333333338,
+        "min": 252.80000000004657
+      },
+      "cachedMs": {
+        "n": 30,
+        "p50": 0,
+        "p95": 0.10000000009313226,
+        "max": 0.10000000009313226,
+        "mean": 0.01999999999534339,
+        "min": 0
+      },
+      "hitRate": 1,
+      "peakCachedFrames": 300,
+      "approxBitmapMBperFrame": 8.2944,
+      "key": "gop10"
+    }
+  ],
+  "gopCacheFill": [
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "hw": "prefer-hardware",
+      "stepSec": 25,
+      "impl": "GOP-interval cache (decode whole GOP to next keyframe, keep ImageBitmap copies)",
+      "uncachedMs": {
+        "n": 12,
+        "p50": 125.89999999990687,
+        "p95": 178.30000000004657,
+        "max": 178.30000000004657,
+        "mean": 119.08333333331393,
+        "min": 49.799999999813735
+      },
+      "cachedMs": {
+        "n": 12,
+        "p50": 300.9000000001397,
+        "p95": 432.69999999995343,
+        "max": 432.69999999995343,
+        "mean": 252.55833333332944,
+        "min": 0
+      },
+      "hitRate": 0.25,
+      "peakCachedFrames": 60,
+      "approxBitmapMBperFrame": 8.2944,
+      "key": "gop2"
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop10s_30s.mp4",
+      "hw": "prefer-hardware",
+      "stepSec": 25,
+      "impl": "GOP-interval cache (decode whole GOP to next keyframe, keep ImageBitmap copies)",
+      "uncachedMs": {
+        "n": 12,
+        "p50": 208.19999999995343,
+        "p95": 373.29999999981374,
+        "max": 373.29999999981374,
+        "mean": 204.125,
+        "min": 111.5
+      },
+      "cachedMs": {
+        "n": 12,
+        "p50": 1671.2999999998137,
+        "p95": 3793,
+        "max": 3793,
+        "mean": 1287.3083333333295,
+        "min": 0
+      },
+      "hitRate": 0.4166666666666667,
+      "peakCachedFrames": 300,
+      "approxBitmapMBperFrame": 8.2944,
+      "key": "gop10"
+    }
+  ],
+  "holdTest": [
+    {
+      "hw": "prefer-hardware",
+      "fed": 400,
+      "heldFramesOutput": 8,
+      "flushCompleted": false,
+      "err": null
+    },
+    {
+      "hw": "prefer-software",
+      "fed": 400,
+      "heldFramesOutput": 400,
+      "flushCompleted": true,
+      "err": null
+    }
+  ]
+}

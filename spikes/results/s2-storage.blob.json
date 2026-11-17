@@ -1,0 +1,87 @@
+{
+  "startedAt": "2026-11-17T17:29:34.744Z",
+  "progress": [
+    {
+      "targetMB": 100,
+      "ok": true,
+      "elapsedMs": 27.5,
+      "heapNow": 106787446,
+      "sliceCheck": "tail slice read ok (1024 B), blob.size=104857600",
+      "objectUrl": "ok"
+    },
+    {
+      "targetMB": 500,
+      "ok": true,
+      "elapsedMs": 237.09999999962747,
+      "heapNow": 106825101,
+      "sliceCheck": "tail slice read ok (1024 B), blob.size=524288000",
+      "objectUrl": "ok"
+    },
+    {
+      "targetMB": 1000,
+      "ok": true,
+      "elapsedMs": 498.39999999990687,
+      "heapNow": 106832533,
+      "sliceCheck": "tail slice read ok (1024 B), blob.size=1048576000",
+      "objectUrl": "ok"
+    },
+    {
+      "targetMB": 2000,
+      "ok": true,
+      "elapsedMs": 974.5999999996275,
+      "heapNow": 106854263,
+      "sliceCheck": "tail slice read ok (1024 B), blob.size=2097152000",
+      "objectUrl": "ok"
+    }
+  ],
+  "final": {
+    "steps": [
+      {
+        "targetMB": 100,
+        "ok": true,
+        "elapsedMs": 27.5,
+        "heapNow": 106787446,
+        "sliceCheck": "tail slice read ok (1024 B), blob.size=104857600",
+        "objectUrl": "ok"
+      },
+      {
+        "targetMB": 500,
+        "ok": true,
+        "elapsedMs": 237.09999999962747,
+        "heapNow": 106825101,
+        "sliceCheck": "tail slice read ok (1024 B), blob.size=524288000",
+        "objectUrl": "ok"
+      },
+      {
+        "targetMB": 1000,
+        "ok": true,
+        "elapsedMs": 498.39999999990687,
+        "heapNow": 106832533,
+        "sliceCheck": "tail slice read ok (1024 B), blob.size=1048576000",
+        "objectUrl": "ok"
+      },
+      {
+        "targetMB": 2000,
+        "ok": true,
+        "elapsedMs": 974.5999999996275,
+        "heapNow": 106854263,
+        "sliceCheck": "tail slice read ok (1024 B), blob.size=2097152000",
+        "objectUrl": "ok"
+      }
+    ],
+    "heap": {
+      "minBytes": 106823682,
+      "maxBytes": 106852652
+    }
+  },
+  "processMemory": {
+    "privTotalPeakMB": 2347,
+    "wsTotalPeakMB": 2585,
+    "rendererPrivPeakMB": 271,
+    "browserPrivPeakMB": 2048,
+    "gpuPrivPeakMB": 126,
+    "utilityPrivPeakMB": 0,
+    "samples": 44
+  },
+  "finishedAt": "2026-11-17T17:30:42.126Z"
+}

@@ -1,0 +1,59 @@
+{
+  "runs": [
+    {
+      "chunk": 65536,
+      "prealloc": false,
+      "failedAtBytes": 929890304,
+      "error": "QuotaExceededError: Failed to execute 'write' on 'FileSystemSyncAccessHandle': No space available for this operation",
+      "estimateAtFail": {
+        "quota": 11667372662,
+        "usage": 929954422,
+        "usageDetails": {
+          "fileSystem": 929954422
+        }
+      },
+      "seconds": 7.2165,
+      "rewriteExistingRegion": "ok",
+      "growTruncate64MB": "QuotaExceededError: Failed to execute 'truncate' on 'FileSystemSyncAccessHandle': No space available for this operation",
+      "afterShrink200MB": "write ok",
+      "secondFileSmallWrite": "ok"
+    },
+    {
+      "chunk": 4194304,
+      "prealloc": false,
+      "failedAtBytes": 926941184,
+      "error": "QuotaExceededError: Failed to execute 'write' on 'FileSystemSyncAccessHandle': No space available for this operation",
+      "estimateAtFail": {
+        "quota": 11667372662,
+        "usage": 929954422,
+        "usageDetails": {
+          "fileSystem": 929954422
+        }
+      },
+      "seconds": 3.1197000000001864,
+      "rewriteExistingRegion": "ok",
+      "growTruncate64MB": "QuotaExceededError: Failed to execute 'truncate' on 'FileSystemSyncAccessHandle': No space available for this operation",
+      "afterShrink200MB": "write ok",
+      "secondFileSmallWrite": "ok"
+    },
+    {
+      "chunk": 1048576,
+      "prealloc": true,
+      "preallocTruncate": "QuotaExceededError: Failed to execute 'truncate' on 'FileSystemSyncAccessHandle': No space available for this operation",
+      "failedAtBytes": 929038336,
+      "error": "QuotaExceededError: Failed to execute 'write' on 'FileSystemSyncAccessHandle': No space available for this operation",
+      "estimateAtFail": {
+        "quota": 11667372662,
+        "usage": 929954422,
+        "usageDetails": {
+          "fileSystem": 929954422
+        }
+      },
+      "seconds": 5.1373000000002795,
+      "rewriteExistingRegion": "ok",
+      "growTruncate64MB": "QuotaExceededError: Failed to execute 'truncate' on 'FileSystemSyncAccessHandle': No space available for this operation",
+      "afterShrink200MB": "write ok",
+      "secondFileSmallWrite": "ok"
+    }
+  ]
+}
