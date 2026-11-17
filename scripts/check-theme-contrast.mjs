@@ -32,6 +32,8 @@ export const PAIRS = [
     { fg: 'ring', bg, min: 3 },
   ]),
   { fg: 'on-accent', bg: 'accent', min: 4.5 },
+  { fg: 'fg', bg: 'selection', min: 4.5 },
+  { fg: 'fg-muted', bg: 'selection', min: 4.5 },
   { fg: 'fg', bg: 'canvas', min: 4.5 },
   { fg: 'track-video', bg: 'surface-sunken', min: 3 },
   { fg: 'track-audio', bg: 'surface-sunken', min: 3 },

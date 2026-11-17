@@ -1,5 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { addLayers, createImageProject } from './helpers';
+import { solidPng } from './png';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -36,6 +38,32 @@ for (const colorScheme of ['dark', 'light'] as const) {
         await expect(dialog.getByRole('tab', { name: tab, selected: true })).toBeVisible();
         await expectNoViolations(page);
       }
+    });
+  });
+}
+
+for (const colorScheme of ['dark', 'light'] as const) {
+  test.describe(`accessibility of the image editor (${colorScheme} theme)`, () => {
+    test.use({ colorScheme });
+
+    test('workspace with layers, properties and dialogs has no violations', async ({ page }) => {
+      await createImageProject(page, 'A11y');
+      await addLayers(page, [
+        { name: 'one.png', bytes: solidPng(16, 16, [200, 100, 50, 255]) },
+        { name: 'two.png', bytes: solidPng(16, 16, [50, 100, 200, 255]) },
+      ]);
+      await page.getByRole('button', { name: 'Exposure', exact: true }).click();
+      await expect(page.getByRole('slider', { name: 'Exposure (stops)' })).toBeVisible();
+      await expectNoViolations(page);
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      await expect(page.getByRole('dialog', { name: 'Export image' })).toBeVisible();
+      await expectNoViolations(page);
+      await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
+
+      await page.getByRole('button', { name: 'Crop…' }).click();
+      await expect(page.getByRole('dialog', { name: 'Crop canvas' })).toBeVisible();
+      await expectNoViolations(page);
     });
   });
 }
