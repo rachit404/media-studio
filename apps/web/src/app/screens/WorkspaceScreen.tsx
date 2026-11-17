@@ -1,5 +1,5 @@
 import { Button, PanelSplitter } from '@media-studio/ui';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { usePanelSize } from '../use-panel-size';
 
 const LEFT = { key: 'ms-panel-left', initial: 240, min: 160, max: 420 };
@@ -10,8 +10,18 @@ const WORKSPACES = {
   video: { title: 'Video workspace', leftTitle: 'Media library', step: 'steps 6 and 7' },
 } as const;
 
-/** Final workspace layout with resizable, collapsible panels. The editors themselves are built in later steps. */
-export function WorkspaceScreen({ kind }: { kind: 'image' | 'video' }) {
+export interface WorkspaceScreenProps {
+  kind: 'image' | 'video';
+  /** Replaces the default workspace title (for example with the project name field). */
+  heading?: ReactNode;
+  /** Extra controls in the top toolbar. */
+  toolbar?: ReactNode;
+  /** Content of the left panel. */
+  leftContent?: ReactNode;
+}
+
+/** Workspace layout with resizable, collapsible panels. The editors themselves are built in later steps. */
+export function WorkspaceScreen({ kind, heading, toolbar, leftContent }: WorkspaceScreenProps) {
   const config = WORKSPACES[kind];
   const [leftSize, setLeftSize] = usePanelSize(LEFT.key, LEFT.initial, LEFT.min, LEFT.max);
   const [rightSize, setRightSize] = usePanelSize(RIGHT.key, RIGHT.initial, RIGHT.min, RIGHT.max);
@@ -20,8 +30,11 @@ export function WorkspaceScreen({ kind }: { kind: 'image' | 'video' }) {
 
   return (
     <div className="flex h-[calc(100vh-3.25rem)] min-h-0 flex-col">
-      <div className="flex items-center gap-2 border-b border-line bg-surface-raised px-4 py-2">
-        <h1 className="mr-auto text-base font-semibold">{config.title}</h1>
+      <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface-raised px-4 py-2">
+        <div className="mr-auto min-w-0">
+          {heading ?? <h1 className="text-base font-semibold">{config.title}</h1>}
+        </div>
+        {toolbar}
         <Button
           variant="ghost"
           aria-pressed={leftOpen}
@@ -46,8 +59,12 @@ export function WorkspaceScreen({ kind }: { kind: 'image' | 'video' }) {
               className="overflow-auto bg-surface p-4"
               style={{ width: leftSize }}
             >
-              <h2 className="text-sm font-semibold">{config.leftTitle}</h2>
-              <p className="mt-2 text-sm text-fg-muted">Nothing here yet.</p>
+              {leftContent ?? (
+                <>
+                  <h2 className="text-sm font-semibold">{config.leftTitle}</h2>
+                  <p className="mt-2 text-sm text-fg-muted">Nothing here yet.</p>
+                </>
+              )}
             </aside>
             <PanelSplitter
               label={`Resize ${config.leftTitle.toLowerCase()} panel`}

@@ -2,12 +2,14 @@ import { Dialog, Tabs, type TabItem } from '@media-studio/ui';
 import { AppearancePanel } from './AppearancePanel';
 import { DiagnosticsPanel } from './DiagnosticsPanel';
 import { ShortcutsPanel } from './ShortcutsPanel';
+import { StoragePanel } from './StoragePanel';
 
-export type SettingsTab = 'appearance' | 'shortcuts' | 'diagnostics';
+export type SettingsTab = 'appearance' | 'shortcuts' | 'storage' | 'diagnostics';
 
 const TABS: readonly TabItem[] = [
   { id: 'appearance', label: 'Appearance', content: <AppearancePanel /> },
   { id: 'shortcuts', label: 'Shortcuts', content: <ShortcutsPanel /> },
+  { id: 'storage', label: 'Storage', content: <StoragePanel /> },
   { id: 'diagnostics', label: 'Diagnostics', content: <DiagnosticsPanel /> },
 ];
 

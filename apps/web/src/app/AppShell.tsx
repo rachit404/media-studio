@@ -8,6 +8,7 @@ import { isMacPlatform } from './platform';
 import { HomeScreen } from './screens/HomeScreen';
 import { WorkspaceScreen } from './screens/WorkspaceScreen';
 import { SettingsDialog, type SettingsTab } from './settings/SettingsDialog';
+import { ProjectScreen } from './project/ProjectScreen';
 import { navigate, useHashRoute } from './use-hash-route';
 import { useGlobalShortcuts } from './use-shortcuts';
 import { toggleTheme } from './use-theme';
@@ -26,7 +27,7 @@ export function AppShell({ report }: { report: CapabilityReport }) {
     'settings.open': () => openSettings('appearance'),
     'settings.shortcuts': () => openSettings('shortcuts'),
     'theme.toggle': toggleTheme,
-    'nav.home': () => navigate('home'),
+    'nav.home': () => navigate({ name: 'home' }),
   });
 
   const settingsHint = shortcutRegistry
@@ -48,9 +49,9 @@ export function AppShell({ report }: { report: CapabilityReport }) {
 
       <LimitationsBanner limitations={report.limitations} />
 
-      {route === 'home' && <HomeScreen />}
-      {route === 'image' && <WorkspaceScreen kind="image" />}
-      {route === 'video' && <WorkspaceScreen kind="video" />}
+      {route.name === 'home' && <HomeScreen />}
+      {route.name === 'preview' && <WorkspaceScreen kind={route.kind} />}
+      {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} />}
 
       <SettingsDialog
         isOpen={settingsOpen}
