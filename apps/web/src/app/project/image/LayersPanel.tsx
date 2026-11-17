@@ -1,5 +1,8 @@
 import {
+  SHAPES,
   addAdjustmentLayer,
+  addShapeLayer,
+  addTextLayer,
   moveLayer,
   removeLayer,
   setLayerVisible,
@@ -61,8 +64,8 @@ export function LayersPanel({ session, content, selectedId, onSelect }: LayersPa
                   className="min-w-0 flex-1 truncate rounded-sm px-1 text-left text-sm outline-offset-2"
                 >
                   {layer.name}
-                  {layer.type === 'adjustment' && (
-                    <span className="ml-1 text-xs text-fg-muted">(adjustment)</span>
+                  {layer.type !== 'image' && (
+                    <span className="ml-1 text-xs text-fg-muted">({layer.type})</span>
                   )}
                 </button>
                 <Button
@@ -96,6 +99,33 @@ export function LayersPanel({ session, content, selectedId, onSelect }: LayersPa
           })}
         </ul>
       )}
+      <h3 className="mt-3 text-xs font-medium text-fg-muted">Add text or shape</h3>
+      <div className="mt-1 flex flex-wrap gap-1">
+        <Button
+          variant="secondary"
+          onPress={() => {
+            const id = crypto.randomUUID();
+            session.history.execute(addTextLayer(id));
+            onSelect(id);
+          }}
+        >
+          Text
+        </Button>
+        {SHAPES.map((shape) => (
+          <Button
+            key={shape}
+            variant="secondary"
+            onPress={() => {
+              const id = crypto.randomUUID();
+              session.history.execute(addShapeLayer(id, shape));
+              onSelect(id);
+            }}
+          >
+            {shape[0]?.toUpperCase()}
+            {shape.slice(1)}
+          </Button>
+        ))}
+      </div>
       <h3 className="mt-3 text-xs font-medium text-fg-muted">Add adjustment layer</h3>
       <div className="mt-1 flex flex-wrap gap-1">
         {ADJUSTMENTS.map((adjustment) => (

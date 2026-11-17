@@ -1,4 +1,4 @@
-import type { Adjustment, Affine, BlendMode } from '@media-studio/core';
+import type { Adjustment, Affine, BlendMode, RasterSpec } from '@media-studio/core';
 
 /** Straight colour, each channel 0..1. */
 export interface Rgb {
@@ -19,6 +19,8 @@ export interface ImageNode {
   matrix: Affine;
   opacity: number;
   blendMode: BlendMode;
+  /** Text and shape layers: the parameters their texture is generated from (textureId is `rasterKey(raster)`). */
+  raster?: RasterSpec;
 }
 
 export interface AdjustmentNode {

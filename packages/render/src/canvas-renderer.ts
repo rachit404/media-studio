@@ -53,7 +53,7 @@ export class CanvasRenderer {
     return this.compositor.hasTexture(id);
   }
 
-  uploadTexture(id: string, bitmap: ImageBitmap): void {
+  uploadTexture(id: string, bitmap: ImageBitmap | OffscreenCanvas): void {
     this.compositor.uploadTexture(id, bitmap);
     this.requestRender();
   }

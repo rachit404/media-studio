@@ -4,10 +4,15 @@ import { AppError } from './errors';
 import type { Command } from './history';
 import {
   MAX_CANVAS_SIZE,
+  shapeSpecSchema,
+  textSpecSchema,
   type AdjustmentLayer,
   type ImageContent,
-  type ImageLayer,
   type Layer,
+  type PlacedLayer,
+  type ShapeKind,
+  type ShapeSpec,
+  type TextSpec,
   type Transform,
 } from './image-document';
 import { normalizeDegrees, type Rect } from './image-geometry';
@@ -29,9 +34,23 @@ function layerFor(content: Draft<ImageContent>, id: string): Draft<Layer> {
   return layer;
 }
 
-function imageLayerFor(content: Draft<ImageContent>, id: string): Draft<ImageLayer> {
+/** Image, text and shape layers: the ones with a transform and a blend mode. */
+function placedLayerFor(content: Draft<ImageContent>, id: string): Draft<PlacedLayer> {
   const layer = layerFor(content, id);
-  if (layer.type !== 'image') throw invalid('This setting only applies to image layers.');
+  if (layer.type === 'adjustment')
+    throw invalid('This setting does not apply to adjustment layers.');
+  return layer;
+}
+
+function textLayerFor(content: Draft<ImageContent>, id: string) {
+  const layer = layerFor(content, id);
+  if (layer.type !== 'text') throw invalid('This setting only applies to text layers.');
+  return layer;
+}
+
+function shapeLayerFor(content: Draft<ImageContent>, id: string) {
+  const layer = layerFor(content, id);
+  if (layer.type !== 'shape') throw invalid('This setting only applies to shape layers.');
   return layer;
 }
 
@@ -88,6 +107,118 @@ export function addImageLayer(layerId: string, asset: LayerAssetRef): Command<Pr
           },
         },
       ]);
+    },
+  };
+}
+
+/** Default size of new text, relative to the canvas, kept within a readable range. */
+function defaultFontSize(content: Draft<ImageContent>): number {
+  return Math.round(Math.min(200, Math.max(16, Math.min(content.width, content.height) / 8)));
+}
+
+export function addTextLayer(layerId: string, text = 'Text'): Command<ProjectDocument> {
+  return {
+    label: 'Add text',
+    apply(draft) {
+      const content = imageContent(draft);
+      appendItems(content.layers, [
+        {
+          id: layerId,
+          type: 'text',
+          name: 'Text',
+          visible: true,
+          opacity: 1,
+          blendMode: 'normal',
+          transform: {
+            x: content.width / 2,
+            y: content.height / 2,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+          },
+          spec: {
+            text,
+            fontFamily: 'sans-serif',
+            fontSize: defaultFontSize(content),
+            fontWeight: 400,
+            color: '#000000',
+            align: 'left',
+            lineHeight: 1.2,
+            letterSpacing: 0,
+          },
+        },
+      ]);
+    },
+  };
+}
+
+const SHAPE_NAMES: Record<ShapeKind, string> = {
+  rectangle: 'Rectangle',
+  ellipse: 'Ellipse',
+  line: 'Line',
+  polygon: 'Polygon',
+};
+
+export function addShapeLayer(layerId: string, shape: ShapeKind): Command<ProjectDocument> {
+  return {
+    label: `Add ${SHAPE_NAMES[shape].toLowerCase()}`,
+    apply(draft) {
+      const content = imageContent(draft);
+      const size = Math.round(
+        Math.max(16, Math.min(300, Math.min(content.width, content.height) / 3)),
+      );
+      const isLine = shape === 'line';
+      appendItems(content.layers, [
+        {
+          id: layerId,
+          type: 'shape',
+          name: SHAPE_NAMES[shape],
+          visible: true,
+          opacity: 1,
+          blendMode: 'normal',
+          transform: {
+            x: content.width / 2,
+            y: content.height / 2,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+          },
+          spec: {
+            shape,
+            width: isLine ? size * 2 : size,
+            height: isLine ? 4 : size,
+            fill: isLine ? null : '#4f8cff',
+            stroke: isLine ? '#000000' : null,
+            strokeWidth: isLine ? 6 : 0,
+            cornerRadius: 0,
+            sides: 6,
+          },
+        },
+      ]);
+    },
+  };
+}
+
+export function setTextSpec(id: string, patch: Partial<TextSpec>): Command<ProjectDocument> {
+  if (!textSpecSchema.partial().safeParse(patch).success)
+    throw invalid('That text setting is not valid.');
+  return {
+    label: 'Edit text',
+    coalesceKey: `text:${id}`,
+    apply(draft) {
+      Object.assign(textLayerFor(imageContent(draft), id).spec, patch);
+    },
+  };
+}
+
+export function setShapeSpec(id: string, patch: Partial<ShapeSpec>): Command<ProjectDocument> {
+  if (!shapeSpecSchema.partial().safeParse(patch).success)
+    throw invalid('That shape setting is not valid.');
+  return {
+    label: 'Edit shape',
+    coalesceKey: `shape:${id}`,
+    apply(draft) {
+      Object.assign(shapeLayerFor(imageContent(draft), id).spec, patch);
     },
   };
 }
@@ -159,7 +290,7 @@ export function setLayerBlendMode(id: string, mode: BlendMode): Command<ProjectD
   return {
     label: 'Change blend mode',
     apply(draft) {
-      imageLayerFor(imageContent(draft), id).blendMode = mode;
+      placedLayerFor(imageContent(draft), id).blendMode = mode;
     },
   };
 }
@@ -185,7 +316,7 @@ export function setLayerTransform(id: string, patch: Partial<Transform>): Comman
     label: 'Transform layer',
     coalesceKey: `transform:${id}`,
     apply(draft) {
-      Object.assign(imageLayerFor(imageContent(draft), id).transform, patch);
+      Object.assign(placedLayerFor(imageContent(draft), id).transform, patch);
     },
   };
 }
@@ -221,12 +352,12 @@ export function setBackground(color: string | null): Command<ProjectDocument> {
 
 // Canvas operations (crop, resize, rotate, flip) ---------------------------------------------------------
 
-function eachImageLayer(
+function eachPlacedLayer(
   content: Draft<ImageContent>,
-  fn: (layer: Draft<ImageLayer>) => void,
+  fn: (layer: Draft<PlacedLayer>) => void,
 ): void {
   for (const layer of Object.values(content.layers.byId)) {
-    if (layer.type === 'image') fn(layer);
+    if (layer.type !== 'adjustment') fn(layer);
   }
 }
 
@@ -245,7 +376,7 @@ export function cropCanvas(rect: Rect): Command<ProjectDocument> {
       }
       content.width = width;
       content.height = height;
-      eachImageLayer(content, (layer) => {
+      eachPlacedLayer(content, (layer) => {
         layer.transform.x -= x;
         layer.transform.y -= y;
       });
@@ -267,7 +398,7 @@ export function resizeCanvas(width: number): Command<ProjectDocument> {
         throw invalid(`The height would exceed ${String(MAX_CANVAS_SIZE)} pixels.`);
       const factor = width / content.width;
       const factorY = height / content.height;
-      eachImageLayer(content, (layer) => {
+      eachPlacedLayer(content, (layer) => {
         layer.transform.x *= factor;
         layer.transform.y *= factorY;
         layer.transform.scaleX *= factor;
@@ -288,7 +419,7 @@ export function rotateCanvas(direction: 'cw' | 'ccw'): Command<ProjectDocument> 
       const { width, height } = content;
       content.width = height;
       content.height = width;
-      eachImageLayer(content, (layer) => {
+      eachPlacedLayer(content, (layer) => {
         const { x, y } = layer.transform;
         if (direction === 'cw') {
           layer.transform.x = height - y;
@@ -310,7 +441,7 @@ export function flipCanvas(axis: 'horizontal' | 'vertical'): Command<ProjectDocu
     label: axis === 'horizontal' ? 'Flip horizontally' : 'Flip vertically',
     apply(draft) {
       const content = imageContent(draft);
-      eachImageLayer(content, (layer) => {
+      eachPlacedLayer(content, (layer) => {
         const t = layer.transform;
         if (axis === 'horizontal') {
           t.x = content.width - t.x;

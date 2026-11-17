@@ -1,4 +1,5 @@
 import { AppError, multiplyAffine, type Affine } from '@media-studio/core';
+import { rasterize } from './raster';
 import {
   ADJUST_FRAGMENT,
   COMPOSITE_FRAGMENT,
@@ -57,6 +58,8 @@ export class Compositor {
   private readonly quad: WebGLVertexArrayObject;
   private readonly floatTargets: boolean;
   private targets: Targets | undefined;
+  /** Texture ids generated from text/shape parameters, so unused ones can be released after each render. */
+  private readonly generated = new Set<string>();
 
   constructor(private readonly gl: WebGL2RenderingContext) {
     this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
@@ -74,7 +77,7 @@ export class Compositor {
    * (`createImageBitmap(..., { premultiplyAlpha: 'premultiply' })`): WebGL ignores UNPACK_PREMULTIPLY_ALPHA_WEBGL
    * for ImageBitmap sources. The bitmap can be closed afterwards.
    */
-  uploadTexture(id: string, source: ImageBitmap): void {
+  uploadTexture(id: string, source: ImageBitmap | OffscreenCanvas): void {
     const { gl } = this;
     if (source.width > this.maxTextureSize || source.height > this.maxTextureSize) {
       throw new AppError({
@@ -87,7 +90,9 @@ export class Compositor {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, source);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -145,6 +150,19 @@ export class Compositor {
       gl.disable(gl.SCISSOR_TEST);
     }
     this.present(current, options, { x0, y0, x1, y1 });
+    this.releaseUnusedGenerated(scene);
+  }
+
+  /** Generated textures follow the document: drop the ones no layer refers to any more. */
+  private releaseUnusedGenerated(scene: RenderScene): void {
+    const used = new Set(
+      scene.nodes.flatMap((node) => (node.type === 'image' ? [node.textureId] : [])),
+    );
+    for (const id of this.generated) {
+      if (used.has(id)) continue;
+      this.deleteTexture(id);
+      this.generated.delete(id);
+    }
   }
 
   dispose(): void {
@@ -169,6 +187,10 @@ export class Compositor {
     view: ViewTransform,
   ): boolean {
     const { gl } = this;
+    if (node.raster && !this.textures.has(node.textureId)) {
+      this.uploadTexture(node.textureId, rasterize(node.raster, this.maxTextureSize));
+      this.generated.add(node.textureId);
+    }
     const texture = this.textures.get(node.textureId);
     if (!texture) return false;
     this.bind(layer);

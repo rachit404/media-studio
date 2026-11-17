@@ -11,6 +11,7 @@ import {
 import { Button } from '@media-studio/ui';
 import type { ProjectSession } from '../project-session';
 import { NumberField, SliderField } from './fields';
+import { ShapeControls, TextControls } from './TextShapeControls';
 
 const BLEND_LABELS: Record<BlendMode, string> = {
   normal: 'Normal',
@@ -79,7 +80,7 @@ export function LayerInspector({
         onChange={(value) => history.execute(setLayerOpacity(layer.id, value / 100))}
       />
 
-      {layer.type === 'image' && (
+      {layer.type !== 'adjustment' && (
         <>
           <div>
             <label htmlFor="blend-mode" className="block text-xs text-fg-muted">
@@ -158,6 +159,9 @@ export function LayerInspector({
           </div>
         </>
       )}
+
+      {layer.type === 'text' && <TextControls session={session} layer={layer} />}
+      {layer.type === 'shape' && <ShapeControls session={session} layer={layer} />}
 
       {layer.type === 'adjustment' && layer.adjustment.kind === 'brightness-contrast' && (
         <>

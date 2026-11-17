@@ -1,4 +1,5 @@
 // @media-studio/engine-image: image editor logic (scene building, view maths, export planning).
+export { DEFAULT_SHAPE_FILL, DEFAULT_SHAPE_STROKE } from './defaults';
 export {
   DEFAULT_EXPORT_SETTINGS,
   DEFAULT_FILL_COLOR,

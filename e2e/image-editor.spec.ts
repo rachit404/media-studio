@@ -407,3 +407,108 @@ test.describe('graphics failure', () => {
     await expect(page.getByRole('alert').filter({ hasText: 'WebGL 2' })).toBeVisible();
   });
 });
+
+test.describe('text and shape layers (IMG-7, IMG-8)', () => {
+  const base = () => solidPng(200, 100, [255, 255, 255, 255]);
+
+  async function addGenerated(page: Parameters<typeof createImageProject>[0], button: string) {
+    await page
+      .getByRole('region', { name: 'Layers' })
+      .getByRole('button', { name: button, exact: true })
+      .click();
+  }
+
+  test('a filled rectangle is drawn at its size and position, and follows its settings', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Shapes');
+    await addLayers(page, [{ name: 'paper.png', bytes: base() }]);
+    await addGenerated(page, 'Rectangle');
+    await page.getByLabel('Width (px)', { exact: true }).fill('40');
+    await page.getByLabel('Height (px)', { exact: true }).fill('20');
+    await page.getByLabel('Fill colour').fill('#ff0000');
+
+    let image = await decodeImage(page, await exportAs(page));
+    expect([image.width, image.height]).toEqual([200, 100]);
+    expectNear(pixelAt(image, 100, 50), [255, 0, 0, 255], 2); // centre of the rectangle
+    expectNear(pixelAt(image, 85, 45), [255, 0, 0, 255], 2); // inside near the left edge
+    expectNear(pixelAt(image, 70, 50), [255, 255, 255, 255], 2); // outside, 30 px from the centre
+    expectNear(pixelAt(image, 100, 70), [255, 255, 255, 255], 2); // outside below (half height is 10)
+
+    // Turn the fill off and add a stroke instead: the centre becomes the paper colour again.
+    await page.getByRole('checkbox', { name: 'Fill' }).uncheck();
+    await page.getByRole('checkbox', { name: 'Stroke' }).check();
+    await page.getByLabel('Stroke width (px)').fill('6');
+    image = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(image, 100, 50), [255, 255, 255, 255], 2);
+    expectNear(pixelAt(image, 100, 40), [0, 0, 0, 255], 40); // on the top edge of the outline (strokes are anti-aliased)
+  });
+
+  test('ellipse and polygon cover their centre but not the corners of their box', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Round');
+    await addLayers(page, [{ name: 'paper.png', bytes: base() }]);
+    for (const shape of ['Ellipse', 'Polygon']) {
+      await addGenerated(page, shape);
+      await page.getByLabel('Width (px)', { exact: true }).fill('60');
+      await page.getByLabel('Height (px)', { exact: true }).fill('60');
+    }
+    const image = await decodeImage(page, await exportAs(page));
+    const [r, g, b] = pixelAt(image, 100, 50);
+    expect([r, g, b]).not.toEqual([255, 255, 255]); // painted
+    expectNear(pixelAt(image, 72, 22), [255, 255, 255, 255], 2); // the corner of the 60x60 box is empty for both shapes
+  });
+
+  test('text is drawn in its colour, changes with its settings, and can be undone', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Words');
+    await addLayers(page, [{ name: 'paper.png', bytes: base() }]);
+    await addGenerated(page, 'Text');
+    await page.getByLabel('Content').fill('MMMM');
+    await page.getByLabel('Size (px)').fill('90');
+    await page.getByLabel('Weight').selectOption('700');
+    await page.getByLabel('Text colour').fill('#ff0000');
+
+    const redPixels = (image: Awaited<ReturnType<typeof decodeImage>>) => {
+      let count = 0;
+      for (let i = 0; i < image.data.length; i += 4) {
+        if (
+          (image.data[i] ?? 0) > 200 &&
+          (image.data[i + 1] ?? 255) < 60 &&
+          (image.data[i + 2] ?? 255) < 60
+        )
+          count += 1;
+      }
+      return count;
+    };
+    const large = await decodeImage(page, await exportAs(page));
+    expect(redPixels(large)).toBeGreaterThan(200);
+
+    await page.getByLabel('Size (px)').fill('20');
+    const small = await decodeImage(page, await exportAs(page));
+    expect(redPixels(small)).toBeGreaterThan(0);
+    expect(redPixels(small)).toBeLessThan(redPixels(large));
+
+    await page.getByRole('button', { name: /^Undo/ }).click(); // back to the 90 px text (typing coalesces)
+    const undone = await decodeImage(page, await exportAs(page));
+    expect(redPixels(undone)).toBe(redPixels(large));
+  });
+
+  test('generated layers support blend modes and opacity like any other layer', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Blendy');
+    await addLayers(page, [{ name: 'paper.png', bytes: solidPng(200, 100, [200, 100, 50, 255]) }]);
+    await addGenerated(page, 'Rectangle');
+    await page.getByLabel('Width (px)', { exact: true }).fill('400');
+    await page.getByLabel('Height (px)', { exact: true }).fill('400');
+    await page.getByLabel('Fill colour').fill('#3296fa');
+    await page.getByRole('combobox', { name: 'Blend mode' }).selectOption('multiply');
+    await setRange(page.getByRole('slider', { name: 'Opacity' }), 50);
+    const image = await decodeImage(page, await exportAs(page));
+    const expected = compositeOver(rgba(200, 100, 50), rgba(50, 150, 250), 'multiply', 0.5);
+    expectNear(pixelAt(image, 100, 50), [...to255(expected), 255], 2);
+  });
+});

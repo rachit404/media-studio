@@ -105,22 +105,15 @@ function setSat(c: Vec3, s: number): Vec3 {
 
 /** Blend whole colours: separable modes per channel, the four HSL modes as defined by the W3C spec. */
 export function blendRgb(mode: BlendMode, cb: Vec3, cs: Vec3): [number, number, number] {
-  switch (mode) {
-    case 'hue':
-      return [...setLum(setSat(cs, sat(cb)), lum(cb))];
-    case 'saturation':
-      return [...setLum(setSat(cb, sat(cs)), lum(cb))];
-    case 'color':
-      return [...setLum(cs, lum(cb))];
-    case 'luminosity':
-      return [...setLum(cb, lum(cs))];
-    default:
-      return [
-        blendChannel(mode, cb[0], cs[0]),
-        blendChannel(mode, cb[1], cs[1]),
-        blendChannel(mode, cb[2], cs[2]),
-      ];
-  }
+  if (mode === 'hue') return [...setLum(setSat(cs, sat(cb)), lum(cb))];
+  if (mode === 'saturation') return [...setLum(setSat(cb, sat(cs)), lum(cb))];
+  if (mode === 'color') return [...setLum(cs, lum(cb))];
+  if (mode === 'luminosity') return [...setLum(cb, lum(cs))];
+  return [
+    blendChannel(mode, cb[0], cs[0]),
+    blendChannel(mode, cb[1], cs[1]),
+    blendChannel(mode, cb[2], cs[2]),
+  ];
 }
 
 /** Source-over compositing with a blend mode (W3C general formula). Opacity scales the source alpha. */

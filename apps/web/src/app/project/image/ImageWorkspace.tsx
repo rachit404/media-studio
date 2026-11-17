@@ -1,5 +1,6 @@
 import type { ProjectDocument } from '@media-studio/core';
 import { buildScene } from '@media-studio/engine-image';
+import { rasterMetrics } from '@media-studio/render';
 import { Button } from '@media-studio/ui';
 import { useMemo, useState, type ReactNode } from 'react';
 import { WorkspaceScreen } from '../../screens/WorkspaceScreen';
@@ -29,7 +30,7 @@ export function ImageWorkspace({ session, project, heading, toolbar }: ImageWork
   if (content.kind !== 'image') throw new Error('ImageWorkspace needs an image project');
 
   const built = useMemo(
-    () => buildScene(content, project.assets.byId),
+    () => buildScene(content, project.assets.byId, rasterMetrics),
     [content, project.assets.byId],
   );
   const selected = selectedId ? (content.layers.byId[selectedId] ?? null) : null;

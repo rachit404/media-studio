@@ -67,8 +67,16 @@ export {
 } from './color';
 export type { Adjustment, AdjustmentKind, BlendMode, Rgba, Vec3 } from './color';
 export {
+  FONT_FAMILIES,
   MAX_CANVAS_SIZE,
+  SHAPES,
+  TEXT_ALIGNMENTS,
   adjustmentLayerSchema,
+  rasterKey,
+  shapeLayerSchema,
+  shapeSpecSchema,
+  textLayerSchema,
+  textSpecSchema,
   adjustmentSchema,
   emptyImageContent,
   imageContentSchema,
@@ -76,7 +84,20 @@ export {
   layerSchema,
   transformSchema,
 } from './image-document';
-export type { AdjustmentLayer, ImageContent, ImageLayer, Layer, Transform } from './image-document';
+export type {
+  AdjustmentLayer,
+  ImageContent,
+  ImageLayer,
+  Layer,
+  PlacedLayer,
+  RasterSpec,
+  ShapeKind,
+  ShapeLayer,
+  ShapeSpec,
+  TextLayer,
+  TextSpec,
+  Transform,
+} from './image-document';
 export {
   IDENTITY,
   applyAffine,
@@ -88,6 +109,8 @@ export type { Affine, Rect } from './image-geometry';
 export {
   addAdjustmentLayer,
   addImageLayer,
+  addShapeLayer,
+  addTextLayer,
   cropCanvas,
   flipCanvas,
   moveLayer,
@@ -101,6 +124,8 @@ export {
   setLayerOpacity,
   setLayerTransform,
   setLayerVisible,
+  setShapeSpec,
+  setTextSpec,
 } from './image-commands';
 export type { LayerAssetRef } from './image-commands';
 export type { WithoutKey } from './ordered';

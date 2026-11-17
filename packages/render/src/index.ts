@@ -2,6 +2,8 @@
 export { CanvasRenderer } from './canvas-renderer';
 export type { CanvasRendererHooks } from './canvas-renderer';
 export { Compositor } from './compositor';
+export { RASTER_SUPERSAMPLE, measureRaster, rasterMetrics, rasterize } from './raster';
+export type { RasterMetrics, RasterSize } from './raster';
 export { MAX_EXPORT_PIXELS, renderSceneToBlob } from './export';
 export type { ExportMime, ExportRenderOptions } from './export';
 export type {
