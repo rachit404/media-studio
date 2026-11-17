@@ -1,0 +1,15 @@
+{
+  "name": "@media-studio/capabilities",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Runtime capability probes (codecs, WebGL2, OPFS, file pickers, write capacity) and the typed capability report.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}
