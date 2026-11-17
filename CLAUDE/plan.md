@@ -8,7 +8,7 @@ Scope, modules, acceptance criteria, tests and limitations per step: `docs/engin
 | 1   | Foundation (M0)                    | `feat/m0-foundation`      | Monorepo, strict tooling, CI, token theme, boundary/licence/CSP gates                   | done    |
 | 2   | App shell and workspace (M1)       | `feat/m1-app-shell`       | Capability probe, panels, theme, shortcuts, errors, diagnostics, a11y UI kit, PWA shell | done    |
 | 3   | Storage, project format, undo (M2) | `feat/m2-storage-project` | FSA+OPFS storage, project package, command history, journal recovery, asset import      | done    |
-| 4   | Image engine essentials (M3)       | `feat/m3-image-engine`    | Renderer, tiles, layers, transform/crop, adjustments, blend shaders, image export       | pending |
+| 4   | Image engine essentials (M3)       | `feat/m3-image-engine`    | Renderer, tiles, layers, transform/crop, adjustments, blend shaders, image export       | done    |
 | 5   | Image editor tier 2 (M4)           | `feat/m4-image-editor`    | Masks, all blend modes, selections, brush, text, shapes, filters                        | pending |
 | 6   | Video engine and timeline (M5)     | `feat/m5-video-engine`    | Import/probe, proxies, decode scheduler, playback, timeline UI, thin export             | pending |
 | 7   | Video editor tier 2 (M6)           | `feat/m6-video-editor`    | Multi-track, overlays, transitions, speed, text/subtitles, audio mixing, keyframes      | pending |

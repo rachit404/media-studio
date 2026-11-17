@@ -79,6 +79,7 @@
 **Known limitations:** FSA path verified only on Chromium; ZIP library choice may change; quota behaviour in other browsers untested.
 
 ## M3: Image engine and essential workflows (L)
+**Status: done** (branch `feat/m3-image-engine`). Differences from the plan: the renderer is our own WebGL2 compositor, not PixiJS (ADR-0020); layers are a flat stack (groups arrive with masks in M4); SVG import and layer locking move to M4; the Render Worker preview spike is not needed because interactive rendering is on-demand on the main thread (export runs on an OffscreenCanvas). PERF-1 baseline: 4096² canvas, ten layers (nine at 2048²) with overlay/multiply blends, 240 frames of zoom: p50 16.7 ms, p95 16.9 ms, max 17.0 ms on Intel Iris Xe (vsync-bound).
 **Scope:** an image can be opened, transformed, adjusted and exported, end to end, on a correct GPU renderer.
 **Files/modules:** `render` (Renderer interface, Pixi/WebGL2 impl, blend shader framework), `engine-image` (layer tree, tools: move/transform, crop, resize, rotate, flip), `apps/web` image workspace, tile store.
 **Implementation plan:**

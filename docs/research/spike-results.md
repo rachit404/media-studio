@@ -20,6 +20,8 @@ lock only covered the spike agents, not the rest of the machine.
 ## Follow-up measurements
 - **S5 re-run on the normalised model (M2, 2026-11-18):** with ordered collections stored as a map plus fractional-index keys, a move or insert changes one item. On a 1,000-layer / 2,000-clip document with 800 random structural commands: execute p50 1.4 ms / p95 2.5 ms / max 5.8 ms; undo p50 0.3 ms / p95 0.6 ms / max 1.1 ms; redo p50 0.2 ms / p95 0.4 ms / max 1.2 ms. This clears the 50 ms criterion that spike S5 left inconclusive. The benchmark is `scripts/perf-undo.test.mjs` and runs in CI.
 
+- **M3 end-to-end measurements (2026-11-18):** blend modes normal/multiply/screen/overlay at 100% and 50% opacity, translucent layers and three stacked adjustment layers all match the CPU reference within 2/255 in exported pixels (Pixi's overlay was off by up to 64/255). Interactive frame time with a 4096² canvas and ten layers: p50 16.7 ms, p95 16.9 ms, p99 16.9 ms, max 17.0 ms (display-limited) on Iris Xe. Lesson: WebGL ignores the premultiply flag for `ImageBitmap` uploads, so bitmaps must be created premultiplied (found by the translucency test).
+
 ## Findings that change the architecture
 1. **The hardware decoder stalls when about 8 `VideoFrame`s are held** (S1 hold test). The frame cache must hold copies (e.g. `ImageBitmap`), never decoder-owned frames. A VideoFrame cache of 30-120 frames is not feasible. (S7 reasoning from the S1 hold test; the VideoFrame-cache run itself was not completed.)
 2. **JS heap is not a valid health metric.** The GPU process grew ~1 GB in 90 s while every counter balanced. Memory budgets must include GPU/process memory, and a longer soak test is required before claiming long-session stability.
