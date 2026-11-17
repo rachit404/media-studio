@@ -56,9 +56,15 @@ importers:
       '@media-studio/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@media-studio/engine-image':
+        specifier: workspace:*
+        version: link:../../packages/engine-image
       '@media-studio/media-io':
         specifier: workspace:*
         version: link:../../packages/media-io
+      '@media-studio/render':
+        specifier: workspace:*
+        version: link:../../packages/render
       '@media-studio/storage':
         specifier: workspace:*
         version: link:../../packages/storage
@@ -108,7 +114,14 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
-  packages/engine-image: {}
+  packages/engine-image:
+    dependencies:
+      '@media-studio/core':
+        specifier: workspace:*
+        version: link:../core
+      '@media-studio/render':
+        specifier: workspace:*
+        version: link:../render
 
   packages/engine-video: {}
 
@@ -118,7 +131,11 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/render: {}
+  packages/render:
+    dependencies:
+      '@media-studio/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/storage:
     dependencies:

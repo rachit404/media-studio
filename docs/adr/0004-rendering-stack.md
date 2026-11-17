@@ -1,6 +1,7 @@
 # ADR-0004: Rendering stack (image canvas and video compositor)
 
-- **Status:** Proposed. Must be confirmed by spike S3 (2026-11-17)
+- **Status:** Superseded for the renderer by [ADR-0020](0020-custom-webgl2-compositor.md) (2026-11-18): the fallback option D was taken. The `Renderer`/scene boundary described here still holds.
+- **Original status:** Proposed. Must be confirmed by spike S3 (2026-11-17)
 
 ## Context
 Both editors need GPU compositing: layers, masks, blend modes, filters/adjustments, text and

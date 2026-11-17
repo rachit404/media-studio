@@ -1,4 +1,16 @@
-// @media-studio/render
-// Renderer interface and the WebGL2 implementation, including blend and effect shaders.
-// Public API of this package is exported from here only. Implementation arrives in the milestone listed in docs/engineering/roadmap.md.
-export {};
+// @media-studio/render: WebGL2 compositor for the interactive canvas and for export (ADR-0020).
+export { CanvasRenderer } from './canvas-renderer';
+export type { CanvasRendererHooks } from './canvas-renderer';
+export { Compositor } from './compositor';
+export { MAX_EXPORT_PIXELS, renderSceneToBlob } from './export';
+export type { ExportMime, ExportRenderOptions } from './export';
+export type {
+  AdjustmentNode,
+  EmptyFill,
+  ImageNode,
+  RenderOptions,
+  RenderScene,
+  Rgb,
+  SceneNode,
+  ViewTransform,
+} from './types';

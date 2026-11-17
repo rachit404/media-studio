@@ -73,3 +73,10 @@ End-to-end: open image → edit → undo/redo → export → verify pixels withi
 
 ## 9. Known limitations (v1)
 sRGB 8-bit only; no ICC conversion; no magic wand; text is rasterised; limited maximum canvas size per device; Safari/Firefox render paths less tested.
+
+## 10. Implementation status (M3, 2026-11-18)
+- **Document:** image content v2 in `core/image-document.ts`: canvas size, background, flat layer stack (image layers and adjustment layers) as an ordered collection; commands in `core/image-commands.ts`; reference colour maths in `core/color.ts`.
+- **Renderer:** `packages/render` implements [ADR-0020](../adr/0020-custom-webgl2-compositor.md): per-layer draw, backdrop-reading composite shader (W3C equations), full-screen adjustment passes, 16-bit float accumulation, clipping to the canvas rectangle (so cropping is non-destructive), checkerboard for empty areas.
+- **Engine:** `packages/engine-image` builds the scene, does view maths (fit, zoom at cursor, pan) and plans exports.
+- **Export:** PNG, JPEG, WebP; scale 10-400%; quality; optional fill colour; always pixels only (no metadata). Limited by `MAX_TEXTURE_SIZE` and 100 MP.
+- **Not yet (M4):** groups, masks, remaining blend modes, selections, brush, text, shapes, SVG import, layer locking, edge anti-aliasing for rotated layers, tiled large documents, drag-to-reorder (buttons exist for every action).
