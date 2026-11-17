@@ -1,4 +1,25 @@
-// @media-studio/storage
-// FileAccess and ProjectStore adapters over the File System Access API and OPFS, journal I/O and archives.
-// Public API of this package is exported from here only. Implementation arrives in the milestone listed in docs/engineering/roadmap.md.
-export {};
+// @media-studio/storage: persistence adapters (OPFS, memory), project store, archives and worker RPC.
+export {
+  ARCHIVE_LIMITS,
+  buildArchive,
+  isAllowedEntryName,
+  isAssetPath,
+  readArchive,
+} from './archive';
+export { decodeText, encodeText, folderSize } from './fs-port';
+export type { FileSystemPort, FsEntry } from './fs-port';
+export { MemoryFileSystem } from './memory-fs';
+export { OpfsFileSystem } from './opfs-fs';
+export { probeWriteCapacity } from './probe';
+export type { WriteProbeResult } from './probe';
+export { ProjectStore } from './project-store';
+export type {
+  OpenResult,
+  ProjectListing,
+  ProjectStoreOptions,
+  ProjectSummary,
+  Recovery,
+  StoreStats,
+} from './project-store';
+export { createRpcClient, exposeRpc } from './rpc';
+export type { PortLike, Remote } from './rpc';

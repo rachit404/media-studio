@@ -11,5 +11,9 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@media-studio/core": "workspace:*",
+    "fflate": "0.8.3"
   }
 }

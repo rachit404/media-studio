@@ -3,7 +3,8 @@
 - **Last updated:** 2026-11-17
 - **Phase:** Build phase started on the owner's instruction. Development follows the 10-step plan in [CLAUDE/plan.md](../CLAUDE/plan.md); integration branch is `claude-takeover` (`main` is frozen).
 - **Step 1 (M0 Foundation): done.** Monorepo, strict tooling, CI, token theme, boundary/licence/theme-contrast/size/CSP gates and e2e are in place and green.
-- **Step 2 (M1 App shell): done.** Capability probe and tiers, typed errors, diagnostics, shortcut registry with rebinding, React Aria UI kit, resizable workspace panels, settings, offline service worker, strict CSP; 65 unit/policy tests and 16 e2e tests (including axe in both themes). Next: step 3 (M2 storage, project format, undo).
+- **Step 2 (M1 App shell): done.** Capability probe and tiers, typed errors, diagnostics, shortcut registry with rebinding, React Aria UI kit, resizable workspace panels, settings, offline service worker, strict CSP; 65 unit/policy tests and 16 e2e tests (including axe in both themes). 
+- **Step 3 (M2 Storage, project format, undo): done.** Normalised document with fractional-index ordering (undo/redo p95 under 1 ms and execute p95 2.5 ms on a 1,000-layer / 2,000-clip document, PERF-5), command history with coalescing, write-ahead journal with checkpoints and crash recovery, OPFS storage worker, project package with validation and migrations, `.msproj` archive export/import with zip-slip and zip-bomb limits, startup write probe, image import with thumbnails, project list, storage settings. 148 unit tests and 25 e2e tests. Known limit: files are copied into browser storage; in-place editing through the File System Access API arrives with video in step 6. Next: step 4 (M3 image engine essentials).
 - **Application code:** M0 shell only (a themed foundation page; no editor features yet). `spikes/` is throwaway and not part of the product.
 
 ## Process phases

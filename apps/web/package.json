@@ -14,6 +14,8 @@
   "dependencies": {
     "@media-studio/capabilities": "workspace:*",
     "@media-studio/core": "workspace:*",
+    "@media-studio/media-io": "workspace:*",
+    "@media-studio/storage": "workspace:*",
     "@media-studio/ui": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1"

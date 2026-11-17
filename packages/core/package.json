@@ -11,5 +11,10 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "fractional-indexing": "4.0.0",
+    "immer": "11.2.10",
+    "zod": "4.6.7"
   }
 }

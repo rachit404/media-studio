@@ -39,3 +39,9 @@ each with a Chromium/FSA implementation and a universal OPFS implementation.
 - `createWritable()` streaming was 108-130 MB/s: fine for export bitrates, below the 200 MB/s raw-storage figure.
 - **Amendments:** add a **startup write probe** instead of trusting `navigator.storage.estimate()` (one automation context threw `QuotaExceededError` at ~930 MB while reporting ~11.7 GB quota); `persist()` returned false in automation; Blob-download fallback reached 2 GB in memory but is unproven above that.
 - **Not verified:** the real File System Access picker path (needs a manual run of `spikes/s2-storage/manual-fsa.html`), and Safari/Firefox.
+
+## Result of the M2 implementation (2026-11-18)
+- Implemented: `FileSystemPort` with an OPFS implementation (sync access handles, one writer per file, serialised per path) running inside a storage worker, a memory implementation for tests, `ProjectStore` with the checkpoint/journal protocol, and typed RPC between the app and the worker.
+- Checkpoint protocol: write `project.next.json`, write `project.json`, remove the next file. A crash at any point leaves a complete copy; tests simulate each case. Journal records carry sequence numbers and a checkpoint stores `journalSeq`, so a crash between checkpoint and journal pruning never double-applies changes.
+- The startup write probe writes and reads back real data; the storage settings tab shows its result next to the (explicitly untrusted) quota estimate.
+- **Deferred to step 6:** referencing originals in place through the File System Access API and the relink flow. Until then every import is copied into browser storage on all browsers.

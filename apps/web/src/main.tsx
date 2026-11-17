@@ -2,9 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
 import { diagnostics, installGlobalErrorLogging } from './app/diagnostics';
+import { startStorageProbe } from './app/storage-client';
 import './styles/theme.css';
 
 installGlobalErrorLogging();
+startStorageProbe();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

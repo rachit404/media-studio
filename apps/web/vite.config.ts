@@ -5,6 +5,7 @@ import { securityHeaders } from './security-headers.ts';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  define: { __APP_VERSION__: JSON.stringify(process.env['npm_package_version'] ?? '0.0.0') },
   build: {
     target: 'es2023',
     sourcemap: true,

@@ -46,6 +46,7 @@ Strict-Transport-Security: max-age=31536000    # HTTPS only
 `style-src 'self'` assumes Tailwind builds to a CSS file. React Aria injects one tiny `<style>` element at runtime (touch-action for pressable elements), so `style-src` also lists that stylesheet's SHA-256 hash (see `apps/web/security-headers.ts`) instead of `'unsafe-inline'`. React's `style` prop is applied through the CSSOM and is not blocked. CSP is tested in CI with the production build: the e2e suite fails on any violation, so a library upgrade that changes the injected text is caught immediately.
 
 ## 4. Code and secure development practices
+- Zod runs with `jitless: true`, so validation never probes `new Function` and a strict CSP sees no eval attempts. Archive import checks entry names and declared sizes before inflating; project files, journal records and archives are all validated against schemas.
 - No `eval`/`new Function`; ESLint rule enforced. No dynamic code loading from user content.
 - Strict TypeScript; boundary validation (Zod) for every external input: files, project JSON, clipboard, drag-and-drop, URL params, IndexedDB/localStorage values.
 - Typed error handling; no swallowed exceptions in storage or export paths.

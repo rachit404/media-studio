@@ -6,6 +6,8 @@ export const COMMANDS = [
   { id: 'settings.shortcuts', label: 'Show keyboard shortcuts', defaults: ['Mod+/'] },
   { id: 'theme.toggle', label: 'Toggle light and dark theme', defaults: ['Mod+Shift+L'] },
   { id: 'nav.home', label: 'Go to the home screen', defaults: ['Alt+H'] },
+  { id: 'edit.undo', label: 'Undo', defaults: ['Mod+Z'] },
+  { id: 'edit.redo', label: 'Redo', defaults: ['Mod+Shift+Z', 'Mod+Y'] },
 ] as const satisfies readonly CommandDef[];
 
 export type CommandId = (typeof COMMANDS)[number]['id'];
