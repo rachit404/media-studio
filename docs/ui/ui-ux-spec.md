@@ -96,7 +96,7 @@ Narrow widths (1024 px): library and inspector become tabs in one side panel.
 Conflict detection and a searchable shortcut reference (Ctrl/Cmd+/) are part of UX-1. Shortcuts never fire while typing in an input.
 
 ## 7. Theming and design tokens
-- One `theme.css` with Tailwind v4 `@theme`: semantic colour tokens (`surface`, `surface-raised`, `surface-sunken`, `border`, `text`, `text-muted`, `accent`, `accent-contrast`, `success`, `warning`, `danger`, `focus-ring`, `selection`, `track-video`, `track-audio`), spacing, radius, type scale, shadows, z-index layers, motion durations.
+- One `theme.css` with Tailwind v4 `@theme`: semantic colour tokens (`surface`, `surface-raised`, `surface-sunken`, `line`, `line-strong`, `fg`, `fg-muted`, `accent`, `on-accent`, `success`, `warning`, `danger`, `ring`, `selection`, `track-video`, `track-audio`, `canvas`; utilities such as `bg-surface`, `text-fg`, `border-line`), spacing, radius, type scale, shadows, z-index layers, motion durations.
 - Dark (default) and light via a `data-theme` attribute re-pointing the variables; OKLCH colour values; **no raw colours in components** (lint rule).
 - **Contrast:** text 4.5:1 minimum, UI components 3:1, verified by automated token checks in CI for both themes.
 - **Canvas neutrality:** the image canvas and preview background use neutral greys independent of the accent colour to avoid colour bias while editing.

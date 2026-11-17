@@ -1,0 +1,15 @@
+{
+  "name": "@media-studio/storage",
+  "version": "0.0.0",
+  "private": true,
+  "description": "FileAccess and ProjectStore adapters over the File System Access API and OPFS, journal I/O and archives.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}

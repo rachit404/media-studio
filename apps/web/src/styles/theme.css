@@ -1,0 +1,120 @@
+@import 'tailwindcss';
+
+/*
+ * THE single source of truth for the design system.
+ * Change a value here and the whole app changes. Components use semantic names only
+ * (bg-surface, text-fg, border-line ...), never raw palette colours: Tailwind's default palette is
+ * removed below and a lint rule rejects raw colours, so there is no way around the tokens.
+ *
+ * Dark is the default theme. The light theme overrides the same variables under [data-theme='light'].
+ * Do not use `@theme inline` for themed colours: it would bake values into utilities and break overrides.
+ * Colours are OKLCH. scripts/check-theme-contrast.mjs verifies WCAG contrast for both themes in CI.
+ */
+@theme static {
+  --color-*: initial;
+
+  /* Surfaces and lines */
+  --color-surface: oklch(0.2 0.01 260);
+  --color-surface-raised: oklch(0.25 0.012 260);
+  --color-surface-sunken: oklch(0.16 0.01 260);
+  --color-line: oklch(0.32 0.015 260);
+  --color-line-strong: oklch(0.55 0.02 260);
+
+  /* Text */
+  --color-fg: oklch(0.95 0.005 260);
+  --color-fg-muted: oklch(0.75 0.01 260);
+
+  /* Accent and status */
+  --color-accent: oklch(0.72 0.14 255);
+  --color-on-accent: oklch(0.18 0.02 255);
+  --color-success: oklch(0.76 0.15 150);
+  --color-warning: oklch(0.82 0.14 85);
+  --color-danger: oklch(0.72 0.17 25);
+
+  /* Interaction */
+  --color-ring: oklch(0.78 0.13 255);
+  --color-selection: oklch(0.4 0.1 255);
+
+  /* Editor surfaces */
+  --color-track-video: oklch(0.6 0.12 255);
+  --color-track-audio: oklch(0.6 0.12 160);
+  --color-canvas: oklch(0.3 0 0);
+
+  /* Typography: system fonts only (no downloads, no third-party requests) */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Shape and depth */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.35), 0 4px 16px oklch(0 0 0 / 0.25);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root[data-theme='light'] {
+  --color-surface: oklch(0.98 0.004 260);
+  --color-surface-raised: oklch(1 0 0);
+  --color-surface-sunken: oklch(0.94 0.006 260);
+  --color-line: oklch(0.88 0.008 260);
+  --color-line-strong: oklch(0.6 0.01 260);
+
+  --color-fg: oklch(0.2 0.01 260);
+  --color-fg-muted: oklch(0.45 0.01 260);
+
+  --color-accent: oklch(0.5 0.19 260);
+  --color-on-accent: oklch(0.99 0 0);
+  --color-success: oklch(0.45 0.13 150);
+  --color-warning: oklch(0.5 0.12 75);
+  --color-danger: oklch(0.5 0.19 27);
+
+  --color-ring: oklch(0.5 0.19 260);
+  --color-selection: oklch(0.88 0.06 260);
+
+  --color-track-video: oklch(0.55 0.12 260);
+  --color-track-audio: oklch(0.5 0.12 160);
+  --color-canvas: oklch(0.82 0 0);
+
+  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.12), 0 4px 16px oklch(0 0 0 / 0.1);
+}
+
+/* Non-colour tokens that Tailwind has no namespace for */
+:root {
+  color-scheme: dark;
+  --z-panel: 10;
+  --z-popover: 20;
+  --z-dialog: 30;
+  --z-toast: 40;
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+html,
+body {
+  background-color: var(--color-surface);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

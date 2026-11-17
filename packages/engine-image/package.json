@@ -1,0 +1,15 @@
+{
+  "name": "@media-studio/engine-image",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Image editor logic: layer operations, tools, selections, brush engine and image export.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}
