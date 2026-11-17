@@ -22,3 +22,10 @@ A one-to-two-day spike builds Menu, Dialog, Tabs, Slider, NumberField and Tree i
 ## Consequences
 - Accessibility behaviour comes from a maintained library; our tests focus on integration.
 - The timeline and canvas remain custom ([ADR-0014](0014-timeline-ui-rendering.md)).
+
+## Validation result (M1, 2026-11-17)
+- Adopted and wrapped in `packages/ui` (Button, Dialog, Tabs); apps import only our wrappers.
+- Keyboard and screen-reader semantics (dialog focus trap, Escape, tabs) pass axe (WCAG 2.2 AA tags) in both themes on the home screen, workspace and every settings tab.
+- Cost: the app JS grew from ~68 KB to ~116 KB gzip (budget 300 KB).
+- CSP: React Aria injects one small `<style>` element at runtime; allowed by hash, not `'unsafe-inline'` (see security-privacy.md). The e2e suite fails on any CSP violation.
+- Pitfall found by axe: an `aria-label` that differs from the visible text breaks WCAG 2.5.3 (label in name). Prefer visible text as the accessible name.

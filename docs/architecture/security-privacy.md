@@ -43,7 +43,7 @@ Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
 Cross-Origin-Opener-Policy: same-origin        # optional hardening; the app does not require cross-origin isolation (ADR-0007)
 Strict-Transport-Security: max-age=31536000    # HTTPS only
 ```
-`style-src 'self'` assumes Tailwind builds to a CSS file (no runtime style injection); any necessary inline styles use nonces or hashes. CSP is tested in CI with the production build.
+`style-src 'self'` assumes Tailwind builds to a CSS file. React Aria injects one tiny `<style>` element at runtime (touch-action for pressable elements), so `style-src` also lists that stylesheet's SHA-256 hash (see `apps/web/security-headers.ts`) instead of `'unsafe-inline'`. React's `style` prop is applied through the CSSOM and is not blocked. CSP is tested in CI with the production build: the e2e suite fails on any violation, so a library upgrade that changes the injected text is caught immediately.
 
 ## 4. Code and secure development practices
 - No `eval`/`new Function`; ESLint rule enforced. No dynamic code loading from user content.

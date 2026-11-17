@@ -48,6 +48,7 @@
 **Known limitations:** no features; deployment pipeline only produces an artefact.
 
 ## M1: App shell and workspace (M)
+**Status: done** (branch `feat/m1-app-shell`). Delivered: capability probe and tiers, typed errors, diagnostics log, shortcut registry with rebinding and conflict detection, accessible UI kit (React Aria Components), resizable and collapsible workspace panels, settings (appearance, shortcuts, diagnostics), offline service worker, strict CSP. All verified in 16 e2e tests including axe checks in both themes. Not done here: a Render Worker preview spike (moved to step 4 where the renderer exists), PWA install icons (PNG, step 10) and the in-app update prompt (step 10).
 **Scope:** capability probing and fallbacks, shell layout, theming, command and shortcut system, settings, error and diagnostics foundations, accessible UI kit core, PWA shell, home screen skeleton.
 **Files/modules:** `capabilities`, `ui`, `core/errors`, `apps/web` (shell, routes, home, settings), diagnostics log.
 **Implementation plan:**

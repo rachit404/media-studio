@@ -2,7 +2,8 @@
 
 - **Last updated:** 2026-11-17
 - **Phase:** Build phase started on the owner's instruction. Development follows the 10-step plan in [CLAUDE/plan.md](../CLAUDE/plan.md); integration branch is `claude-takeover` (`main` is frozen).
-- **Step 1 (M0 Foundation): done.** Monorepo, strict tooling, CI, token theme, boundary/licence/theme-contrast/size/CSP gates and e2e are in place and green. Next: step 2 (M1 App shell).
+- **Step 1 (M0 Foundation): done.** Monorepo, strict tooling, CI, token theme, boundary/licence/theme-contrast/size/CSP gates and e2e are in place and green.
+- **Step 2 (M1 App shell): done.** Capability probe and tiers, typed errors, diagnostics, shortcut registry with rebinding, React Aria UI kit, resizable workspace panels, settings, offline service worker, strict CSP; 65 unit/policy tests and 16 e2e tests (including axe in both themes). Next: step 3 (M2 storage, project format, undo).
 - **Application code:** M0 shell only (a themed foundation page; no editor features yet). `spikes/` is throwaway and not part of the product.
 
 ## Process phases
