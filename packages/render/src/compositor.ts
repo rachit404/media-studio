@@ -2,6 +2,7 @@ import { AppError, multiplyAffine, type Affine } from '@media-studio/core';
 import { rasterize } from './raster';
 import {
   ADJUST_FRAGMENT,
+  BLUR_FRAGMENT,
   COMPOSITE_FRAGMENT,
   FINAL_FRAGMENT,
   FULLSCREEN_VERTEX,
@@ -34,6 +35,14 @@ interface Targets {
   a: Target;
   b: Target;
   layer: Target;
+}
+
+interface FilterPass {
+  width: number;
+  height: number;
+  view: ViewTransform;
+  /** Document rectangle as [minU, minV, maxU, maxV] texture coordinates. */
+  bounds: readonly [number, number, number, number];
 }
 
 function glError(message: string, cause?: unknown): AppError {
@@ -127,6 +136,14 @@ export class Compositor {
     const sy0 = Math.min(height, Math.max(0, Math.floor(y0)));
     const sy1 = Math.min(height, Math.max(0, Math.ceil(y1)));
     const visible = sx1 > sx0 && sy1 > sy0;
+    // The document rectangle in texture coordinates, inset by half a pixel, for filters that read neighbours.
+    const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+    const bounds: [number, number, number, number] = [
+      clamp01((x0 + 0.5) / width),
+      clamp01(1 - (y1 - 0.5) / height),
+      clamp01((x1 - 0.5) / width),
+      clamp01(1 - (y0 + 0.5) / height),
+    ];
 
     let current = targets.a;
     let spare = targets.b;
@@ -143,7 +160,7 @@ export class Compositor {
           if (!this.drawLayer(node, targets.layer, width, height, view)) continue;
           this.composite(node, current, targets.layer, spare);
         } else {
-          this.adjust(node, current, spare);
+          this.adjust(node, current, spare, targets.layer, { width, height, view, bounds });
         }
         [current, spare] = [spare, current];
       }
@@ -235,22 +252,80 @@ export class Compositor {
     this.drawFullscreen();
   }
 
-  private adjust(node: AdjustmentNode, backdrop: Target, destination: Target): void {
+  private adjust(
+    node: AdjustmentNode,
+    backdrop: Target,
+    destination: Target,
+    temp: Target,
+    pass: FilterPass,
+  ): void {
+    const a = node.adjustment;
+    if (a.kind === 'blur' || a.kind === 'sharpen') {
+      this.filter(node, a, backdrop, destination, temp, pass);
+      return;
+    }
     const { gl } = this;
     this.bind(destination);
     const program = this.program('adjust', FULLSCREEN_VERTEX, ADJUST_FRAGMENT);
     gl.useProgram(program.program);
     this.bindTexture(program, 'uBackdrop', 0, backdrop.texture);
-    const a = node.adjustment;
-    const [kind, p0, p1] =
-      a.kind === 'brightness-contrast'
-        ? [0, a.brightness, a.contrast]
-        : a.kind === 'exposure'
-          ? [1, a.exposure, 0]
-          : [2, a.saturation, 0];
+    let kind = 0;
+    let params: [number, number, number, number];
+    let param4 = 0;
+    if (a.kind === 'brightness-contrast') {
+      params = [a.brightness, a.contrast, 0, 0];
+    } else if (a.kind === 'exposure') {
+      kind = 1;
+      params = [a.exposure, 0, 0, 0];
+    } else if (a.kind === 'saturation') {
+      kind = 2;
+      params = [a.saturation, 0, 0, 0];
+    } else if (a.kind === 'levels') {
+      kind = 3;
+      params = [a.inBlack, a.inWhite, a.gamma, a.outBlack];
+      param4 = a.outWhite;
+    } else {
+      kind = 4;
+      params = [a.amount, 0, 0, 0];
+    }
     gl.uniform1i(this.uniform(program, 'uKind'), kind);
-    gl.uniform2f(this.uniform(program, 'uParams'), p0, p1);
+    gl.uniform4f(this.uniform(program, 'uParams'), ...params);
+    gl.uniform1f(this.uniform(program, 'uParam4'), param4);
     gl.uniform1f(this.uniform(program, 'uOpacity'), node.opacity);
+    this.drawFullscreen();
+  }
+
+  /** Blur and sharpen: horizontal pass into the spare texture, vertical pass combined with the original. */
+  private filter(
+    node: AdjustmentNode,
+    a: { kind: 'blur'; radius: number } | { kind: 'sharpen'; amount: number; radius: number },
+    backdrop: Target,
+    destination: Target,
+    temp: Target,
+    pass: FilterPass,
+  ): void {
+    const { gl } = this;
+    // Radius is in document pixels; sigma is half of it, converted to output pixels.
+    const sigma = (a.radius / 2) * pass.view.scaleX;
+    const program = this.program('blur', FULLSCREEN_VERTEX, BLUR_FRAGMENT);
+    gl.useProgram(program.program);
+    gl.uniform4f(this.uniform(program, 'uBounds'), ...pass.bounds);
+    gl.uniform1f(this.uniform(program, 'uSigma'), sigma);
+    gl.uniform1i(this.uniform(program, 'uMode'), a.kind === 'sharpen' ? 1 : 0);
+    gl.uniform1f(this.uniform(program, 'uAmount'), a.kind === 'sharpen' ? a.amount : 0);
+    gl.uniform1f(this.uniform(program, 'uOpacity'), node.opacity);
+    this.bindTexture(program, 'uOrig', 1, backdrop.texture);
+
+    this.bind(temp);
+    this.bindTexture(program, 'uTex', 0, backdrop.texture);
+    gl.uniform2f(this.uniform(program, 'uDir'), 1 / pass.width, 0);
+    gl.uniform1i(this.uniform(program, 'uCombine'), 0);
+    this.drawFullscreen();
+
+    this.bind(destination);
+    this.bindTexture(program, 'uTex', 0, temp.texture);
+    gl.uniform2f(this.uniform(program, 'uDir'), 0, 1 / pass.height);
+    gl.uniform1i(this.uniform(program, 'uCombine'), 1);
     this.drawFullscreen();
   }
 

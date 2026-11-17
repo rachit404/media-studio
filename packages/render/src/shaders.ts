@@ -120,12 +120,13 @@ void main() {
   outColor = vec4(premultiplied, ar);
 }`;
 
-/** Adjustments run on straight colour and never change alpha. Mirrors applyAdjustment() in core. */
+/** Per-pixel adjustments run on straight colour and never change alpha. Mirrors applyAdjustment() in core. */
 export const ADJUST_FRAGMENT = `#version 300 es
 precision highp float;
 uniform sampler2D uBackdrop;
-uniform int uKind;        // 0 brightness/contrast, 1 exposure, 2 saturation
-uniform vec2 uParams;
+uniform int uKind;        // 0 brightness/contrast, 1 exposure, 2 saturation, 3 levels, 4 black & white
+uniform vec4 uParams;
+uniform float uParam4;
 uniform float uOpacity;
 in vec2 vUv;
 out vec4 outColor;
@@ -142,16 +143,64 @@ void main() {
   float a = p.a;
   vec3 c = a > 0.0 ? p.rgb / a : vec3(0.0);
   vec3 r = c;
+  float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
   if (uKind == 0) {
     r = clamp((c - 0.5) * (1.0 + uParams.y) + 0.5 + uParams.x, 0.0, 1.0);
   } else if (uKind == 1) {
     r = clamp(toSrgb(clamp(toLinear(c) * exp2(uParams.x), 0.0, 1.0)), 0.0, 1.0);
-  } else {
-    float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  } else if (uKind == 2) {
     r = clamp(vec3(luma) + (c - luma) * (1.0 + uParams.x), 0.0, 1.0);
+  } else if (uKind == 3) {
+    float range = max(uParams.y - uParams.x, 0.000001);
+    vec3 t = pow(clamp((c - uParams.x) / range, 0.0, 1.0), vec3(1.0 / uParams.z));
+    r = clamp(uParams.w + t * (uParam4 - uParams.w), 0.0, 1.0);
+  } else {
+    r = clamp(mix(c, vec3(luma), uParams.x), 0.0, 1.0);
   }
   vec3 result = mix(c, r, uOpacity);
   outColor = vec4(result * a, a);
+}`;
+
+/**
+ * Separable Gaussian blur on premultiplied colour, 13 taps spaced sigma/2 apart (so they always span +-3 sigma).
+ * The second pass can also combine with the original: blur replaces it, sharpen adds amount * (original - blurred).
+ * Reads are clamped to the document rectangle so nothing outside it bleeds in.
+ */
+export const BLUR_FRAGMENT = `#version 300 es
+precision highp float;
+uniform sampler2D uTex;
+uniform sampler2D uOrig;
+uniform vec2 uDir;           // one pixel along the blur axis, in uv units
+uniform float uSigma;        // output pixels
+uniform vec4 uBounds;        // min/max uv of the document rectangle
+uniform int uCombine;        // 0: only blur, 1: blur then combine with the original
+uniform int uMode;           // 0 blur, 1 sharpen
+uniform float uAmount;
+uniform float uOpacity;
+in vec2 vUv;
+out vec4 outColor;
+
+void main() {
+  vec4 sum = vec4(0.0);
+  float weights = 0.0;
+  for (int i = -6; i <= 6; i++) {
+    float k = float(i) * 0.5;
+    float w = exp(-0.5 * k * k);
+    vec2 uv = clamp(vUv + uDir * (k * uSigma), uBounds.xy, uBounds.zw);
+    sum += texture(uTex, uv) * w;
+    weights += w;
+  }
+  vec4 blurred = sum / weights;
+  if (uCombine == 0) {
+    outColor = blurred;
+    return;
+  }
+  vec4 orig = texture(uOrig, vUv);
+  vec4 result = blurred;
+  if (uMode == 1) {
+    result = vec4(clamp(orig.rgb + uAmount * (orig.rgb - blurred.rgb), 0.0, orig.a), orig.a);
+  }
+  outColor = mix(orig, result, uOpacity);
 }`;
 
 /** Final pass to the canvas: empty fill, and optional clipping to the document rectangle. */
