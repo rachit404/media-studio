@@ -58,6 +58,7 @@ export type {
 export {
   BLEND_MODES,
   applyAdjustment,
+  isFilterAdjustment,
   blendChannel,
   blendRgb,
   compositeOver,
@@ -65,7 +66,15 @@ export {
   linearToSrgb,
   srgbToLinear,
 } from './color';
-export type { Adjustment, AdjustmentKind, BlendMode, Rgba, Vec3 } from './color';
+export type {
+  Adjustment,
+  AdjustmentKind,
+  BlendMode,
+  FilterAdjustment,
+  PointAdjustment,
+  Rgba,
+  Vec3,
+} from './color';
 export {
   FONT_FAMILIES,
   MAX_CANVAS_SIZE,
@@ -108,6 +117,7 @@ export {
 export type { Affine, Rect } from './image-geometry';
 export {
   addAdjustmentLayer,
+  addAdjustmentLayers,
   addImageLayer,
   addShapeLayer,
   addTextLayer,

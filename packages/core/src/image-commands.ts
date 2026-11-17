@@ -4,6 +4,7 @@ import { AppError } from './errors';
 import type { Command } from './history';
 import {
   MAX_CANVAS_SIZE,
+  adjustmentSchema,
   shapeSpecSchema,
   textSpecSchema,
   type AdjustmentLayer,
@@ -64,6 +65,10 @@ const ADJUSTMENT_NAMES: Record<AdjustmentKind, string> = {
   'brightness-contrast': 'Brightness/Contrast',
   exposure: 'Exposure',
   saturation: 'Saturation',
+  levels: 'Levels',
+  'black-white': 'Black & White',
+  blur: 'Blur',
+  sharpen: 'Sharpen',
 };
 
 // Layers ------------------------------------------------------------------------------------------------
@@ -330,11 +335,36 @@ export function setAdjustmentParams(
     coalesceKey: `adjustment:${id}`,
     apply(draft) {
       const layer = adjustmentLayerFor(imageContent(draft), id);
-      for (const [name, value] of Object.entries(patch)) {
+      for (const name of Object.keys(patch)) {
         if (!(name in layer.adjustment) || name === 'kind')
           throw invalid(`Unknown adjustment setting: ${name}`);
-        (layer.adjustment as unknown as Record<string, number>)[name] = value;
       }
+      const merged = adjustmentSchema.safeParse({ ...layer.adjustment, ...patch });
+      if (!merged.success) throw invalid('That adjustment value is not valid.');
+      Object.assign(layer.adjustment, patch);
+    },
+  };
+}
+
+/** Add several adjustment layers as one undoable step (used by filter presets). */
+export function addAdjustmentLayers(
+  items: readonly { id: string; name: string; adjustment: Adjustment }[],
+  label: string,
+): Command<ProjectDocument> {
+  return {
+    label,
+    apply(draft) {
+      appendItems(
+        imageContent(draft).layers,
+        items.map((item) => ({
+          id: item.id,
+          type: 'adjustment' as const,
+          name: item.name,
+          visible: true,
+          opacity: 1,
+          adjustment: item.adjustment,
+        })),
+      );
     },
   };
 }

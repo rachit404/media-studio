@@ -26,11 +26,31 @@ export type BlendMode = (typeof BLEND_MODES)[number];
 
 export type Rgba = readonly [r: number, g: number, b: number, a: number];
 
-export type Adjustment =
+/** Adjustments that change each pixel on its own (they have an exact CPU reference). */
+export type PointAdjustment =
   | { kind: 'brightness-contrast'; brightness: number; contrast: number }
   | { kind: 'exposure'; exposure: number }
-  | { kind: 'saturation'; saturation: number };
+  | { kind: 'saturation'; saturation: number }
+  | {
+      kind: 'levels';
+      inBlack: number;
+      inWhite: number;
+      gamma: number;
+      outBlack: number;
+      outWhite: number;
+    }
+  | { kind: 'black-white'; amount: number };
+
+/** Adjustments that look at neighbouring pixels. Radii are in document pixels. */
+export type FilterAdjustment =
+  { kind: 'blur'; radius: number } | { kind: 'sharpen'; amount: number; radius: number };
+
+export type Adjustment = PointAdjustment | FilterAdjustment;
 export type AdjustmentKind = Adjustment['kind'];
+
+export function isFilterAdjustment(adjustment: Adjustment): adjustment is FilterAdjustment {
+  return adjustment.kind === 'blur' || adjustment.kind === 'sharpen';
+}
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
@@ -148,7 +168,7 @@ const LUMA = [0.2126, 0.7152, 0.0722] as const;
 /** Apply an adjustment to a straight-alpha colour. Alpha is never changed. */
 export function applyAdjustment(
   color: Rgba,
-  adjustment: Adjustment,
+  adjustment: PointAdjustment,
 ): [number, number, number, number] {
   const [r, g, b, a] = color;
   switch (adjustment.kind) {
@@ -168,6 +188,19 @@ export function applyAdjustment(
       const map = (v: number) => clamp01(luma + (v - luma) * factor);
       return [map(r), map(g), map(b), a];
     }
+    case 'levels': {
+      const range = Math.max(adjustment.inWhite - adjustment.inBlack, 1e-6);
+      const map = (v: number) => {
+        const t = clamp01((v - adjustment.inBlack) / range) ** (1 / adjustment.gamma);
+        return clamp01(adjustment.outBlack + t * (adjustment.outWhite - adjustment.outBlack));
+      };
+      return [map(r), map(g), map(b), a];
+    }
+    case 'black-white': {
+      const luma = LUMA[0] * r + LUMA[1] * g + LUMA[2] * b;
+      const map = (v: number) => clamp01(v + (luma - v) * adjustment.amount);
+      return [map(r), map(g), map(b), a];
+    }
   }
 }
 
@@ -180,5 +213,13 @@ export function defaultAdjustment(kind: AdjustmentKind): Adjustment {
       return { kind, exposure: 0 };
     case 'saturation':
       return { kind, saturation: 0 };
+    case 'levels':
+      return { kind, inBlack: 0, inWhite: 1, gamma: 1, outBlack: 0, outWhite: 1 };
+    case 'black-white':
+      return { kind, amount: 1 };
+    case 'blur':
+      return { kind, radius: 4 };
+    case 'sharpen':
+      return { kind, amount: 1, radius: 2 };
   }
 }

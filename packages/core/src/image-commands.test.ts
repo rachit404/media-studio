@@ -3,6 +3,7 @@ import { AppError } from './errors';
 import { History } from './history';
 import {
   addAdjustmentLayer,
+  addAdjustmentLayers,
   addImageLayer,
   addShapeLayer,
   addTextLayer,
@@ -141,10 +142,9 @@ describe('layers', () => {
       adjustment: { brightness: 0.2, contrast: -0.5 },
     });
     expect(() => history.execute(setAdjustmentParams('A1', { nonsense: 1 }))).toThrow(AppError);
-    expect(() =>
-      history.execute(setAdjustmentParams('A1', { brightness: 5 })).valueOf(),
-    ).not.toThrow();
-    expect(() => parseProject(history.state)).toThrow(AppError); // out-of-range values are caught by the schema
+    const before = history.state;
+    expect(() => history.execute(setAdjustmentParams('A1', { brightness: 5 }))).toThrow(AppError);
+    expect(history.state).toBe(before); // an invalid value changes nothing
   });
 
   it('rejects invalid operations with typed or range errors', () => {
@@ -447,5 +447,63 @@ describe('text and shape layers', () => {
     } as never);
     expect(reordered).toBe(a);
     expect(rasterKey({ kind: 'text', ...text.spec, fontSize: text.spec.fontSize + 1 })).not.toBe(a);
+  });
+});
+
+describe('levels, black & white, blur, sharpen and presets', () => {
+  it('adds the new adjustment kinds with identity-like defaults and validates their settings', () => {
+    const history = withLayers();
+    for (const kind of ['levels', 'black-white', 'blur', 'sharpen'] as const) {
+      history.execute(addAdjustmentLayer(`A-${kind}`, kind));
+    }
+    expect(
+      layers(history)
+        .slice(2)
+        .map((l) => l.name),
+    ).toEqual(['Levels', 'Black & White', 'Blur', 'Sharpen']);
+    expect(() => parseProject(history.state)).not.toThrow();
+
+    history.execute(setAdjustmentParams('A-levels', { inBlack: 0.1, inWhite: 0.9, gamma: 1.5 }));
+    expect(() => history.execute(setAdjustmentParams('A-levels', { inBlack: 0.95 }))).toThrow(
+      AppError,
+    ); // would pass the white point
+    expect(() => history.execute(setAdjustmentParams('A-blur', { radius: 500 }))).toThrow(AppError);
+    expect(() => history.execute(setAdjustmentParams('A-sharpen', { radius: 0 }))).toThrow(
+      AppError,
+    );
+    history.execute(setAdjustmentParams('A-blur', { radius: 12 }));
+    expect(layers(history).find((l) => l.id === 'A-blur')).toMatchObject({
+      adjustment: { kind: 'blur', radius: 12 },
+    });
+  });
+
+  it('adds several adjustment layers as one undo step (presets)', () => {
+    const history = withLayers();
+    const before = history.state;
+    history.execute(
+      addAdjustmentLayers(
+        [
+          {
+            id: 'P1',
+            name: 'Vivid: saturation',
+            adjustment: { kind: 'saturation', saturation: 0.3 },
+          },
+          {
+            id: 'P2',
+            name: 'Vivid: contrast',
+            adjustment: { kind: 'brightness-contrast', brightness: 0, contrast: 0.2 },
+          },
+        ],
+        'Apply Vivid',
+      ),
+    );
+    expect(
+      layers(history)
+        .slice(2)
+        .map((l) => l.id),
+    ).toEqual(['P1', 'P2']);
+    expect(history.undoLabel).toBe('Apply Vivid');
+    history.undo();
+    expect(history.state).toEqual(before);
   });
 });

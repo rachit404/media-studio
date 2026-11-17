@@ -35,6 +35,26 @@ export const adjustmentSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({ kind: z.literal('exposure'), exposure: z.number().min(-4).max(4) }),
   z.strictObject({ kind: z.literal('saturation'), saturation: z.number().min(-1).max(1) }),
+  z
+    .strictObject({
+      kind: z.literal('levels'),
+      inBlack: z.number().min(0).max(1),
+      inWhite: z.number().min(0).max(1),
+      gamma: z.number().min(0.1).max(10),
+      outBlack: z.number().min(0).max(1),
+      outWhite: z.number().min(0).max(1),
+    })
+    .refine(
+      (levels) => levels.inWhite - levels.inBlack >= 0.01,
+      'white point must be above the black point',
+    ),
+  z.strictObject({ kind: z.literal('black-white'), amount: z.number().min(0).max(1) }),
+  z.strictObject({ kind: z.literal('blur'), radius: z.number().min(0).max(100) }),
+  z.strictObject({
+    kind: z.literal('sharpen'),
+    amount: z.number().min(0).max(5),
+    radius: z.number().min(0.5).max(50),
+  }),
 ]);
 
 export const imageLayerSchema = z.strictObject({

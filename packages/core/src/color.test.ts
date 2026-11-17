@@ -6,6 +6,7 @@ import {
   blendRgb,
   compositeOver,
   defaultAdjustment,
+  isFilterAdjustment,
   linearToSrgb,
   srgbToLinear,
   type Rgba,
@@ -188,9 +189,14 @@ describe('applyAdjustment', () => {
   const sample: Rgba = [0.8, 0.4, 0.2, 0.6];
 
   it('defaults are identity and alpha is never touched', () => {
-    for (const kind of ['brightness-contrast', 'exposure', 'saturation'] as const) {
-      close(applyAdjustment(sample, defaultAdjustment(kind)), sample);
+    for (const kind of ['brightness-contrast', 'exposure', 'saturation', 'levels'] as const) {
+      const adjustment = defaultAdjustment(kind);
+      if (isFilterAdjustment(adjustment)) throw new Error('expected a point adjustment');
+      close(applyAdjustment(sample, adjustment), sample);
     }
+    expect(defaultAdjustment('blur').kind).toBe('blur');
+    expect(isFilterAdjustment(defaultAdjustment('sharpen'))).toBe(true);
+    expect(isFilterAdjustment(defaultAdjustment('levels'))).toBe(false);
     expect(applyAdjustment(sample, { kind: 'exposure', exposure: 2 })[3]).toBe(0.6);
   });
 
@@ -228,6 +234,43 @@ describe('applyAdjustment', () => {
     expect(r).toBeCloseTo(0.2126 * 0.8 + 0.7152 * 0.4 + 0.0722 * 0.2, 9);
     const boosted = applyAdjustment(sample, { kind: 'saturation', saturation: 1 });
     expect(boosted[0] - boosted[2]).toBeGreaterThan(sample[0] - sample[2]);
+  });
+
+  it('levels remap the input range, apply gamma and map to the output range', () => {
+    const base = {
+      kind: 'levels',
+      inBlack: 0.2,
+      inWhite: 0.8,
+      gamma: 1,
+      outBlack: 0,
+      outWhite: 1,
+    } as const;
+    close(applyAdjustment([0.2, 0.5, 0.8, 1], base), [0, 0.5, 1, 1]);
+    close(applyAdjustment([0.1, 0.9, 0.5, 1], base), [0, 1, 0.5, 1]); // clipped outside the input range
+    const [mid] = applyAdjustment([0.5, 0.5, 0.5, 1], {
+      ...base,
+      inBlack: 0,
+      inWhite: 1,
+      gamma: 2,
+    });
+    expect(mid).toBeCloseTo(0.5 ** 0.5, 9); // gamma above 1 brightens mid-tones
+    const [low, high] = applyAdjustment([0, 1, 0.5, 1], {
+      ...base,
+      inBlack: 0,
+      inWhite: 1,
+      outBlack: 0.25,
+      outWhite: 0.75,
+    });
+    expect(low).toBeCloseTo(0.25);
+    expect(high).toBeCloseTo(0.75);
+  });
+
+  it('black & white blends towards luma and keeps alpha', () => {
+    const luma = 0.2126 * 0.8 + 0.7152 * 0.4 + 0.0722 * 0.2;
+    close(applyAdjustment(sample, { kind: 'black-white', amount: 1 }), [luma, luma, luma, 0.6]);
+    close(applyAdjustment(sample, { kind: 'black-white', amount: 0 }), sample);
+    const [r] = applyAdjustment(sample, { kind: 'black-white', amount: 0.5 });
+    expect(r).toBeCloseTo((0.8 + luma) / 2);
   });
 
   it('always stays inside 0..1', () => {
