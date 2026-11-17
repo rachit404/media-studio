@@ -33,6 +33,7 @@
 ---
 
 ## M0: Foundation (S)
+**Status: done** (branch `feat/m0-foundation`). Acceptance verified by negative tests: boundary violations, raw colours, `eval`, GPL dependencies and low-contrast tokens all fail the gates; the production build runs under the real CSP with no external requests. CI on GitHub still needs branch protection configured by the owner.
 **Scope:** repository, tooling, CI, quality gates, theme token skeleton. No product features.
 **Files/modules:** root config, `.github/`, `apps/web` (empty shell), `packages/*` (empty with boundaries), `scripts/`, `docs/third-party.md`, README, LICENSE (Apache-2.0), CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, `.gitignore`, `.editorconfig`.
 **Implementation plan:**

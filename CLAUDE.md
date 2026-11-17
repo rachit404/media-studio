@@ -4,6 +4,7 @@ Privacy-first, local-first browser image + video editor. React 19, TypeScript 6.
 Index of project guidelines: `CLAUDE/README.md`. Full design: `docs/`.
 
 ## Always
+
 - **Branches:** `main` never receives new commits. `claude-takeover` is the integration branch (the "main" for Claude Code). Work on `feat/...` branches cut from it; merge back with `--no-ff` only after `pnpm check` passes.
 - **Plan:** follow `CLAUDE/plan.md` (10 steps), one step at a time; update its status when a step is merged.
 - **Quality:** no placeholder features that look real; no `any`; no raw colours (tokens in `apps/web/src/styles/theme.css`); browser media APIs only in adapter packages. Lint and boundary checks enforce this.

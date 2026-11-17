@@ -1,8 +1,9 @@
 # Project status
 
 - **Last updated:** 2026-11-17
-- **Phase:** 4 of 6 complete (documentation drafted). Next: owner review → **Phase 5: structure and roadmap approval** → Phase 6: explicit approval before any application code.
-- **Application code:** none yet (only throwaway spikes in `spikes/`, not part of the product).
+- **Phase:** Build phase started on the owner's instruction. Development follows the 10-step plan in [CLAUDE/plan.md](../CLAUDE/plan.md); integration branch is `claude-takeover` (`main` is frozen).
+- **Step 1 (M0 Foundation): done.** Monorepo, strict tooling, CI, token theme, boundary/licence/theme-contrast/size/CSP gates and e2e are in place and green. Next: step 2 (M1 App shell).
+- **Application code:** M0 shell only (a themed foundation page; no editor features yet). `spikes/` is throwaway and not part of the product.
 
 ## Process phases
 | Phase | State |
