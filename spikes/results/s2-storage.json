@@ -1,0 +1,466 @@
+{
+  "mode": "full",
+  "startedAt": "2026-11-17T17:25:59.349Z",
+  "steps": {
+    "quota": {
+      "estimate": {
+        "quota": 10737418240,
+        "usage": 0,
+        "usageDetails": {}
+      },
+      "persistedBefore": false,
+      "persistResult": false,
+      "persistedAfter": false
+    },
+    "mainThreadSync": {
+      "typeofCreateSyncAccessHandleOnMainThread": "undefined",
+      "callOnMainThread": "TypeError: fh.createSyncAccessHandle is not a function"
+    },
+    "singleWriter": {
+      "secondExclusiveSameWorker": "NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file.",
+      "unsafeWhileExclusiveHeld": "NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file.",
+      "createWritableWhileSyncHeld": "NoModificationAllowedError: Failed to execute 'createWritable' on 'FileSystemFileHandle': An attempt was made to modify an object where modifications are not allowed.",
+      "getFileReadWhileSyncHeld": "OK size=3",
+      "removeWhileHeld": "NoModificationAllowedError: Failed to execute 'removeEntry' on 'FileSystemDirectoryHandle': An attempt was made to modify an object where modifications are not allowed.",
+      "differentFileConcurrently": "OK",
+      "closedHandleUseThrows": "InvalidStateError: Failed to execute 'read' on 'FileSystemSyncAccessHandle': The access handle was already closed",
+      "afterClose": "OPENED OK",
+      "dataAfterReopen": "1,2,3",
+      "twoUnsafeConcurrent": "BOTH OPENED",
+      "exclusiveWhileUnsafeHeld": "NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file."
+    },
+    "singleWriterCrossWorker": {
+      "workerBWhileAHolds": "NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file.",
+      "workerBAfterAReleased": "OPENED"
+    },
+    "seq1GB": [
+      {
+        "name": "s1g-65536.bin",
+        "sizeBytes": 1073741824,
+        "chunkBytes": 65536,
+        "chunks": 16384,
+        "writeMBps": 668.6691915892327,
+        "writeMs": 1531.4000000003725,
+        "flushMs": 224.89999999990687,
+        "readMBps": 3668.9358652861583,
+        "readMs": 279.09999999962747,
+        "fileSizeAfter": 1073741824,
+        "integrity": {
+          "chunksChecked": 258,
+          "mismatches": 0
+        },
+        "writeSegMBps_256MB": [
+          657,
+          674,
+          649,
+          697
+        ],
+        "readSegMBps_256MB": [
+          3141,
+          3832,
+          3793,
+          4044
+        ],
+        "heapWorkerBytes": {
+          "min": -1,
+          "max": -1,
+          "samples": 128
+        },
+        "failedAttemptsBefore": [],
+        "diskFreeGBAfter": 133.28
+      },
+      {
+        "name": "s1g-1048576.bin",
+        "sizeBytes": 1073741824,
+        "chunkBytes": 1048576,
+        "chunks": 1024,
+        "writeMBps": 1560.2620752708985,
+        "writeMs": 656.2999999998137,
+        "flushMs": 172.90000000037253,
+        "readMBps": 4007.8277886497062,
+        "readMs": 255.5,
+        "fileSizeAfter": 1073741824,
+        "integrity": {
+          "chunksChecked": 258,
+          "mismatches": 0
+        },
+        "writeSegMBps_256MB": [
+          1579,
+          1785,
+          1457,
+          1463
+        ],
+        "readSegMBps_256MB": [
+          4190,
+          4190,
+          3497,
+          4260
+        ],
+        "heapWorkerBytes": {
+          "min": -1,
+          "max": -1,
+          "samples": 128
+        },
+        "failedAttemptsBefore": [],
+        "diskFreeGBAfter": 133.28
+      },
+      {
+        "name": "s1g-4194304.bin",
+        "sizeBytes": 1073741824,
+        "chunkBytes": 4194304,
+        "chunks": 256,
+        "writeMBps": 1011.1582897203631,
+        "writeMs": 1012.7000000001863,
+        "flushMs": 163.29999999981374,
+        "readMBps": 3998.438110111783,
+        "readMs": 256.10000000009313,
+        "fileSizeAfter": 1073741824,
+        "integrity": {
+          "chunksChecked": 256,
+          "mismatches": 0
+        },
+        "writeSegMBps_256MB": [
+          1372,
+          749,
+          918,
+          1246
+        ],
+        "readSegMBps_256MB": [
+          4621,
+          4523,
+          4217,
+          3070
+        ],
+        "heapWorkerBytes": {
+          "min": -1,
+          "max": -1,
+          "samples": 128
+        },
+        "failedAttemptsBefore": [],
+        "diskFreeGBAfter": 132.28
+      }
+    ],
+    "random": {
+      "fileSize": 1073741824,
+      "groups": [
+        {
+          "readBytes": 65536,
+          "count": 1000,
+          "opsPerSec": 52083.33333282806,
+          "MBps": 3255.2083333017536,
+          "p50ms": 0,
+          "p95ms": 0.10000000009313226,
+          "p99ms": 0.10000000009313226,
+          "maxMs": 0.19999999972060323
+        },
+        {
+          "readBytes": 1048576,
+          "count": 1000,
+          "opsPerSec": 4271.678769754815,
+          "MBps": 4271.678769754815,
+          "p50ms": 0.20000000018626451,
+          "p95ms": 0.3000000002793968,
+          "p99ms": 0.39999999990686774,
+          "maxMs": 0.7000000001862645
+        },
+        {
+          "readBytes": 4194304,
+          "count": 1000,
+          "opsPerSec": 782.2889775484203,
+          "MBps": 3129.1559101936814,
+          "p50ms": 1,
+          "p95ms": 2.7999999998137355,
+          "p99ms": 4.100000000093132,
+          "maxMs": 4.5
+        }
+      ]
+    },
+    "flushSmall": {
+      "writes": 200,
+      "chunk": 65536,
+      "flushP50ms": 0.40000000037252903,
+      "flushP95ms": 0.7999999998137355,
+      "flushMaxMs": 0.8999999999068677
+    },
+    "big": {
+      "requestedGB": 4,
+      "usedGB": 4,
+      "scaledDownBecauseDisk": false,
+      "name": "big.bin",
+      "sizeBytes": 4294967296,
+      "chunkBytes": 1048576,
+      "chunks": 4096,
+      "writeMBps": 1186.421040435671,
+      "writeMs": 3452.399999999907,
+      "flushMs": 265.10000000009313,
+      "readMBps": 3103.7356975076664,
+      "readMs": 1319.6999999997206,
+      "fileSizeAfter": 4294967296,
+      "integrity": {
+        "chunksChecked": 258,
+        "mismatches": 0
+      },
+      "writeSegMBps_256MB": [
+        1074,
+        1090,
+        1116,
+        1398,
+        1478,
+        1311,
+        1430,
+        1043,
+        1110,
+        1189,
+        1126,
+        1532,
+        1362,
+        1055,
+        804,
+        1387
+      ],
+      "readSegMBps_256MB": [
+        3488,
+        3815,
+        4204,
+        3386,
+        3832,
+        4149,
+        4122,
+        4354,
+        4830,
+        4183,
+        2857,
+        3652,
+        3172,
+        1642,
+        1483,
+        2323
+      ],
+      "heapWorkerBytes": {
+        "min": -1,
+        "max": -1,
+        "samples": 128
+      },
+      "heapMainBytes": {
+        "minBytes": 3069946,
+        "maxBytes": 3071582
+      },
+      "failedAttemptsBefore": [],
+      "processMemory": {
+        "privTotalPeakMB": 278,
+        "wsTotalPeakMB": 519,
+        "rendererPrivPeakMB": 102,
+        "browserPrivPeakMB": 43,
+        "gpuPrivPeakMB": 114,
+        "utilityPrivPeakMB": 0,
+        "samples": 4
+      },
+      "diskFreeGBWhileFilePresent": 130.28,
+      "quotaAfter": {
+        "quota": 15032385696,
+        "usage": 4294967456,
+        "usageDetails": {
+          "fileSystem": 4294967456
+        }
+      }
+    },
+    "stream": [
+      {
+        "name": "stream1.bin",
+        "bytes": 1073741824,
+        "chunk": 1048576,
+        "writeMBps_excl_close": 107.51672074001638,
+        "writeMBps_incl_close": 107.46707246681011,
+        "closeCommitMs": 4.399999999906868,
+        "fileSize": 1073741824,
+        "heapMainBytes": {
+          "start": 3239659,
+          "minBytes": 7294995,
+          "maxBytes": 74403199
+        },
+        "integrity": {
+          "checked": 64,
+          "mismatches": 0
+        },
+        "failedAttemptsBefore": [],
+        "processMemory": {
+          "privTotalPeakMB": 329,
+          "wsTotalPeakMB": 578,
+          "rendererPrivPeakMB": 162,
+          "browserPrivPeakMB": 46,
+          "gpuPrivPeakMB": 120,
+          "utilityPrivPeakMB": 0,
+          "samples": 17
+        }
+      },
+      {
+        "name": "stream4.bin",
+        "bytes": 4294967296,
+        "chunk": 1048576,
+        "writeMBps_excl_close": 130.23184830024508,
+        "writeMBps_incl_close": 130.20907839565592,
+        "closeCommitMs": 5.5,
+        "fileSize": 4294967296,
+        "heapMainBytes": {
+          "start": 3287807,
+          "minBytes": 7311903,
+          "maxBytes": 74515847
+        },
+        "integrity": {
+          "checked": 64,
+          "mismatches": 0
+        },
+        "failedAttemptsBefore": [],
+        "processMemory": {
+          "privTotalPeakMB": 342,
+          "wsTotalPeakMB": 594,
+          "rendererPrivPeakMB": 143,
+          "browserPrivPeakMB": 49,
+          "gpuPrivPeakMB": 135,
+          "utilityPrivPeakMB": 0,
+          "samples": 28
+        }
+      }
+    ],
+    "leftoverOPFS": [],
+    "blobRerun": {
+      "source": "s2-storage.blob.json (blob-run.mjs, own run after the in-run blob step lost its page)",
+      "startedAt": "2026-11-17T17:29:34.744Z",
+      "progress": [
+        {
+          "targetMB": 100,
+          "ok": true,
+          "elapsedMs": 27.5,
+          "heapNow": 106787446,
+          "sliceCheck": "tail slice read ok (1024 B), blob.size=104857600",
+          "objectUrl": "ok"
+        },
+        {
+          "targetMB": 500,
+          "ok": true,
+          "elapsedMs": 237.09999999962747,
+          "heapNow": 106825101,
+          "sliceCheck": "tail slice read ok (1024 B), blob.size=524288000",
+          "objectUrl": "ok"
+        },
+        {
+          "targetMB": 1000,
+          "ok": true,
+          "elapsedMs": 498.39999999990687,
+          "heapNow": 106832533,
+          "sliceCheck": "tail slice read ok (1024 B), blob.size=1048576000",
+          "objectUrl": "ok"
+        },
+        {
+          "targetMB": 2000,
+          "ok": true,
+          "elapsedMs": 974.5999999996275,
+          "heapNow": 106854263,
+          "sliceCheck": "tail slice read ok (1024 B), blob.size=2097152000",
+          "objectUrl": "ok"
+        }
+      ],
+      "final": {
+        "steps": [
+          {
+            "targetMB": 100,
+            "ok": true,
+            "elapsedMs": 27.5,
+            "heapNow": 106787446,
+            "sliceCheck": "tail slice read ok (1024 B), blob.size=104857600",
+            "objectUrl": "ok"
+          },
+          {
+            "targetMB": 500,
+            "ok": true,
+            "elapsedMs": 237.09999999962747,
+            "heapNow": 106825101,
+            "sliceCheck": "tail slice read ok (1024 B), blob.size=524288000",
+            "objectUrl": "ok"
+          },
+          {
+            "targetMB": 1000,
+            "ok": true,
+            "elapsedMs": 498.39999999990687,
+            "heapNow": 106832533,
+            "sliceCheck": "tail slice read ok (1024 B), blob.size=1048576000",
+            "objectUrl": "ok"
+          },
+          {
+            "targetMB": 2000,
+            "ok": true,
+            "elapsedMs": 974.5999999996275,
+            "heapNow": 106854263,
+            "sliceCheck": "tail slice read ok (1024 B), blob.size=2097152000",
+            "objectUrl": "ok"
+          }
+        ],
+        "heap": {
+          "minBytes": 106823682,
+          "maxBytes": 106852652
+        }
+      },
+      "processMemory": {
+        "privTotalPeakMB": 2347,
+        "wsTotalPeakMB": 2585,
+        "rendererPrivPeakMB": 271,
+        "browserPrivPeakMB": 2048,
+        "gpuPrivPeakMB": 126,
+        "utilityPrivPeakMB": 0,
+        "samples": 44
+      },
+      "finishedAt": "2026-11-17T17:30:42.126Z"
+    },
+    "blobInRunFailure": {
+      "chunkMB": 100,
+      "progress": [],
+      "crashed": "Error: page.evaluate: Target page, context or browser has been closed",
+      "processMemory": {
+        "privTotalPeakMB": 416,
+        "wsTotalPeakMB": 730,
+        "rendererPrivPeakMB": 176,
+        "browserPrivPeakMB": 51,
+        "gpuPrivPeakMB": 141,
+        "utilityPrivPeakMB": 0,
+        "samples": 64
+      }
+    }
+  },
+  "env": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "cores": 16,
+    "deviceMemoryGB": 16,
+    "webgl2": true,
+    "glRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "webgpu": true,
+    "crossOriginIsolated": false,
+    "secureContext": true,
+    "os": "Windows_NT 10.0.26300",
+    "totalRamGB": 15.7,
+    "freeRamGBAtStart": 4.3,
+    "diskFreeGBAtStart": 134.29,
+    "tmpdir": "C:\\Users\\USER\\AppData\\Local\\Temp",
+    "heapApiAvailable": "number"
+  },
+  "finishedAt": "2026-11-17T17:29:15.322Z",
+  "diskFreeGBAtEnd": 134.53,
+  "provenance": {
+    "mainRun": "spikes/s2-storage/run.mjs full, persistent on-disk Chrome profile (launchPersistentContext), run by this agent; all numbers in steps.* except blobRerun/incognito come from it",
+    "blobRerun": "spikes/s2-storage/blob-run.mjs, run by this agent (s2-storage.blob.json)",
+    "incognitoAttempt": "s2-storage.incognito-failed.json = the previous agent's first full run (browser.newPage() = off-the-record context); s2-storage.diag.json = previous agent's diagnostic. Neither produced by this agent; both re-read and consistent: writes fail at ~0.93 GB while estimate().quota reports 10-11.7 GB",
+    "smokeFile": "s2-storage.smoke.json = previous agent, 1/32 scale, not used for any number",
+    "notRun": "diag2.mjs (per-origin vs per-file ceiling, stream until failure) never produced a result file"
+  },
+  "verdicts": {
+    "OPFS sync handle sustained >=200 MB/s (1GB, 64KB/1MB/4MB chunks)": "PASS: write 669/1560/1011 MB/s, read 3669/4008/3998 MB/s",
+    "4GB sequential write+read, memory flat (<~500 MB)": "PASS: 4 GB write 1186 MB/s, read 3104 MB/s; main heap 3.07 MB flat; renderer private peak 102 MB (only 4 samples); worker JS heap NOT measurable (performance.memory undefined in workers)",
+    "integrity (pattern write/read-back)": "PASS: 0 mismatches in 258+258+256+258 sampled chunks",
+    "async createWritable streaming 1GB/4GB": "BELOW 200 MB/s: 107.5 / 130.2 MB/s; memory PASS (main heap peak 74.5 MB, renderer private peak 143-162 MB)",
+    "real showSaveFilePicker streaming": "NOT VERIFIED BY AUTOMATION (MANUAL-REQUIRED: spikes/s2-storage/manual-fsa.html)",
+    "Blob fallback": "reached 2 GB (stopped by design, 4 GB not attempted); browser process private memory peaked 2048 MB; download hand-off not verified",
+    "single writer": "PASS (NoModificationAllowedError on second handle, same worker and cross-worker; released on close())",
+    "sync handle on main thread": "PASS (not available: createSyncAccessHandle is undefined)",
+    "persist()": "false (not granted, no prompt) in this profile",
+    "overall S2": "PASS for OPFS sync-handle path in a normal on-disk Chrome profile; FAIL/hazard in off-the-record context (ceiling ~0.93 GB, RAM-limited suspected)"
+  }
+}

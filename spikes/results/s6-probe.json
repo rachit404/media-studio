@@ -1,0 +1,1422 @@
+{
+  "generatedAt": "2026-11-17T17:05:13.560Z",
+  "note": "Other agents may have been running concurrently; this probe is capability-only (not timed) except opfsWriteMBps.",
+  "targets": {
+    "chrome-headed": {
+      "version": "157.0.8103.79",
+      "platform": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+        "cores": 16,
+        "deviceMemoryGB": 16,
+        "isSecureContext": true,
+        "origin": "http://127.0.0.1:5199",
+        "crossOriginIsolated": false,
+        "sharedArrayBufferMainThread": false,
+        "showOpenFilePicker": true,
+        "showSaveFilePicker": true,
+        "showDirectoryPicker": true,
+        "opfsGetDirectoryMain": true,
+        "mainHasVideoEncoder": true,
+        "mainHasAudioEncoder": true,
+        "performanceMemory": true,
+        "storageEstimate": {
+          "quotaMB": 10737,
+          "usageMB": 0
+        },
+        "storagePersist": false,
+        "storagePersisted": false
+      },
+      "graphics": {
+        "webgl2": true,
+        "webgl2Renderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "webgl2Vendor": "Google Inc. (Intel)",
+        "maxTextureSize": 16384,
+        "webgl1": true,
+        "webgpuApi": true,
+        "webgpuAdapter": {
+          "vendor": "intel",
+          "architecture": "gen-12lp",
+          "device": "",
+          "description": ""
+        }
+      },
+      "worker": {
+        "offscreen2d": true,
+        "offscreenWebgl2": true,
+        "workerGlRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "opfsGetDirectory": true,
+        "opfsSyncAccessHandle": true,
+        "opfsWriteMBps_16MB": 142.9,
+        "sharedArrayBufferInWorker": false,
+        "workerHasVideoEncoder": true
+      },
+      "video": {
+        "H.264 Baseline@3.1 720p": {
+          "codec": "avc1.42001f",
+          "w": 1280,
+          "h": 720,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 Baseline@4.2 1080p": {
+          "codec": "avc1.42002a",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 Main@4.0 1080p": {
+          "codec": "avc1.4d0028",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@3.1 720p": {
+          "codec": "avc1.64001f",
+          "w": 1280,
+          "h": 720,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@4.0 1080p": {
+          "codec": "avc1.640028",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.0 1080p": {
+          "codec": "avc1.640032",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.1 4K": {
+          "codec": "avc1.640033",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.2 4K": {
+          "codec": "avc1.640034",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "HEVC Main@4.0 1080p (hvc1)": {
+          "codec": "hvc1.1.6.L120.B0",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          }
+        },
+        "HEVC Main@5.1 4K (hev1)": {
+          "codec": "hev1.1.6.L153.B0",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "no",
+            "no-preference": "no"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          }
+        },
+        "VP9 p0 L4.0 1080p": {
+          "codec": "vp09.00.40.08",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "VP9 p0 L5.1 4K": {
+          "codec": "vp09.00.51.08",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "VP8 1080p": {
+          "codec": "vp8",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "AV1 Main L4.0 1080p": {
+          "codec": "av01.0.08M.08",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "AV1 Main L5.0 4K": {
+          "codec": "av01.0.12M.08",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        }
+      },
+      "audio": {
+        "AAC-LC mp4a.40.2": {
+          "encode": "yes",
+          "decode": "yes"
+        },
+        "Opus": {
+          "encode": "yes",
+          "decode": "yes"
+        },
+        "FLAC": {
+          "encode": "no",
+          "decode": "yes"
+        },
+        "Vorbis": {
+          "encode": "no",
+          "decode": "yes"
+        },
+        "MP3": {
+          "encode": "no",
+          "decode": "yes"
+        }
+      },
+      "imageDecoder": {
+        "image/png": true,
+        "image/jpeg": true,
+        "image/webp": true,
+        "image/gif": true,
+        "image/avif": true
+      },
+      "roundTrip": {
+        "h264_hw": {
+          "codec": "avc1.640028",
+          "hw": "prefer-hardware",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "h264_sw": {
+          "codec": "avc1.640028",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "vp9_sw": {
+          "codec": "vp09.00.40.08",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "vp8_sw": {
+          "codec": "vp8",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "av1_sw": {
+          "codec": "av01.0.08M.08",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "aac": {
+          "codec": "mp4a.40.2",
+          "ok": true,
+          "chunks": 47,
+          "err": null
+        },
+        "opus": {
+          "codec": "opus",
+          "ok": true,
+          "chunks": 51,
+          "err": null
+        }
+      }
+    },
+    "chrome-headless": {
+      "version": "157.0.8103.79",
+      "platform": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "cores": 16,
+        "deviceMemoryGB": 16,
+        "isSecureContext": true,
+        "origin": "http://127.0.0.1:5199",
+        "crossOriginIsolated": false,
+        "sharedArrayBufferMainThread": false,
+        "showOpenFilePicker": true,
+        "showSaveFilePicker": true,
+        "showDirectoryPicker": true,
+        "opfsGetDirectoryMain": true,
+        "mainHasVideoEncoder": true,
+        "mainHasAudioEncoder": true,
+        "performanceMemory": true,
+        "storageEstimate": {
+          "quotaMB": 10737,
+          "usageMB": 0
+        },
+        "storagePersist": false,
+        "storagePersisted": false
+      },
+      "graphics": {
+        "webgl2": true,
+        "webgl2Renderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "webgl2Vendor": "Google Inc. (Intel)",
+        "maxTextureSize": 16384,
+        "webgl1": true,
+        "webgpuApi": true,
+        "webgpuAdapter": {
+          "vendor": "intel",
+          "architecture": "gen-12lp",
+          "device": "",
+          "description": ""
+        }
+      },
+      "worker": {
+        "offscreen2d": true,
+        "offscreenWebgl2": true,
+        "workerGlRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "opfsGetDirectory": true,
+        "opfsSyncAccessHandle": true,
+        "opfsWriteMBps_16MB": 86.1,
+        "sharedArrayBufferInWorker": false,
+        "workerHasVideoEncoder": true
+      },
+      "video": {
+        "H.264 Baseline@3.1 720p": {
+          "codec": "avc1.42001f",
+          "w": 1280,
+          "h": 720,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 Baseline@4.2 1080p": {
+          "codec": "avc1.42002a",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 Main@4.0 1080p": {
+          "codec": "avc1.4d0028",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@3.1 720p": {
+          "codec": "avc1.64001f",
+          "w": 1280,
+          "h": 720,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@4.0 1080p": {
+          "codec": "avc1.640028",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.0 1080p": {
+          "codec": "avc1.640032",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.1 4K": {
+          "codec": "avc1.640033",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.2 4K": {
+          "codec": "avc1.640034",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "HEVC Main@4.0 1080p (hvc1)": {
+          "codec": "hvc1.1.6.L120.B0",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          }
+        },
+        "HEVC Main@5.1 4K (hev1)": {
+          "codec": "hev1.1.6.L153.B0",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "no",
+            "no-preference": "no"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          }
+        },
+        "VP9 p0 L4.0 1080p": {
+          "codec": "vp09.00.40.08",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "VP9 p0 L5.1 4K": {
+          "codec": "vp09.00.51.08",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "VP8 1080p": {
+          "codec": "vp8",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "AV1 Main L4.0 1080p": {
+          "codec": "av01.0.08M.08",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "AV1 Main L5.0 4K": {
+          "codec": "av01.0.12M.08",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        }
+      },
+      "audio": {
+        "AAC-LC mp4a.40.2": {
+          "encode": "yes",
+          "decode": "yes"
+        },
+        "Opus": {
+          "encode": "yes",
+          "decode": "yes"
+        },
+        "FLAC": {
+          "encode": "no",
+          "decode": "yes"
+        },
+        "Vorbis": {
+          "encode": "no",
+          "decode": "yes"
+        },
+        "MP3": {
+          "encode": "no",
+          "decode": "yes"
+        }
+      },
+      "imageDecoder": {
+        "image/png": true,
+        "image/jpeg": true,
+        "image/webp": true,
+        "image/gif": true,
+        "image/avif": true
+      },
+      "roundTrip": {
+        "h264_hw": {
+          "codec": "avc1.640028",
+          "hw": "prefer-hardware",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "h264_sw": {
+          "codec": "avc1.640028",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "vp9_sw": {
+          "codec": "vp09.00.40.08",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "vp8_sw": {
+          "codec": "vp8",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "av1_sw": {
+          "codec": "av01.0.08M.08",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "aac": {
+          "codec": "mp4a.40.2",
+          "ok": true,
+          "chunks": 47,
+          "err": null
+        },
+        "opus": {
+          "codec": "opus",
+          "ok": true,
+          "chunks": 51,
+          "err": null
+        }
+      }
+    },
+    "edge-headed": {
+      "version": "157.0.4341.60",
+      "platform": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+        "cores": 16,
+        "deviceMemoryGB": 16,
+        "isSecureContext": true,
+        "origin": "http://127.0.0.1:5199",
+        "crossOriginIsolated": false,
+        "sharedArrayBufferMainThread": false,
+        "showOpenFilePicker": true,
+        "showSaveFilePicker": true,
+        "showDirectoryPicker": true,
+        "opfsGetDirectoryMain": true,
+        "mainHasVideoEncoder": true,
+        "mainHasAudioEncoder": true,
+        "performanceMemory": true,
+        "storageEstimate": {
+          "quotaMB": 10737,
+          "usageMB": 0
+        },
+        "storagePersist": false,
+        "storagePersisted": false
+      },
+      "graphics": {
+        "webgl2": true,
+        "webgl2Renderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "webgl2Vendor": "Google Inc. (Intel)",
+        "maxTextureSize": 16384,
+        "webgl1": true,
+        "webgpuApi": true,
+        "webgpuAdapter": {
+          "vendor": "intel",
+          "architecture": "gen-12lp",
+          "device": "",
+          "description": ""
+        }
+      },
+      "worker": {
+        "offscreen2d": true,
+        "offscreenWebgl2": true,
+        "workerGlRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "opfsGetDirectory": true,
+        "opfsSyncAccessHandle": true,
+        "opfsWriteMBps_16MB": 141.3,
+        "sharedArrayBufferInWorker": false,
+        "workerHasVideoEncoder": true
+      },
+      "video": {
+        "H.264 Baseline@3.1 720p": {
+          "codec": "avc1.42001f",
+          "w": 1280,
+          "h": 720,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 Baseline@4.2 1080p": {
+          "codec": "avc1.42002a",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 Main@4.0 1080p": {
+          "codec": "avc1.4d0028",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@3.1 720p": {
+          "codec": "avc1.64001f",
+          "w": 1280,
+          "h": 720,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@4.0 1080p": {
+          "codec": "avc1.640028",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.0 1080p": {
+          "codec": "avc1.640032",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.1 4K": {
+          "codec": "avc1.640033",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.2 4K": {
+          "codec": "avc1.640034",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "HEVC Main@4.0 1080p (hvc1)": {
+          "codec": "hvc1.1.6.L120.B0",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "no",
+            "no-preference": "no"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          }
+        },
+        "HEVC Main@5.1 4K (hev1)": {
+          "codec": "hev1.1.6.L153.B0",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "no",
+            "no-preference": "no"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          }
+        },
+        "VP9 p0 L4.0 1080p": {
+          "codec": "vp09.00.40.08",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "VP9 p0 L5.1 4K": {
+          "codec": "vp09.00.51.08",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "VP8 1080p": {
+          "codec": "vp8",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "AV1 Main L4.0 1080p": {
+          "codec": "av01.0.08M.08",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "AV1 Main L5.0 4K": {
+          "codec": "av01.0.12M.08",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        }
+      },
+      "audio": {
+        "AAC-LC mp4a.40.2": {
+          "encode": "yes",
+          "decode": "yes"
+        },
+        "Opus": {
+          "encode": "yes",
+          "decode": "yes"
+        },
+        "FLAC": {
+          "encode": "no",
+          "decode": "yes"
+        },
+        "Vorbis": {
+          "encode": "no",
+          "decode": "yes"
+        },
+        "MP3": {
+          "encode": "no",
+          "decode": "yes"
+        }
+      },
+      "imageDecoder": {
+        "image/png": true,
+        "image/jpeg": true,
+        "image/webp": true,
+        "image/gif": true,
+        "image/avif": true
+      },
+      "roundTrip": {
+        "h264_hw": {
+          "codec": "avc1.640028",
+          "hw": "prefer-hardware",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "h264_sw": {
+          "codec": "avc1.640028",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "vp9_sw": {
+          "codec": "vp09.00.40.08",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "vp8_sw": {
+          "codec": "vp8",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "av1_sw": {
+          "codec": "av01.0.08M.08",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "aac": {
+          "codec": "mp4a.40.2",
+          "ok": true,
+          "chunks": 47,
+          "err": null
+        },
+        "opus": {
+          "codec": "opus",
+          "ok": true,
+          "chunks": 51,
+          "err": null
+        }
+      }
+    },
+    "edge-headless": {
+      "version": "157.0.4341.60",
+      "platform": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+        "cores": 16,
+        "deviceMemoryGB": 16,
+        "isSecureContext": true,
+        "origin": "http://127.0.0.1:5199",
+        "crossOriginIsolated": false,
+        "sharedArrayBufferMainThread": false,
+        "showOpenFilePicker": true,
+        "showSaveFilePicker": true,
+        "showDirectoryPicker": true,
+        "opfsGetDirectoryMain": true,
+        "mainHasVideoEncoder": true,
+        "mainHasAudioEncoder": true,
+        "performanceMemory": true,
+        "storageEstimate": {
+          "quotaMB": 10737,
+          "usageMB": 0
+        },
+        "storagePersist": false,
+        "storagePersisted": false
+      },
+      "graphics": {
+        "webgl2": true,
+        "webgl2Renderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "webgl2Vendor": "Google Inc. (Intel)",
+        "maxTextureSize": 16384,
+        "webgl1": true,
+        "webgpuApi": true,
+        "webgpuAdapter": {
+          "vendor": "intel",
+          "architecture": "gen-12lp",
+          "device": "",
+          "description": ""
+        }
+      },
+      "worker": {
+        "offscreen2d": true,
+        "offscreenWebgl2": true,
+        "workerGlRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "opfsGetDirectory": true,
+        "opfsSyncAccessHandle": true,
+        "opfsWriteMBps_16MB": 127.2,
+        "sharedArrayBufferInWorker": false,
+        "workerHasVideoEncoder": true
+      },
+      "video": {
+        "H.264 Baseline@3.1 720p": {
+          "codec": "avc1.42001f",
+          "w": 1280,
+          "h": 720,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 Baseline@4.2 1080p": {
+          "codec": "avc1.42002a",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 Main@4.0 1080p": {
+          "codec": "avc1.4d0028",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@3.1 720p": {
+          "codec": "avc1.64001f",
+          "w": 1280,
+          "h": 720,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@4.0 1080p": {
+          "codec": "avc1.640028",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.0 1080p": {
+          "codec": "avc1.640032",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.1 4K": {
+          "codec": "avc1.640033",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "H.264 High@5.2 4K": {
+          "codec": "avc1.640034",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "HEVC Main@4.0 1080p (hvc1)": {
+          "codec": "hvc1.1.6.L120.B0",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "no",
+            "no-preference": "no"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          }
+        },
+        "HEVC Main@5.1 4K (hev1)": {
+          "codec": "hev1.1.6.L153.B0",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "no",
+            "no-preference": "no"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "no",
+            "no-preference": "yes"
+          }
+        },
+        "VP9 p0 L4.0 1080p": {
+          "codec": "vp09.00.40.08",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "VP9 p0 L5.1 4K": {
+          "codec": "vp09.00.51.08",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "VP8 1080p": {
+          "codec": "vp8",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "AV1 Main L4.0 1080p": {
+          "codec": "av01.0.08M.08",
+          "w": 1920,
+          "h": 1080,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        },
+        "AV1 Main L5.0 4K": {
+          "codec": "av01.0.12M.08",
+          "w": 3840,
+          "h": 2160,
+          "encode": {
+            "prefer-hardware": "no",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          },
+          "decode": {
+            "prefer-hardware": "yes",
+            "prefer-software": "yes",
+            "no-preference": "yes"
+          }
+        }
+      },
+      "audio": {
+        "AAC-LC mp4a.40.2": {
+          "encode": "yes",
+          "decode": "yes"
+        },
+        "Opus": {
+          "encode": "yes",
+          "decode": "yes"
+        },
+        "FLAC": {
+          "encode": "no",
+          "decode": "yes"
+        },
+        "Vorbis": {
+          "encode": "no",
+          "decode": "yes"
+        },
+        "MP3": {
+          "encode": "no",
+          "decode": "yes"
+        }
+      },
+      "imageDecoder": {
+        "image/png": true,
+        "image/jpeg": true,
+        "image/webp": true,
+        "image/gif": true,
+        "image/avif": true
+      },
+      "roundTrip": {
+        "h264_hw": {
+          "codec": "avc1.640028",
+          "hw": "prefer-hardware",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "h264_sw": {
+          "codec": "avc1.640028",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "vp9_sw": {
+          "codec": "vp09.00.40.08",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "vp8_sw": {
+          "codec": "vp8",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "av1_sw": {
+          "codec": "av01.0.08M.08",
+          "hw": "prefer-software",
+          "ok": true,
+          "chunks": 30,
+          "err": null
+        },
+        "aac": {
+          "codec": "mp4a.40.2",
+          "ok": true,
+          "chunks": 47,
+          "err": null
+        },
+        "opus": {
+          "codec": "opus",
+          "ok": true,
+          "chunks": 51,
+          "err": null
+        }
+      }
+    }
+  }
+}

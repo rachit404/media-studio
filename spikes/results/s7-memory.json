@@ -1,0 +1,1229 @@
+{
+  "env": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "cores": 16,
+    "deviceMemoryGB": 16,
+    "webgl2": true,
+    "glRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "webgpu": true,
+    "crossOriginIsolated": false,
+    "secureContext": true
+  },
+  "playback": [
+    {
+      "label": "main-60-bitmap-HW-90s",
+      "kind": "bitmap",
+      "hw": "prefer-hardware",
+      "cacheMax": 60,
+      "clips": 30,
+      "clipSec": 3,
+      "timelineFramesPlayed": 2700,
+      "wallSec": 90.0103999999999,
+      "startupMs": 57.3000000002794,
+      "presented": 2700,
+      "missed": 0,
+      "missedPct": 0,
+      "boundaryMissTotal": 0,
+      "boundaryMissPerClip": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "heapMB": {
+        "n": 89,
+        "min": 37.18263626098633,
+        "max": 78.61548614501953,
+        "firstHalfAvg": 51.918210614811294,
+        "secondHalfAvg": 58.53316033681234,
+        "last": 45.431763648986816
+      },
+      "counters": {
+        "vfCreated": 3645,
+        "vfClosed": 3645,
+        "bmCreated": 2700,
+        "bmClosed": 2700,
+        "maxOpenVF": 1,
+        "maxOpenBM": 61,
+        "finalOpenVF": 0,
+        "finalOpenBM": 0
+      },
+      "cache": {
+        "evictions": 2640,
+        "hits": 2700,
+        "misses": 0,
+        "sizeAtEnd": 60,
+        "discardedByDecoder": 945,
+        "throttleWaits": 14059
+      },
+      "error": null,
+      "samples": [
+        {
+          "tSec": 1,
+          "heapMB": 37.419968605041504,
+          "cache": 56,
+          "openVF": 0,
+          "openBM": 56,
+          "playG": 30
+        },
+        {
+          "tSec": 2,
+          "heapMB": 37.489338874816895,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 60
+        },
+        {
+          "tSec": 3,
+          "heapMB": 39.89207172393799,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 90
+        },
+        {
+          "tSec": 4,
+          "heapMB": 40.03061389923096,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 120
+        },
+        {
+          "tSec": 5,
+          "heapMB": 40.184906005859375,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 150
+        },
+        {
+          "tSec": 6,
+          "heapMB": 41.76016712188721,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 180
+        },
+        {
+          "tSec": 7,
+          "heapMB": 44.10939884185791,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 210
+        },
+        {
+          "tSec": 8,
+          "heapMB": 44.25576114654541,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 240
+        },
+        {
+          "tSec": 9,
+          "heapMB": 48.13961315155029,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 270
+        },
+        {
+          "tSec": 10,
+          "heapMB": 48.29310894012451,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 300
+        },
+        {
+          "tSec": 11,
+          "heapMB": 50.479323387145996,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 330
+        },
+        {
+          "tSec": 12,
+          "heapMB": 57.59356498718262,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 360
+        },
+        {
+          "tSec": 13,
+          "heapMB": 57.005083084106445,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 390
+        },
+        {
+          "tSec": 14,
+          "heapMB": 37.18263626098633,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 420
+        },
+        {
+          "tSec": 15,
+          "heapMB": 37.50412368774414,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 450
+        },
+        {
+          "tSec": 16,
+          "heapMB": 37.62432098388672,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 480
+        },
+        {
+          "tSec": 17,
+          "heapMB": 40.02137756347656,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 510
+        },
+        {
+          "tSec": 18,
+          "heapMB": 44.7717924118042,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 540
+        },
+        {
+          "tSec": 19,
+          "heapMB": 44.92760753631592,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 570
+        },
+        {
+          "tSec": 20,
+          "heapMB": 46.581430435180664,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 600
+        },
+        {
+          "tSec": 21,
+          "heapMB": 53.4836950302124,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 630
+        },
+        {
+          "tSec": 22,
+          "heapMB": 53.5982084274292,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 660
+        },
+        {
+          "tSec": 23,
+          "heapMB": 53.71816539764404,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 690
+        },
+        {
+          "tSec": 24,
+          "heapMB": 55.144869804382324,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 720
+        },
+        {
+          "tSec": 25,
+          "heapMB": 55.27003002166748,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 750
+        },
+        {
+          "tSec": 26,
+          "heapMB": 55.37013530731201,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 780
+        },
+        {
+          "tSec": 27,
+          "heapMB": 57.65480613708496,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 810
+        },
+        {
+          "tSec": 28,
+          "heapMB": 57.0576229095459,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 840
+        },
+        {
+          "tSec": 29,
+          "heapMB": 57.19512748718262,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 870
+        },
+        {
+          "tSec": 30,
+          "heapMB": 63.84784412384033,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 900
+        },
+        {
+          "tSec": 31,
+          "heapMB": 63.9757776260376,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 930
+        },
+        {
+          "tSec": 32,
+          "heapMB": 66.1468448638916,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 960
+        },
+        {
+          "tSec": 33,
+          "heapMB": 71.83757209777832,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 990
+        },
+        {
+          "tSec": 34,
+          "heapMB": 71.94978141784668,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1020
+        },
+        {
+          "tSec": 35,
+          "heapMB": 72.06269645690918,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1050
+        },
+        {
+          "tSec": 36,
+          "heapMB": 76.84485244750977,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1080
+        },
+        {
+          "tSec": 37,
+          "heapMB": 78.48820877075195,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1110
+        },
+        {
+          "tSec": 38,
+          "heapMB": 78.61548614501953,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1140
+        },
+        {
+          "tSec": 39,
+          "heapMB": 39.65020275115967,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1170
+        },
+        {
+          "tSec": 40,
+          "heapMB": 39.78905391693115,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1200
+        },
+        {
+          "tSec": 41,
+          "heapMB": 41.94784069061279,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1230
+        },
+        {
+          "tSec": 42,
+          "heapMB": 48.86652755737305,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1260
+        },
+        {
+          "tSec": 43,
+          "heapMB": 48.250770568847656,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1290
+        },
+        {
+          "tSec": 44,
+          "heapMB": 48.36893844604492,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1320
+        },
+        {
+          "tSec": 45,
+          "heapMB": 53.008572578430176,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1350
+        },
+        {
+          "tSec": 46,
+          "heapMB": 53.13208484649658,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1380
+        },
+        {
+          "tSec": 47,
+          "heapMB": 55.4365348815918,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1410
+        },
+        {
+          "tSec": 48,
+          "heapMB": 56.80356216430664,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1440
+        },
+        {
+          "tSec": 49,
+          "heapMB": 56.91203308105469,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1470
+        },
+        {
+          "tSec": 50,
+          "heapMB": 57.03996658325195,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1500
+        },
+        {
+          "tSec": 51,
+          "heapMB": 61.50283145904541,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1530
+        },
+        {
+          "tSec": 52,
+          "heapMB": 60.907166481018066,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1560
+        },
+        {
+          "tSec": 53,
+          "heapMB": 61.0464563369751,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1590
+        },
+        {
+          "tSec": 54,
+          "heapMB": 68.1239128112793,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1620
+        },
+        {
+          "tSec": 55,
+          "heapMB": 68.23919677734375,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1650
+        },
+        {
+          "tSec": 56,
+          "heapMB": 68.34515380859375,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1680
+        },
+        {
+          "tSec": 57,
+          "heapMB": 74.21359348297119,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1710
+        },
+        {
+          "tSec": 58,
+          "heapMB": 74.34372615814209,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1740
+        },
+        {
+          "tSec": 59,
+          "heapMB": 74.476149559021,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1770
+        },
+        {
+          "tSec": 60,
+          "heapMB": 78.40279579162598,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1800
+        },
+        {
+          "tSec": 61,
+          "heapMB": 78.5285587310791,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1830
+        },
+        {
+          "tSec": 62,
+          "heapMB": 39.07857131958008,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1860
+        },
+        {
+          "tSec": 63,
+          "heapMB": 45.919217109680176,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1890
+        },
+        {
+          "tSec": 64,
+          "heapMB": 45.97831058502197,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1920
+        },
+        {
+          "tSec": 65,
+          "heapMB": 46.05277347564697,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1950
+        },
+        {
+          "tSec": 66,
+          "heapMB": 49.881418228149414,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 1980
+        },
+        {
+          "tSec": 67,
+          "heapMB": 51.99137020111084,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2010
+        },
+        {
+          "tSec": 68,
+          "heapMB": 52.078505516052246,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2040
+        },
+        {
+          "tSec": 69,
+          "heapMB": 54.344350814819336,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2070
+        },
+        {
+          "tSec": 70,
+          "heapMB": 54.42309761047363,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2100
+        },
+        {
+          "tSec": 71,
+          "heapMB": 54.50282096862793,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2130
+        },
+        {
+          "tSec": 72,
+          "heapMB": 55.97147083282471,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2160
+        },
+        {
+          "tSec": 73,
+          "heapMB": 56.05869770050049,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2190
+        },
+        {
+          "tSec": 74,
+          "heapMB": 56.14621829986572,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2220
+        },
+        {
+          "tSec": 75,
+          "heapMB": 62.67215442657471,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2250
+        },
+        {
+          "tSec": 76,
+          "heapMB": 62.73751926422119,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2280
+        },
+        {
+          "tSec": 77,
+          "heapMB": 62.79788684844971,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2310
+        },
+        {
+          "tSec": 78,
+          "heapMB": 69.09419059753418,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2340
+        },
+        {
+          "tSec": 79,
+          "heapMB": 69.15692710876465,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2370
+        },
+        {
+          "tSec": 80,
+          "heapMB": 69.24482536315918,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2400
+        },
+        {
+          "tSec": 81,
+          "heapMB": 73.99828433990479,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2430
+        },
+        {
+          "tSec": 82,
+          "heapMB": 74.07726764678955,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2460
+        },
+        {
+          "tSec": 83,
+          "heapMB": 76.40594959259033,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2490
+        },
+        {
+          "tSec": 84,
+          "heapMB": 38.298508644104004,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2520
+        },
+        {
+          "tSec": 85,
+          "heapMB": 38.369935035705566,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2550
+        },
+        {
+          "tSec": 86,
+          "heapMB": 38.4331636428833,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2580
+        },
+        {
+          "tSec": 87,
+          "heapMB": 45.0333251953125,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2610
+        },
+        {
+          "tSec": 88,
+          "heapMB": 45.35139560699463,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2640
+        },
+        {
+          "tSec": 89,
+          "heapMB": 45.431763648986816,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60,
+          "playG": 2670
+        }
+      ],
+      "osSamples": [
+        {
+          "tSec": 1,
+          "procMB": {
+            "total": 1168,
+            "crashpad-handler": 10,
+            "browser": 195,
+            "utility": 72,
+            "gpu": 634,
+            "renderer": 258
+          }
+        },
+        {
+          "tSec": 13,
+          "procMB": {
+            "total": 1590,
+            "crashpad-handler": 10,
+            "browser": 197,
+            "utility": 72,
+            "gpu": 1016,
+            "renderer": 295
+          }
+        },
+        {
+          "tSec": 24,
+          "procMB": {
+            "total": 1706,
+            "crashpad-handler": 10,
+            "browser": 206,
+            "utility": 72,
+            "gpu": 1119,
+            "renderer": 300
+          }
+        },
+        {
+          "tSec": 35,
+          "procMB": {
+            "total": 1833,
+            "crashpad-handler": 10,
+            "browser": 207,
+            "utility": 72,
+            "gpu": 1216,
+            "renderer": 330
+          }
+        },
+        {
+          "tSec": 46,
+          "procMB": {
+            "total": 1845,
+            "crashpad-handler": 10,
+            "browser": 201,
+            "utility": 69,
+            "gpu": 1266,
+            "renderer": 300
+          }
+        },
+        {
+          "tSec": 57,
+          "procMB": {
+            "total": 1930,
+            "crashpad-handler": 10,
+            "browser": 203,
+            "utility": 69,
+            "gpu": 1322,
+            "renderer": 327
+          }
+        },
+        {
+          "tSec": 68,
+          "procMB": {
+            "total": 1970,
+            "crashpad-handler": 10,
+            "browser": 203,
+            "utility": 70,
+            "gpu": 1395,
+            "renderer": 293
+          }
+        },
+        {
+          "tSec": 79,
+          "procMB": {
+            "total": 2183,
+            "crashpad-handler": 10,
+            "browser": 203,
+            "utility": 69,
+            "gpu": 1580,
+            "renderer": 321
+          }
+        },
+        {
+          "tSec": 90,
+          "procMB": {
+            "total": 2250,
+            "crashpad-handler": 10,
+            "browser": 203,
+            "utility": 69,
+            "gpu": 1686,
+            "renderer": 282
+          }
+        }
+      ]
+    }
+  ],
+  "scrub": [
+    {
+      "cacheMax": 60,
+      "hw": "prefer-hardware",
+      "durSec": 20,
+      "requests": 186,
+      "completed": 154,
+      "superseded": 30,
+      "failed": 0,
+      "cacheHits": 5,
+      "completedLatencyMs": {
+        "p50": 69.90000000037253,
+        "p95": 96.29999999981374,
+        "max": 100.60000000009313
+      },
+      "heapMB": {
+        "min": 38.13197422027588,
+        "max": 85.76353168487549,
+        "last": 81.83089447021484
+      },
+      "counters": {
+        "vfCreated": 5083,
+        "vfClosed": 5083,
+        "bmCreated": 149,
+        "bmClosed": 149,
+        "maxOpenVF": 1,
+        "maxOpenBM": 61,
+        "finalOpenVF": 0,
+        "finalOpenBM": 0
+      },
+      "settleOk": true,
+      "error": null,
+      "samples": [
+        {
+          "tSec": 1,
+          "heapMB": 45.759084701538086,
+          "cache": 9,
+          "openVF": 0,
+          "openBM": 9
+        },
+        {
+          "tSec": 2,
+          "heapMB": 44.08931922912598,
+          "cache": 17,
+          "openVF": 0,
+          "openBM": 17
+        },
+        {
+          "tSec": 3,
+          "heapMB": 48.57495975494385,
+          "cache": 25,
+          "openVF": 0,
+          "openBM": 25
+        },
+        {
+          "tSec": 4,
+          "heapMB": 48.95566272735596,
+          "cache": 33,
+          "openVF": 0,
+          "openBM": 33
+        },
+        {
+          "tSec": 5,
+          "heapMB": 47.853360176086426,
+          "cache": 40,
+          "openVF": 0,
+          "openBM": 40
+        },
+        {
+          "tSec": 6,
+          "heapMB": 64.09052085876465,
+          "cache": 47,
+          "openVF": 0,
+          "openBM": 47
+        },
+        {
+          "tSec": 7,
+          "heapMB": 45.98752021789551,
+          "cache": 54,
+          "openVF": 0,
+          "openBM": 54
+        },
+        {
+          "tSec": 8,
+          "heapMB": 53.8180046081543,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 9,
+          "heapMB": 45.66902446746826,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 10,
+          "heapMB": 68.05858516693115,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 11,
+          "heapMB": 85.76353168487549,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 12,
+          "heapMB": 65.02772617340088,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 13,
+          "heapMB": 45.83176517486572,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 14,
+          "heapMB": 66.53814029693604,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 15,
+          "heapMB": 45.335580825805664,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 16,
+          "heapMB": 38.13197422027588,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 17,
+          "heapMB": 64.04480838775635,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 18,
+          "heapMB": 46.85592555999756,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 19,
+          "heapMB": 76.67912006378174,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        },
+        {
+          "tSec": 20,
+          "heapMB": 81.83089447021484,
+          "cache": 60,
+          "openVF": 0,
+          "openBM": 60
+        }
+      ],
+      "osSamples": [
+        {
+          "tSec": 1,
+          "procMB": {
+            "total": 850,
+            "crashpad-handler": 10,
+            "browser": 189,
+            "utility": 71,
+            "gpu": 317,
+            "renderer": 262
+          }
+        },
+        {
+          "tSec": 12,
+          "procMB": {
+            "total": 2074,
+            "crashpad-handler": 10,
+            "browser": 208,
+            "utility": 72,
+            "gpu": 1498,
+            "renderer": 286
+          }
+        }
+      ]
+    }
+  ],
+  "proxy": [
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "decHw": "prefer-hardware",
+      "encHw": "no-preference",
+      "frames": 1800,
+      "ms": 8170.399999999907,
+      "fps": 220.30745128757718,
+      "realtimeX": 7.343581709585906,
+      "mediaSec": 60,
+      "sourceDur": 60,
+      "srcSize": "1920x1080",
+      "bitrate": 3000000,
+      "outBytes": 23134474,
+      "verify": {
+        "codec": "avc",
+        "displayW": 960,
+        "displayH": 540,
+        "duration": 60,
+        "packets": 1800,
+        "decodableFrames": 1800
+      },
+      "leakVF": 0,
+      "maxOpenVF": 2,
+      "osSamples": [
+        {
+          "tSec": 1,
+          "procMB": {
+            "total": 1986,
+            "crashpad-handler": 10,
+            "browser": 203,
+            "utility": 72,
+            "gpu": 1300,
+            "renderer": 401
+          }
+        }
+      ]
+    },
+    {
+      "status": "OK",
+      "file": "h264_4k30_gop2s_20s.mp4",
+      "decHw": "prefer-hardware",
+      "encHw": "no-preference",
+      "frames": 600,
+      "ms": 7937.899999999907,
+      "fps": 75.5867420854391,
+      "realtimeX": 2.5195580695146367,
+      "mediaSec": 20,
+      "sourceDur": 20,
+      "srcSize": "3840x2160",
+      "bitrate": 3000000,
+      "outBytes": 8093991,
+      "verify": {
+        "codec": "avc",
+        "displayW": 960,
+        "displayH": 540,
+        "duration": 20,
+        "packets": 600,
+        "decodableFrames": 600
+      },
+      "leakVF": 0,
+      "maxOpenVF": 2,
+      "osSamples": [
+        {
+          "tSec": 1,
+          "procMB": {
+            "total": 1980,
+            "crashpad-handler": 10,
+            "browser": 281,
+            "utility": 72,
+            "gpu": 1149,
+            "renderer": 468
+          }
+        }
+      ]
+    },
+    {
+      "status": "OK",
+      "file": "h264_1080p30_gop2s_60s.mp4",
+      "decHw": "prefer-hardware",
+      "encHw": "prefer-software",
+      "frames": 1800,
+      "ms": 11153.299999999814,
+      "fps": 161.3872127531789,
+      "realtimeX": 5.379573758439296,
+      "mediaSec": 60,
+      "sourceDur": 60,
+      "srcSize": "1920x1080",
+      "bitrate": 3000000,
+      "outBytes": 22337000,
+      "verify": {
+        "codec": "avc",
+        "displayW": 960,
+        "displayH": 540,
+        "duration": 60,
+        "packets": 1800,
+        "decodableFrames": 1800
+      },
+      "leakVF": 0,
+      "maxOpenVF": 2,
+      "osSamples": [
+        {
+          "tSec": 1,
+          "procMB": {
+            "total": 1880,
+            "crashpad-handler": 10,
+            "browser": 282,
+            "utility": 72,
+            "gpu": 1093,
+            "renderer": 424
+          }
+        },
+        {
+          "tSec": 13,
+          "procMB": {
+            "total": 1906,
+            "crashpad-handler": 10,
+            "browser": 303,
+            "utility": 72,
+            "gpu": 1116,
+            "renderer": 406
+          }
+        }
+      ]
+    }
+  ]
+}

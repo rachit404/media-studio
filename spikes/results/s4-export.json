@@ -1,0 +1,3487 @@
+{
+  "env": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "cores": 16,
+    "deviceMemoryGB": 16,
+    "webgl2": true,
+    "glRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "webgpu": true,
+    "crossOriginIsolated": false,
+    "secureContext": true,
+    "browserVersion": "157.0.8103.79"
+  },
+  "seconds": 60,
+  "quick": false,
+  "startedAt": "2026-11-17T17:12:11.243Z",
+  "runs": [
+    {
+      "label": "h264-hw-buffer",
+      "opts": {
+        "label": "h264-hw-buffer",
+        "codec": "avc1.640028",
+        "hw": "prefer-hardware",
+        "sink": "buffer",
+        "seconds": 60
+      },
+      "frames": 1800,
+      "tracks": {},
+      "cancel": null,
+      "ok": true,
+      "wallMs": 18544,
+      "loopMs": 18386.199951171875,
+      "flushMs": 98.599853515625,
+      "finalizeMs": 59.2001953125,
+      "framesEncoded": 1800,
+      "audioChunks": 2813,
+      "videoBytes": 62448890,
+      "audioBytes": 960533,
+      "renderMsTotal": 561.1999999957625,
+      "frameCreateEncodeMsTotal": 377.499999998603,
+      "framesCreated": 1800,
+      "framesClosed": 1800,
+      "openFramesAtEnd": 0,
+      "maxOpenFrames": 1,
+      "peakEncodeQueue": 7,
+      "peakAudioQueue": 2,
+      "maxPendingMux": 1,
+      "maxQ": 6,
+      "maxMux": 40,
+      "heap": [
+        {
+          "tSec": 0.02,
+          "frame": 0,
+          "heap": null,
+          "queue": 1,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 1.03,
+          "frame": 85,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 2.03,
+          "frame": 184,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 3.03,
+          "frame": 278,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 4.03,
+          "frame": 378,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 5.04,
+          "frame": 475,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 6.04,
+          "frame": 570,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 7.05,
+          "frame": 666,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 8.05,
+          "frame": 769,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 9.05,
+          "frame": 898,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 10.06,
+          "frame": 1022,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 11.06,
+          "frame": 1136,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 12.06,
+          "frame": 1228,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 13.07,
+          "frame": 1324,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 14.08,
+          "frame": 1416,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 15.09,
+          "frame": 1509,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 16.09,
+          "frame": 1596,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 17.1,
+          "frame": 1691,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 18.11,
+          "frame": 1774,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        }
+      ],
+      "workerHasPerfMemory": false,
+      "startupMs": 1322.2001953125,
+      "vencConfigAccepted": {
+        "codec": "avc1.640028",
+        "hardwareAcceleration": "prefer-hardware"
+      },
+      "fileBytes": 63430201,
+      "audioMixMs": 741.1000000000931,
+      "mainHeap": [
+        {
+          "tSec": 1,
+          "heap": 73536437
+        },
+        {
+          "tSec": 2.01,
+          "heap": 73539213
+        },
+        {
+          "tSec": 3,
+          "heap": 73539981
+        },
+        {
+          "tSec": 4.02,
+          "heap": 73541181
+        },
+        {
+          "tSec": 5,
+          "heap": 73542893
+        },
+        {
+          "tSec": 6.01,
+          "heap": 73543673
+        },
+        {
+          "tSec": 7.01,
+          "heap": 73544453
+        },
+        {
+          "tSec": 8.01,
+          "heap": 50493917
+        },
+        {
+          "tSec": 9,
+          "heap": 50501161
+        },
+        {
+          "tSec": 10.01,
+          "heap": 50502757
+        },
+        {
+          "tSec": 11.01,
+          "heap": 50504013
+        },
+        {
+          "tSec": 12,
+          "heap": 50505005
+        },
+        {
+          "tSec": 13,
+          "heap": 50505777
+        },
+        {
+          "tSec": 14.01,
+          "heap": 50506561
+        },
+        {
+          "tSec": 15.01,
+          "heap": 50507345
+        },
+        {
+          "tSec": 16.01,
+          "heap": 50508129
+        },
+        {
+          "tSec": 17,
+          "heap": 50509121
+        },
+        {
+          "tSec": 18,
+          "heap": 50509893
+        },
+        {
+          "tSec": 19.01,
+          "heap": 50510625
+        }
+      ],
+      "workerReady": {
+        "type": "ready",
+        "workerHasPerfMemory": false
+      },
+      "heapSamples": [
+        {
+          "tSec": 0,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 1.6,
+          "workerHeapMB": 11.8,
+          "workerHeapTotalMB": 13.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 2.5,
+          "workerHeapMB": 12.3,
+          "workerHeapTotalMB": 14,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 3.3,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 15,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 4.1,
+          "workerHeapMB": 12.3,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 4.9,
+          "workerHeapMB": 12.6,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 5.7,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 6.5,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 7.4,
+          "workerHeapMB": 13.2,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 8.2,
+          "workerHeapMB": 13.4,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 9,
+          "workerHeapMB": 13.2,
+          "workerHeapTotalMB": 15.8,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 9.8,
+          "workerHeapMB": 14.1,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 10.6,
+          "workerHeapMB": 13.4,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 12.2,
+          "workerHeapMB": 14,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 13,
+          "workerHeapMB": 13.4,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 13.8,
+          "workerHeapMB": 14.3,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 14.7,
+          "workerHeapMB": 13.5,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 15.5,
+          "workerHeapMB": 14.3,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 16.3,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 17.1,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 17.9,
+          "workerHeapMB": 14.6,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 18.7,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 16.8,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 19.6,
+          "workerHeapMB": 14.4,
+          "workerHeapTotalMB": 16.8,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 20.4,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 16.8,
+          "pageHeapMB": 13.3
+        }
+      ],
+      "rssSamplesMB": [
+        {
+          "tSec": 0.8,
+          "renderer": 241,
+          "network.mojom.NetworkService": 49,
+          "GPU": 115,
+          "browser": 131,
+          "storage.mojom.StorageService": 19
+        },
+        {
+          "tSec": 11.4,
+          "renderer": 335,
+          "network.mojom.NetworkService": 49,
+          "GPU": 394,
+          "browser": 132,
+          "storage.mojom.StorageService": 19
+        }
+      ],
+      "hostWallMs": 21190,
+      "cpuSecByProcessType": {
+        "browser": 0.64,
+        "renderer": 5.74,
+        "GPU": 22.29,
+        "network.mojom.NetworkService": 0.07,
+        "storage.mojom.StorageService": 0
+      },
+      "verify": {
+        "checks": {
+          "durationWithin0_1s": true,
+          "frameCount": true,
+          "resolution": true,
+          "audioPresent": true,
+          "firstLastDecodable": true,
+          "timestampsExact": true
+        },
+        "fileBytes": 63430201,
+        "sha256": "01001a5a4b270baff10bde79c15b7182be9f5e671c0bc1bb8f1ae68df40c4c3a",
+        "bitrateMbpsTotal": 8.457,
+        "format": "MP4",
+        "durationSec": 60.010666666666665,
+        "video": {
+          "codec": "avc",
+          "codedWidth": 1920,
+          "codedHeight": 1080,
+          "packetCount": 1800,
+          "averageBitrateMbps": 8.327,
+          "avgPacketRate": 30
+        },
+        "audio": {
+          "codec": "aac",
+          "channels": 2,
+          "sampleRate": 48000,
+          "durationSec": 60.010666666666665
+        },
+        "firstFrame": {
+          "ts": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "lastFrame": {
+          "ts": 59.96666666666667,
+          "w": 1920
+        },
+        "decodedFrames": 1800,
+        "maxTimestampErrorSec": 0,
+        "timestampsMonotonic": true,
+        "decodeAllMs": 1395.8000000000466,
+        "audioFirstSampleDecodable": true,
+        "allPass": true
+      },
+      "opfsAfter": []
+    },
+    {
+      "label": "h264-sw-buffer",
+      "opts": {
+        "label": "h264-sw-buffer",
+        "codec": "avc1.640028",
+        "hw": "prefer-software",
+        "sink": "buffer",
+        "seconds": 60
+      },
+      "frames": 1800,
+      "tracks": {},
+      "cancel": null,
+      "ok": true,
+      "wallMs": 26553,
+      "loopMs": 26266.699951171875,
+      "flushMs": 182,
+      "finalizeMs": 104.300048828125,
+      "framesEncoded": 1800,
+      "audioChunks": 2813,
+      "videoBytes": 58686414,
+      "audioBytes": 960533,
+      "renderMsTotal": 533.6999999990221,
+      "frameCreateEncodeMsTotal": 397.8999999964144,
+      "framesCreated": 1800,
+      "framesClosed": 1800,
+      "openFramesAtEnd": 0,
+      "maxOpenFrames": 1,
+      "peakEncodeQueue": 7,
+      "peakAudioQueue": 2,
+      "maxPendingMux": 1,
+      "maxQ": 6,
+      "maxMux": 40,
+      "heap": [
+        {
+          "tSec": 0.01,
+          "frame": 0,
+          "heap": null,
+          "queue": 1,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 1.02,
+          "frame": 88,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 2.02,
+          "frame": 183,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 3.03,
+          "frame": 264,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 4.03,
+          "frame": 340,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 5.03,
+          "frame": 438,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 6.04,
+          "frame": 531,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 7.05,
+          "frame": 610,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 8.06,
+          "frame": 683,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 9.07,
+          "frame": 730,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 10.07,
+          "frame": 791,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 11.08,
+          "frame": 848,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 12.09,
+          "frame": 901,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 13.1,
+          "frame": 966,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 14.11,
+          "frame": 1042,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 15.13,
+          "frame": 1106,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 16.14,
+          "frame": 1172,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 17.15,
+          "frame": 1246,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 18.16,
+          "frame": 1320,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 19.17,
+          "frame": 1389,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 20.17,
+          "frame": 1458,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 21.19,
+          "frame": 1523,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 22.19,
+          "frame": 1576,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 23.2,
+          "frame": 1631,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 24.21,
+          "frame": 1672,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 25.21,
+          "frame": 1726,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 26.23,
+          "frame": 1796,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        }
+      ],
+      "workerHasPerfMemory": false,
+      "startupMs": 158.10009765625,
+      "vencConfigAccepted": {
+        "codec": "avc1.640028",
+        "hardwareAcceleration": "prefer-software"
+      },
+      "fileBytes": 59667718,
+      "audioMixMs": 741.1000000000931,
+      "mainHeap": [
+        {
+          "tSec": 1.01,
+          "heap": 114690974
+        },
+        {
+          "tSec": 2,
+          "heap": 114691818
+        },
+        {
+          "tSec": 3.01,
+          "heap": 114692586
+        },
+        {
+          "tSec": 4,
+          "heap": 114693134
+        },
+        {
+          "tSec": 5,
+          "heap": 114693902
+        },
+        {
+          "tSec": 6.01,
+          "heap": 114694890
+        },
+        {
+          "tSec": 7,
+          "heap": 114695438
+        },
+        {
+          "tSec": 8,
+          "heap": 114696206
+        },
+        {
+          "tSec": 9,
+          "heap": 114696534
+        },
+        {
+          "tSec": 10.02,
+          "heap": 114697098
+        },
+        {
+          "tSec": 11,
+          "heap": 114697650
+        },
+        {
+          "tSec": 12.01,
+          "heap": 114698214
+        },
+        {
+          "tSec": 13.01,
+          "heap": 114698778
+        },
+        {
+          "tSec": 14,
+          "heap": 114699330
+        },
+        {
+          "tSec": 15.01,
+          "heap": 114700114
+        },
+        {
+          "tSec": 16.01,
+          "heap": 114714890
+        },
+        {
+          "tSec": 17.01,
+          "heap": 114715454
+        },
+        {
+          "tSec": 18.01,
+          "heap": 114716238
+        },
+        {
+          "tSec": 19,
+          "heap": 114716970
+        },
+        {
+          "tSec": 20,
+          "heap": 114717522
+        },
+        {
+          "tSec": 21.01,
+          "heap": 114718306
+        },
+        {
+          "tSec": 22.01,
+          "heap": 114718650
+        },
+        {
+          "tSec": 23,
+          "heap": 114719202
+        },
+        {
+          "tSec": 24,
+          "heap": 114719754
+        },
+        {
+          "tSec": 25,
+          "heap": 114720074
+        },
+        {
+          "tSec": 26.01,
+          "heap": 114720638
+        }
+      ],
+      "workerReady": {
+        "type": "ready",
+        "workerHasPerfMemory": false
+      },
+      "heapSamples": [
+        {
+          "tSec": 0,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 1.7,
+          "workerHeapMB": 12.5,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 2.5,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 3.3,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 4.1,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 4.9,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 5.7,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 6.6,
+          "workerHeapMB": 13.2,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 7.4,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 15.5,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 8.2,
+          "workerHeapMB": 13.7,
+          "workerHeapTotalMB": 15.8,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 9,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 9.8,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 10.6,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 12.6,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 14.5,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 13.4,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 14.2,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 15,
+          "workerHeapMB": 13.5,
+          "workerHeapTotalMB": 14.8,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 15.8,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 16.7,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 14,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 17.5,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 14.8,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 18.3,
+          "workerHeapMB": 13.5,
+          "workerHeapTotalMB": 14.8,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 19.1,
+          "workerHeapMB": 13.2,
+          "workerHeapTotalMB": 14.8,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 19.9,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 14.8,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 20.8,
+          "workerHeapMB": 14.4,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 21.6,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 23.4,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 24.2,
+          "workerHeapMB": 13.8,
+          "workerHeapTotalMB": 14.8,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 25.1,
+          "workerHeapMB": 13.5,
+          "workerHeapTotalMB": 14.8,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 25.9,
+          "workerHeapMB": 13.4,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 26.7,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 14.5,
+          "pageHeapMB": 14
+        }
+      ],
+      "rssSamplesMB": [
+        {
+          "tSec": 0.8,
+          "renderer": 444,
+          "network.mojom.NetworkService": 36,
+          "GPU": 292,
+          "browser": 85,
+          "storage.mojom.StorageService": 9
+        },
+        {
+          "tSec": 11.8,
+          "renderer": 490,
+          "network.mojom.NetworkService": 36,
+          "GPU": 297,
+          "browser": 85,
+          "storage.mojom.StorageService": 9
+        },
+        {
+          "tSec": 22.6,
+          "renderer": 517,
+          "network.mojom.NetworkService": 36,
+          "GPU": 283,
+          "browser": 86,
+          "storage.mojom.StorageService": 10
+        }
+      ],
+      "hostWallMs": 27517,
+      "cpuSecByProcessType": {
+        "browser": 0.23,
+        "renderer": 76.2,
+        "GPU": 7.27,
+        "network.mojom.NetworkService": 0.07,
+        "storage.mojom.StorageService": 0
+      },
+      "verify": {
+        "checks": {
+          "durationWithin0_1s": true,
+          "frameCount": true,
+          "resolution": true,
+          "audioPresent": true,
+          "firstLastDecodable": true,
+          "timestampsExact": true
+        },
+        "fileBytes": 59667718,
+        "sha256": "8f011bc93b55a9063f2b01bc1f658543d160e97d6071b4a9bd957dc3524aa05e",
+        "bitrateMbpsTotal": 7.956,
+        "format": "MP4",
+        "durationSec": 60.010666666666665,
+        "video": {
+          "codec": "avc",
+          "codedWidth": 1920,
+          "codedHeight": 1080,
+          "packetCount": 1800,
+          "averageBitrateMbps": 7.825,
+          "avgPacketRate": 30
+        },
+        "audio": {
+          "codec": "aac",
+          "channels": 2,
+          "sampleRate": 48000,
+          "durationSec": 60.010666666666665
+        },
+        "firstFrame": {
+          "ts": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "lastFrame": {
+          "ts": 59.96666666666667,
+          "w": 1920
+        },
+        "decodedFrames": 1800,
+        "maxTimestampErrorSec": 0,
+        "timestampsMonotonic": true,
+        "decodeAllMs": 3434.0999999998603,
+        "audioFirstSampleDecodable": true,
+        "allPass": true
+      },
+      "opfsAfter": []
+    },
+    {
+      "label": "h264-hw-opfs",
+      "opts": {
+        "label": "h264-hw-opfs",
+        "codec": "avc1.640028",
+        "hw": "prefer-hardware",
+        "sink": "opfs",
+        "seconds": 60
+      },
+      "frames": 1800,
+      "tracks": {},
+      "cancel": null,
+      "ok": true,
+      "wallMs": 21226.89990234375,
+      "loopMs": 21067,
+      "flushMs": 133,
+      "finalizeMs": 26.89990234375,
+      "framesEncoded": 1800,
+      "audioChunks": 2813,
+      "videoBytes": 62448890,
+      "audioBytes": 960533,
+      "renderMsTotal": 901.9000000050291,
+      "frameCreateEncodeMsTotal": 602.0999999982305,
+      "framesCreated": 1800,
+      "framesClosed": 1800,
+      "openFramesAtEnd": 0,
+      "maxOpenFrames": 1,
+      "peakEncodeQueue": 7,
+      "peakAudioQueue": 2,
+      "maxPendingMux": 1,
+      "maxQ": 6,
+      "maxMux": 40,
+      "heap": [
+        {
+          "tSec": 0.01,
+          "frame": 0,
+          "heap": null,
+          "queue": 1,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 1.02,
+          "frame": 61,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 2.04,
+          "frame": 142,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 3.05,
+          "frame": 228,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 4.05,
+          "frame": 308,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 5.05,
+          "frame": 391,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 6.06,
+          "frame": 472,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 7.07,
+          "frame": 562,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 8.07,
+          "frame": 647,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 9.07,
+          "frame": 725,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 10.09,
+          "frame": 800,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 11.09,
+          "frame": 907,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 12.1,
+          "frame": 993,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 13.1,
+          "frame": 1079,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 14.1,
+          "frame": 1165,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 15.11,
+          "frame": 1262,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 16.12,
+          "frame": 1352,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 17.13,
+          "frame": 1446,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 18.14,
+          "frame": 1538,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 19.15,
+          "frame": 1623,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 20.16,
+          "frame": 1727,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 21.23,
+          "frame": 1800,
+          "heap": null,
+          "queue": 0,
+          "openFrames": 0,
+          "pendingMux": 0
+        }
+      ],
+      "workerHasPerfMemory": false,
+      "startupMs": 1225.10009765625,
+      "vencConfigAccepted": {
+        "codec": "avc1.640028",
+        "hardwareAcceleration": "prefer-hardware"
+      },
+      "fileBytes": 63430209,
+      "fileName": "s4-h264-hw-opfs.mp4",
+      "audioMixMs": 592.3999999999069,
+      "mainHeap": [
+        {
+          "tSec": 1.02,
+          "heap": 73526869
+        },
+        {
+          "tSec": 2,
+          "heap": 73529505
+        },
+        {
+          "tSec": 3,
+          "heap": 73530053
+        },
+        {
+          "tSec": 4.01,
+          "heap": 73530833
+        },
+        {
+          "tSec": 5.01,
+          "heap": 73538073
+        },
+        {
+          "tSec": 6.01,
+          "heap": 73538853
+        },
+        {
+          "tSec": 7.01,
+          "heap": 73539413
+        },
+        {
+          "tSec": 8.01,
+          "heap": 73540169
+        },
+        {
+          "tSec": 9.01,
+          "heap": 73541073
+        },
+        {
+          "tSec": 10.01,
+          "heap": 73542581
+        },
+        {
+          "tSec": 11.01,
+          "heap": 73543385
+        },
+        {
+          "tSec": 12.01,
+          "heap": 73544169
+        },
+        {
+          "tSec": 13.01,
+          "heap": 73545173
+        },
+        {
+          "tSec": 14.01,
+          "heap": 73545957
+        },
+        {
+          "tSec": 15,
+          "heap": 73546485
+        },
+        {
+          "tSec": 16,
+          "heap": 73547257
+        },
+        {
+          "tSec": 17,
+          "heap": 73548029
+        },
+        {
+          "tSec": 18,
+          "heap": 73549021
+        },
+        {
+          "tSec": 19.01,
+          "heap": 73549741
+        },
+        {
+          "tSec": 20,
+          "heap": 73550733
+        },
+        {
+          "tSec": 21.01,
+          "heap": 73551517
+        },
+        {
+          "tSec": 22,
+          "heap": 73552289
+        }
+      ],
+      "workerReady": {
+        "type": "ready",
+        "workerHasPerfMemory": false
+      },
+      "heapSamples": [
+        {
+          "tSec": 0,
+          "pageHeapMB": 14.2
+        },
+        {
+          "tSec": 1.6,
+          "workerHeapMB": 11.8,
+          "workerHeapTotalMB": 13.8,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 2.4,
+          "workerHeapMB": 12.4,
+          "workerHeapTotalMB": 14,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 3.2,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 15,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 4,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 4.8,
+          "workerHeapMB": 12.4,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 5.6,
+          "workerHeapMB": 12.6,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 6.5,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 7.3,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 15.8,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 8.1,
+          "workerHeapMB": 12.6,
+          "workerHeapTotalMB": 15.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 8.9,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 15.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 9.7,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 15.8,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 10.5,
+          "workerHeapMB": 13.7,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 12.4,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 17.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 13.2,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 14,
+          "workerHeapMB": 14.1,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 14.9,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 15.7,
+          "workerHeapMB": 13.5,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 16.5,
+          "workerHeapMB": 14.2,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 17.3,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 18.1,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 19,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 19.8,
+          "workerHeapMB": 13.5,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 20.6,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 21.4,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 23,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 17,
+          "pageHeapMB": 13.3
+        }
+      ],
+      "rssSamplesMB": [
+        {
+          "tSec": 0.7,
+          "renderer": 257,
+          "GPU": 141,
+          "network.mojom.NetworkService": 51,
+          "browser": 119,
+          "storage.mojom.StorageService": 19
+        },
+        {
+          "tSec": 11.6,
+          "renderer": 370,
+          "GPU": 403,
+          "network.mojom.NetworkService": 52,
+          "browser": 154,
+          "storage.mojom.StorageService": 19
+        },
+        {
+          "tSec": 22.2,
+          "renderer": 348,
+          "GPU": 399,
+          "network.mojom.NetworkService": 52,
+          "browser": 187,
+          "storage.mojom.StorageService": 19
+        }
+      ],
+      "hostWallMs": 23841,
+      "cpuSecByProcessType": {
+        "browser": 4.11,
+        "renderer": 8.01,
+        "GPU": 30.98,
+        "network.mojom.NetworkService": 0.22,
+        "storage.mojom.StorageService": 0
+      },
+      "verify": {
+        "checks": {
+          "durationWithin0_1s": true,
+          "frameCount": true,
+          "resolution": true,
+          "audioPresent": true,
+          "firstLastDecodable": true,
+          "timestampsExact": true
+        },
+        "fileBytes": 63430209,
+        "sha256": "942f99a8a0e3281a2d5c580853c4b2c1d51abd443c0d71c6d6b8121a6cb58fd1",
+        "bitrateMbpsTotal": 8.457,
+        "format": "MP4",
+        "durationSec": 60.010666666666665,
+        "video": {
+          "codec": "avc",
+          "codedWidth": 1920,
+          "codedHeight": 1080,
+          "packetCount": 1800,
+          "averageBitrateMbps": 8.327,
+          "avgPacketRate": 30
+        },
+        "audio": {
+          "codec": "aac",
+          "channels": 2,
+          "sampleRate": 48000,
+          "durationSec": 60.010666666666665
+        },
+        "firstFrame": {
+          "ts": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "lastFrame": {
+          "ts": 59.96666666666667,
+          "w": 1920
+        },
+        "decodedFrames": 1800,
+        "maxTimestampErrorSec": 0,
+        "timestampsMonotonic": true,
+        "decodeAllMs": 1517.6000000000931,
+        "audioFirstSampleDecodable": true,
+        "allPass": true
+      },
+      "opfsAfter": [
+        "s4-h264-hw-opfs.mp4"
+      ]
+    },
+    {
+      "label": "h264-hw-buffer-rerun",
+      "opts": {
+        "label": "h264-hw-buffer-rerun",
+        "codec": "avc1.640028",
+        "hw": "prefer-hardware",
+        "sink": "buffer",
+        "seconds": 60
+      },
+      "frames": 1800,
+      "tracks": {},
+      "cancel": null,
+      "ok": true,
+      "wallMs": 19578.5,
+      "loopMs": 19367.7998046875,
+      "flushMs": 129.5,
+      "finalizeMs": 81.2001953125,
+      "framesEncoded": 1800,
+      "audioChunks": 2813,
+      "videoBytes": 62448890,
+      "audioBytes": 960533,
+      "renderMsTotal": 580.0000000079162,
+      "frameCreateEncodeMsTotal": 389.1999999722466,
+      "framesCreated": 1800,
+      "framesClosed": 1800,
+      "openFramesAtEnd": 0,
+      "maxOpenFrames": 1,
+      "peakEncodeQueue": 7,
+      "peakAudioQueue": 2,
+      "maxPendingMux": 1,
+      "maxQ": 6,
+      "maxMux": 40,
+      "heap": [
+        {
+          "tSec": 0.01,
+          "frame": 0,
+          "heap": null,
+          "queue": 1,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 1.02,
+          "frame": 84,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 2.03,
+          "frame": 184,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 3.03,
+          "frame": 284,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 4.04,
+          "frame": 379,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 5.05,
+          "frame": 474,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 6.05,
+          "frame": 578,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 7.05,
+          "frame": 676,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 8.06,
+          "frame": 770,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 9.07,
+          "frame": 874,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 10.08,
+          "frame": 974,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 11.09,
+          "frame": 1064,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 12.1,
+          "frame": 1154,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 13.1,
+          "frame": 1241,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 14.11,
+          "frame": 1327,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 15.11,
+          "frame": 1420,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 16.11,
+          "frame": 1510,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 17.12,
+          "frame": 1592,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 18.12,
+          "frame": 1685,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 19.12,
+          "frame": 1782,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        }
+      ],
+      "workerHasPerfMemory": false,
+      "startupMs": 1157.60009765625,
+      "vencConfigAccepted": {
+        "codec": "avc1.640028",
+        "hardwareAcceleration": "prefer-hardware"
+      },
+      "fileBytes": 63430201,
+      "audioMixMs": 412.39999999990687,
+      "mainHeap": [
+        {
+          "tSec": 1.01,
+          "heap": 73525153
+        },
+        {
+          "tSec": 2.01,
+          "heap": 73528021
+        },
+        {
+          "tSec": 3,
+          "heap": 73528789
+        },
+        {
+          "tSec": 4,
+          "heap": 73535205
+        },
+        {
+          "tSec": 5,
+          "heap": 73536785
+        },
+        {
+          "tSec": 6,
+          "heap": 73537773
+        },
+        {
+          "tSec": 7,
+          "heap": 73538541
+        },
+        {
+          "tSec": 8.01,
+          "heap": 73539321
+        },
+        {
+          "tSec": 9.01,
+          "heap": 73540445
+        },
+        {
+          "tSec": 10.01,
+          "heap": 73541953
+        },
+        {
+          "tSec": 11.01,
+          "heap": 73543001
+        },
+        {
+          "tSec": 12,
+          "heap": 73543761
+        },
+        {
+          "tSec": 13.01,
+          "heap": 73544545
+        },
+        {
+          "tSec": 14.01,
+          "heap": 73545329
+        },
+        {
+          "tSec": 15,
+          "heap": 73546101
+        },
+        {
+          "tSec": 16,
+          "heap": 73546873
+        },
+        {
+          "tSec": 17,
+          "heap": 73547633
+        },
+        {
+          "tSec": 18,
+          "heap": 73548405
+        },
+        {
+          "tSec": 19.01,
+          "heap": 73549369
+        },
+        {
+          "tSec": 20.01,
+          "heap": 73550153
+        }
+      ],
+      "workerReady": {
+        "type": "ready",
+        "workerHasPerfMemory": false
+      },
+      "heapSamples": [
+        {
+          "tSec": 0,
+          "pageHeapMB": 14.2
+        },
+        {
+          "tSec": 1.4,
+          "workerHeapMB": 11.8,
+          "workerHeapTotalMB": 13.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 2.2,
+          "workerHeapMB": 12.6,
+          "workerHeapTotalMB": 14.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 3,
+          "workerHeapMB": 12.4,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 3.8,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 15.8,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 4.6,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 5.4,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 6.3,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 7.1,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 7.9,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 15.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 8.7,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 9.5,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 10.3,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 11.7,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 12.5,
+          "workerHeapMB": 14.4,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 13.3,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 14.2,
+          "workerHeapMB": 14.1,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 15,
+          "workerHeapMB": 13.2,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 15.8,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 16.6,
+          "workerHeapMB": 13.4,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 17.4,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 18.3,
+          "workerHeapMB": 14.5,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 19.1,
+          "workerHeapMB": 13.4,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 19.9,
+          "workerHeapMB": 14.2,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 20.7,
+          "workerHeapMB": 13.5,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.3
+        }
+      ],
+      "rssSamplesMB": [
+        {
+          "tSec": 0.5,
+          "network.mojom.NetworkService": 51,
+          "browser": 118,
+          "GPU": 133,
+          "renderer": 264,
+          "storage.mojom.StorageService": 19
+        },
+        {
+          "tSec": 10.9,
+          "network.mojom.NetworkService": 52,
+          "browser": 128,
+          "GPU": 400,
+          "renderer": 347,
+          "storage.mojom.StorageService": 19
+        },
+        {
+          "tSec": 21.5,
+          "network.mojom.NetworkService": 52,
+          "browser": 129,
+          "GPU": 357,
+          "renderer": 312,
+          "storage.mojom.StorageService": 19
+        }
+      ],
+      "hostWallMs": 22294,
+      "cpuSecByProcessType": {
+        "browser": 1.64,
+        "renderer": 5.58,
+        "GPU": 22.88,
+        "network.mojom.NetworkService": 0.09,
+        "storage.mojom.StorageService": 0
+      },
+      "verify": {
+        "checks": {
+          "durationWithin0_1s": true,
+          "frameCount": true,
+          "resolution": true,
+          "audioPresent": true,
+          "firstLastDecodable": true,
+          "timestampsExact": true
+        },
+        "fileBytes": 63430201,
+        "sha256": "5e06ddfbd5cac9b0c3c86bfafc1f474c13a474f3c94c4a041cf1027f1215ff9a",
+        "bitrateMbpsTotal": 8.457,
+        "format": "MP4",
+        "durationSec": 60.010666666666665,
+        "video": {
+          "codec": "avc",
+          "codedWidth": 1920,
+          "codedHeight": 1080,
+          "packetCount": 1800,
+          "averageBitrateMbps": 8.327,
+          "avgPacketRate": 30
+        },
+        "audio": {
+          "codec": "aac",
+          "channels": 2,
+          "sampleRate": 48000,
+          "durationSec": 60.010666666666665
+        },
+        "firstFrame": {
+          "ts": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "lastFrame": {
+          "ts": 59.96666666666667,
+          "w": 1920
+        },
+        "decodedFrames": 1800,
+        "maxTimestampErrorSec": 0,
+        "timestampsMonotonic": true,
+        "decodeAllMs": 1454.6000000000931,
+        "audioFirstSampleDecodable": true,
+        "allPass": true
+      },
+      "opfsAfter": []
+    },
+    {
+      "label": "vp9-hw-buffer",
+      "opts": {
+        "label": "vp9-hw-buffer",
+        "codec": "vp09.00.40.08",
+        "hw": "prefer-hardware",
+        "sink": "buffer",
+        "seconds": 60
+      },
+      "frames": 1800,
+      "tracks": {},
+      "cancel": null,
+      "ok": true,
+      "wallMs": 14828.2001953125,
+      "loopMs": 14696.7001953125,
+      "flushMs": 75.89990234375,
+      "finalizeMs": 55.60009765625,
+      "framesEncoded": 1800,
+      "audioChunks": 2813,
+      "videoBytes": 58635818,
+      "audioBytes": 960533,
+      "renderMsTotal": 558.699999996461,
+      "frameCreateEncodeMsTotal": 381.60000000102445,
+      "framesCreated": 1800,
+      "framesClosed": 1800,
+      "openFramesAtEnd": 0,
+      "maxOpenFrames": 1,
+      "peakEncodeQueue": 7,
+      "peakAudioQueue": 2,
+      "maxPendingMux": 1,
+      "maxQ": 6,
+      "maxMux": 40,
+      "heap": [
+        {
+          "tSec": 0.01,
+          "frame": 0,
+          "heap": null,
+          "queue": 1,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 1.01,
+          "frame": 71,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 2.02,
+          "frame": 197,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 3.02,
+          "frame": 320,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 4.02,
+          "frame": 441,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 5.02,
+          "frame": 555,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 6.02,
+          "frame": 677,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 7.03,
+          "frame": 816,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 8.03,
+          "frame": 938,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 9.03,
+          "frame": 1080,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 10.03,
+          "frame": 1202,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 11.04,
+          "frame": 1329,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 12.06,
+          "frame": 1473,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 13.06,
+          "frame": 1599,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 14.06,
+          "frame": 1720,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        }
+      ],
+      "workerHasPerfMemory": false,
+      "startupMs": 3.39990234375,
+      "vencConfigAccepted": {
+        "codec": "vp09.00.40.08",
+        "hardwareAcceleration": "prefer-hardware"
+      },
+      "fileBytes": 59617091,
+      "audioMixMs": 412.39999999990687,
+      "mainHeap": [
+        {
+          "tSec": 1.01,
+          "heap": 114657530
+        },
+        {
+          "tSec": 2,
+          "heap": 114658594
+        },
+        {
+          "tSec": 3.01,
+          "heap": 114659594
+        },
+        {
+          "tSec": 4.01,
+          "heap": 114660594
+        },
+        {
+          "tSec": 5,
+          "heap": 114661582
+        },
+        {
+          "tSec": 6,
+          "heap": 114662570
+        },
+        {
+          "tSec": 7.01,
+          "heap": 114663790
+        },
+        {
+          "tSec": 8,
+          "heap": 114664778
+        },
+        {
+          "tSec": 9,
+          "heap": 114665766
+        },
+        {
+          "tSec": 10.01,
+          "heap": 114666770
+        },
+        {
+          "tSec": 11,
+          "heap": 114667762
+        },
+        {
+          "tSec": 12.01,
+          "heap": 114668986
+        },
+        {
+          "tSec": 13.01,
+          "heap": 114669990
+        },
+        {
+          "tSec": 14.01,
+          "heap": 114671214
+        }
+      ],
+      "workerReady": {
+        "type": "ready",
+        "workerHasPerfMemory": false
+      },
+      "heapSamples": [
+        {
+          "tSec": 0,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 1.2,
+          "workerHeapMB": 12.6,
+          "workerHeapTotalMB": 15,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 2.1,
+          "workerHeapMB": 12.4,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 2.9,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 3.7,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 4.5,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 5.3,
+          "workerHeapMB": 13.4,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 6.1,
+          "workerHeapMB": 13.7,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 6.9,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 7.8,
+          "workerHeapMB": 14.2,
+          "workerHeapTotalMB": 17.3,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 8.6,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 17.3,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 9.4,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 17.3,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 10.2,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 17.3,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 11.7,
+          "workerHeapMB": 13.8,
+          "workerHeapTotalMB": 17.5,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 12.5,
+          "workerHeapMB": 13.4,
+          "workerHeapTotalMB": 17.5,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 13.3,
+          "workerHeapMB": 14,
+          "workerHeapTotalMB": 17.5,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 14.2,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 17.5,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 15,
+          "workerHeapMB": 14,
+          "workerHeapTotalMB": 17.8,
+          "pageHeapMB": 13.9
+        }
+      ],
+      "rssSamplesMB": [
+        {
+          "tSec": 0.4,
+          "network.mojom.NetworkService": 52,
+          "browser": 132,
+          "GPU": 287,
+          "renderer": 367,
+          "storage.mojom.StorageService": 19
+        },
+        {
+          "tSec": 10.9,
+          "network.mojom.NetworkService": 52,
+          "browser": 133,
+          "GPU": 416,
+          "renderer": 431,
+          "storage.mojom.StorageService": 19
+        }
+      ],
+      "hostWallMs": 15786,
+      "cpuSecByProcessType": {
+        "browser": 0.66,
+        "renderer": 4.67,
+        "GPU": 21.65,
+        "network.mojom.NetworkService": 0.05,
+        "storage.mojom.StorageService": 0
+      },
+      "verify": {
+        "checks": {
+          "durationWithin0_1s": true,
+          "frameCount": true,
+          "resolution": true,
+          "audioPresent": true,
+          "firstLastDecodable": true,
+          "timestampsExact": true
+        },
+        "fileBytes": 59617091,
+        "sha256": "e8fc62b3e043e675b1b9ea4b69023336a933a9eb250bed7f8165a47d8665d5fb",
+        "bitrateMbpsTotal": 7.949,
+        "format": "MP4",
+        "durationSec": 60.010666666666665,
+        "video": {
+          "codec": "vp9",
+          "codedWidth": 1920,
+          "codedHeight": 1080,
+          "packetCount": 1800,
+          "averageBitrateMbps": 7.818,
+          "avgPacketRate": 30
+        },
+        "audio": {
+          "codec": "aac",
+          "channels": 2,
+          "sampleRate": 48000,
+          "durationSec": 60.010666666666665
+        },
+        "firstFrame": {
+          "ts": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "lastFrame": {
+          "ts": 59.96666666666667,
+          "w": 1920
+        },
+        "decodedFrames": 1800,
+        "maxTimestampErrorSec": 0,
+        "timestampsMonotonic": true,
+        "decodeAllMs": 1054.2000000001863,
+        "audioFirstSampleDecodable": true,
+        "allPass": true
+      },
+      "opfsAfter": []
+    },
+    {
+      "label": "vp9-sw-buffer",
+      "opts": {
+        "label": "vp9-sw-buffer",
+        "codec": "vp09.00.40.08",
+        "hw": "prefer-software",
+        "sink": "buffer",
+        "seconds": 60
+      },
+      "frames": 1800,
+      "tracks": {},
+      "cancel": null,
+      "ok": true,
+      "wallMs": 21698.5,
+      "loopMs": 21487.400146484375,
+      "flushMs": 156.699951171875,
+      "finalizeMs": 54.39990234375,
+      "framesEncoded": 1800,
+      "audioChunks": 2813,
+      "videoBytes": 46141120,
+      "audioBytes": 960533,
+      "renderMsTotal": 457.6000000028871,
+      "frameCreateEncodeMsTotal": 326.40000000363216,
+      "framesCreated": 1800,
+      "framesClosed": 1800,
+      "openFramesAtEnd": 0,
+      "maxOpenFrames": 1,
+      "peakEncodeQueue": 7,
+      "peakAudioQueue": 2,
+      "maxPendingMux": 1,
+      "maxQ": 6,
+      "maxMux": 40,
+      "heap": [
+        {
+          "tSec": 0.02,
+          "frame": 0,
+          "heap": null,
+          "queue": 1,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 1.03,
+          "frame": 102,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 2.03,
+          "frame": 212,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 3.03,
+          "frame": 322,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 4.04,
+          "frame": 438,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 5.04,
+          "frame": 527,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 6.04,
+          "frame": 628,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 7.05,
+          "frame": 733,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 8.05,
+          "frame": 833,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 9.06,
+          "frame": 938,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 10.06,
+          "frame": 1042,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 11.07,
+          "frame": 1111,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 12.09,
+          "frame": 1172,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 13.09,
+          "frame": 1232,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 14.1,
+          "frame": 1294,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 15.1,
+          "frame": 1359,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 16.11,
+          "frame": 1422,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 17.11,
+          "frame": 1497,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 18.12,
+          "frame": 1568,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 19.13,
+          "frame": 1637,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 20.14,
+          "frame": 1713,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        },
+        {
+          "tSec": 21.15,
+          "frame": 1777,
+          "heap": null,
+          "queue": 7,
+          "openFrames": 0,
+          "pendingMux": 0
+        }
+      ],
+      "workerHasPerfMemory": false,
+      "startupMs": 48.39990234375,
+      "vencConfigAccepted": {
+        "codec": "vp09.00.40.08",
+        "hardwareAcceleration": "prefer-software"
+      },
+      "fileBytes": 47122393,
+      "audioMixMs": 401.89999999990687,
+      "mainHeap": [
+        {
+          "tSec": 1.01,
+          "heap": 73529201
+        },
+        {
+          "tSec": 2,
+          "heap": 73531337
+        },
+        {
+          "tSec": 3,
+          "heap": 73539997
+        },
+        {
+          "tSec": 4,
+          "heap": 73540985
+        },
+        {
+          "tSec": 5.01,
+          "heap": 73541765
+        },
+        {
+          "tSec": 6.01,
+          "heap": 73542545
+        },
+        {
+          "tSec": 7.01,
+          "heap": 73543545
+        },
+        {
+          "tSec": 8,
+          "heap": 50491237
+        },
+        {
+          "tSec": 9,
+          "heap": 50491885
+        },
+        {
+          "tSec": 10.01,
+          "heap": 50493601
+        },
+        {
+          "tSec": 11,
+          "heap": 50494417
+        },
+        {
+          "tSec": 12,
+          "heap": 50494969
+        },
+        {
+          "tSec": 13.01,
+          "heap": 50495533
+        },
+        {
+          "tSec": 14,
+          "heap": 50505913
+        },
+        {
+          "tSec": 15.01,
+          "heap": 50506477
+        },
+        {
+          "tSec": 16,
+          "heap": 50507029
+        },
+        {
+          "tSec": 17,
+          "heap": 50507801
+        },
+        {
+          "tSec": 18.01,
+          "heap": 50508353
+        },
+        {
+          "tSec": 19.01,
+          "heap": 50509317
+        },
+        {
+          "tSec": 20,
+          "heap": 50509869
+        },
+        {
+          "tSec": 21,
+          "heap": 50510421
+        }
+      ],
+      "workerReady": {
+        "type": "ready",
+        "workerHasPerfMemory": false
+      },
+      "heapSamples": [
+        {
+          "tSec": 0,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 1.3,
+          "workerHeapMB": 12.5,
+          "workerHeapTotalMB": 14.8,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 2.1,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 2.9,
+          "workerHeapMB": 12.5,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 3.7,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 4.5,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 5.3,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 6.1,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 15.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 6.9,
+          "workerHeapMB": 13.5,
+          "workerHeapTotalMB": 15.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 7.8,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 8.6,
+          "workerHeapMB": 13.7,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 9.4,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 10.2,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 11.6,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 12.4,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 13.2,
+          "workerHeapMB": 14.4,
+          "workerHeapTotalMB": 16.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 14,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 14.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 14.8,
+          "workerHeapMB": 13.2,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 15.6,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 15.8,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 16.4,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 14.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 17.3,
+          "workerHeapMB": 13.7,
+          "workerHeapTotalMB": 14.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 18.1,
+          "workerHeapMB": 13.7,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 18.9,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 14.5,
+          "pageHeapMB": 13.2
+        },
+        {
+          "tSec": 19.7,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 20.5,
+          "workerHeapMB": 13.6,
+          "workerHeapTotalMB": 14.3,
+          "pageHeapMB": 13.3
+        },
+        {
+          "tSec": 22.1,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 15,
+          "pageHeapMB": 13.3
+        }
+      ],
+      "rssSamplesMB": [
+        {
+          "tSec": 0.5,
+          "renderer": 221,
+          "network.mojom.NetworkService": 51,
+          "browser": 134,
+          "storage.mojom.StorageService": 19,
+          "GPU": 116
+        },
+        {
+          "tSec": 10.8,
+          "renderer": 570,
+          "network.mojom.NetworkService": 51,
+          "browser": 135,
+          "storage.mojom.StorageService": 19,
+          "GPU": 259
+        },
+        {
+          "tSec": 21.3,
+          "renderer": 587,
+          "network.mojom.NetworkService": 49,
+          "browser": 132,
+          "storage.mojom.StorageService": 19,
+          "GPU": 259
+        }
+      ],
+      "hostWallMs": 22896,
+      "cpuSecByProcessType": {
+        "browser": 0.16,
+        "renderer": 112.82,
+        "GPU": 4.63,
+        "network.mojom.NetworkService": 0.06,
+        "storage.mojom.StorageService": 0
+      },
+      "verify": {
+        "checks": {
+          "durationWithin0_1s": true,
+          "frameCount": true,
+          "resolution": true,
+          "audioPresent": true,
+          "firstLastDecodable": true,
+          "timestampsExact": true
+        },
+        "fileBytes": 47122393,
+        "sha256": "be144d8914b64728905d1e4edbd39894da0d231bee3e908fbc0ac8c27c1a828c",
+        "bitrateMbpsTotal": 6.283,
+        "format": "MP4",
+        "durationSec": 60.010666666666665,
+        "video": {
+          "codec": "vp9",
+          "codedWidth": 1920,
+          "codedHeight": 1080,
+          "packetCount": 1800,
+          "averageBitrateMbps": 6.152,
+          "avgPacketRate": 30
+        },
+        "audio": {
+          "codec": "aac",
+          "channels": 2,
+          "sampleRate": 48000,
+          "durationSec": 60.010666666666665
+        },
+        "firstFrame": {
+          "ts": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "lastFrame": {
+          "ts": 59.96666666666667,
+          "w": 1920
+        },
+        "decodedFrames": 1800,
+        "maxTimestampErrorSec": 0,
+        "timestampsMonotonic": true,
+        "decodeAllMs": 1003.1000000000931,
+        "audioFirstSampleDecodable": true,
+        "allPass": true
+      },
+      "opfsAfter": []
+    },
+    {
+      "label": "cancel50-h264-hw-opfs",
+      "opts": {
+        "label": "cancel50-h264-hw-opfs",
+        "codec": "avc1.640028",
+        "hw": "prefer-hardware",
+        "sink": "opfs",
+        "cancelAtFraction": 0.5,
+        "seconds": 60
+      },
+      "frames": 1800,
+      "tracks": {},
+      "cancel": {
+        "tSent": 1794936675691.2,
+        "msgLatencyMs": 0.300048828125,
+        "frameAtCancel": 901,
+        "openFramesAtCancel": 0,
+        "encodersClosedAfterMs": 1.199951171875,
+        "vencState": "closed",
+        "aencState": "closed",
+        "outputCancelledAfterMs": 3,
+        "writableAbort": "err: TypeError",
+        "removeEntry": "ok",
+        "cleanupDoneAfterMs": 8.5,
+        "openFramesAfter": 0,
+        "framesCreated": 901,
+        "framesClosed": 901,
+        "opfsEntriesAfter": [],
+        "partialFileRemains": false,
+        "callbacksAfterCancel": 0,
+        "encoderErrorAfterCancel": false
+      },
+      "cancelled": true,
+      "cancelAckAtMainMs": 1514.800048828125,
+      "audioMixMs": 401.89999999990687,
+      "mainHeap": [
+        {
+          "tSec": 1.01,
+          "heap": 129643219
+        },
+        {
+          "tSec": 2,
+          "heap": 129644063
+        },
+        {
+          "tSec": 3.01,
+          "heap": 129644843
+        },
+        {
+          "tSec": 4.01,
+          "heap": 129645623
+        },
+        {
+          "tSec": 5,
+          "heap": 129646391
+        },
+        {
+          "tSec": 6,
+          "heap": 129647159
+        },
+        {
+          "tSec": 7,
+          "heap": 129647927
+        },
+        {
+          "tSec": 8.01,
+          "heap": 98338310
+        },
+        {
+          "tSec": 9.01,
+          "heap": 98339090
+        },
+        {
+          "tSec": 10.01,
+          "heap": 98339982
+        },
+        {
+          "tSec": 11.02,
+          "heap": 98340106
+        }
+      ],
+      "workerReady": {
+        "type": "ready",
+        "workerHasPerfMemory": false
+      },
+      "heapSamples": [
+        {
+          "tSec": 0,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 1.4,
+          "workerHeapMB": 12.6,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 2.2,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 3,
+          "workerHeapMB": 13.2,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 3.8,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 4.6,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 15,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 5.4,
+          "workerHeapMB": 12.9,
+          "workerHeapTotalMB": 15,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 6.2,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 15,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 7,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 15,
+          "pageHeapMB": 15.7
+        },
+        {
+          "tSec": 7.9,
+          "workerHeapMB": 13.7,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 8.7,
+          "workerHeapMB": 13.1,
+          "workerHeapTotalMB": 15.5,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 9.5,
+          "workerHeapMB": 13.9,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 13.9
+        },
+        {
+          "tSec": 10.3,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 13.9
+        }
+      ],
+      "rssSamplesMB": [
+        {
+          "tSec": 0.6,
+          "renderer": 407,
+          "network.mojom.NetworkService": 50,
+          "browser": 188,
+          "storage.mojom.StorageService": 19,
+          "GPU": 533
+        },
+        {
+          "tSec": 10.7,
+          "renderer": 369,
+          "network.mojom.NetworkService": 49,
+          "browser": 133,
+          "storage.mojom.StorageService": 19,
+          "GPU": 351
+        }
+      ],
+      "hostWallMs": 11552,
+      "cpuSecByProcessType": {
+        "browser": 0.88,
+        "renderer": 2.99,
+        "GPU": 11.17,
+        "network.mojom.NetworkService": 0.07,
+        "storage.mojom.StorageService": 0
+      },
+      "opfsAfter": []
+    },
+    {
+      "label": "cancel50-h264-sw-buffer",
+      "opts": {
+        "label": "cancel50-h264-sw-buffer",
+        "codec": "avc1.640028",
+        "hw": "prefer-software",
+        "sink": "buffer",
+        "cancelAtFraction": 0.5,
+        "seconds": 60
+      },
+      "frames": 1800,
+      "tracks": {},
+      "cancel": {
+        "tSent": 1794936683419.6,
+        "msgLatencyMs": 0,
+        "frameAtCancel": 901,
+        "openFramesAtCancel": 0,
+        "encodersClosedAfterMs": 0.199951171875,
+        "vencState": "closed",
+        "aencState": "closed",
+        "outputCancelledAfterMs": 0.39990234375,
+        "cleanupDoneAfterMs": 0.39990234375,
+        "openFramesAfter": 0,
+        "framesCreated": 901,
+        "framesClosed": 901,
+        "callbacksAfterCancel": 0,
+        "encoderErrorAfterCancel": false
+      },
+      "cancelled": true,
+      "cancelAckAtMainMs": 1501.89990234375,
+      "audioMixMs": 401.89999999990687,
+      "mainHeap": [
+        {
+          "tSec": 1,
+          "heap": 98424470
+        },
+        {
+          "tSec": 2,
+          "heap": 98425754
+        },
+        {
+          "tSec": 3,
+          "heap": 98426962
+        },
+        {
+          "tSec": 4.01,
+          "heap": 98428182
+        },
+        {
+          "tSec": 5.01,
+          "heap": 98429622
+        },
+        {
+          "tSec": 6.01,
+          "heap": 98430986
+        },
+        {
+          "tSec": 7.01,
+          "heap": 98431106
+        }
+      ],
+      "workerReady": {
+        "type": "ready",
+        "workerHasPerfMemory": false
+      },
+      "heapSamples": [
+        {
+          "tSec": 0,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 1.2,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 15.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 2,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 2.8,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 3.7,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 4.5,
+          "workerHeapMB": 13.3,
+          "workerHeapTotalMB": 15.5,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 5.3,
+          "workerHeapMB": 13,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 6.1,
+          "workerHeapMB": 12.7,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 14
+        },
+        {
+          "tSec": 6.9,
+          "workerHeapMB": 12.8,
+          "workerHeapTotalMB": 16.3,
+          "pageHeapMB": 14
+        }
+      ],
+      "rssSamplesMB": [
+        {
+          "tSec": 0.4,
+          "renderer": 496,
+          "network.mojom.NetworkService": 50,
+          "browser": 133,
+          "storage.mojom.StorageService": 19,
+          "GPU": 401
+        }
+      ],
+      "hostWallMs": 7704,
+      "cpuSecByProcessType": {
+        "browser": 0.09,
+        "renderer": 16.96,
+        "GPU": 1.95,
+        "network.mojom.NetworkService": 0.05,
+        "storage.mojom.StorageService": 0
+      },
+      "opfsAfter": []
+    }
+  ],
+  "finishedAt": "2026-11-17T17:31:25.041Z",
+  "note": "Runs merged from 3 invocations of run.mjs (same machine/Chrome 157.0.8103.79); two invocations lost runs because the browser was closed externally and those runs were re-run once"
+}

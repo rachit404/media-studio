@@ -1,0 +1,66 @@
+{
+  "mode": "full",
+  "startedAt": "2026-11-17T17:11:40.095Z",
+  "steps": {
+    "quota": {
+      "estimate": {
+        "quota": 10737418240,
+        "usage": 0,
+        "usageDetails": {}
+      },
+      "persistedBefore": false,
+      "persistResult": false,
+      "persistedAfter": false
+    },
+    "mainThreadSync": {
+      "typeofCreateSyncAccessHandleOnMainThread": "undefined",
+      "callOnMainThread": "TypeError: fh.createSyncAccessHandle is not a function"
+    },
+    "singleWriter": {
+      "secondExclusiveSameWorker": "NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file.",
+      "unsafeWhileExclusiveHeld": "NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file.",
+      "createWritableWhileSyncHeld": "NoModificationAllowedError: Failed to execute 'createWritable' on 'FileSystemFileHandle': An attempt was made to modify an object where modifications are not allowed.",
+      "getFileReadWhileSyncHeld": "OK size=3",
+      "removeWhileHeld": "NoModificationAllowedError: Failed to execute 'removeEntry' on 'FileSystemDirectoryHandle': An attempt was made to modify an object where modifications are not allowed.",
+      "differentFileConcurrently": "OK",
+      "closedHandleUseThrows": "InvalidStateError: Failed to execute 'read' on 'FileSystemSyncAccessHandle': The access handle was already closed",
+      "afterClose": "OPENED OK",
+      "dataAfterReopen": "1,2,3",
+      "twoUnsafeConcurrent": "BOTH OPENED",
+      "exclusiveWhileUnsafeHeld": "NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file."
+    },
+    "singleWriterCrossWorker": {
+      "workerBWhileAHolds": "NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle or Writable stream associated with the same file.",
+      "workerBAfterAReleased": "OPENED"
+    },
+    "seq1GB": [
+      {
+        "failedAllAttempts": [
+          "Error: page.evaluate: Error: Error: QuotaExceededError: Failed to execute 'write' on 'FileSystemSyncAccessHandle': No space available for this operation | at chunk 15587/16384 (974 MB written, chunk 65536) | estimate={\"quota\":11758951998,\"usage\":1021533758,\"usageDetails\":{\"fileSystem\":1021533758}}\n    at w.onmessage (http://127.0.0.1:5199/s2-storage/main.ts:11:29)",
+          "Error: page.evaluate: Error: Error: QuotaExceededError: Failed to execute 'write' on 'FileSystemSyncAccessHandle': No space available for this operation | at chunk 15587/16384 (974 MB written, chunk 65536) | estimate={\"quota\":11758951998,\"usage\":1021533758,\"usageDetails\":{\"fileSystem\":1021533758}}\n    at w.onmessage (http://127.0.0.1:5199/s2-storage/main.ts:11:29)",
+          "Error: page.evaluate: Error: Error: QuotaExceededError: Failed to execute 'write' on 'FileSystemSyncAccessHandle': No space available for this operation | at chunk 15587/16384 (974 MB written, chunk 65536) | estimate={\"quota\":11758951998,\"usage\":1021533758,\"usageDetails\":{\"fileSystem\":1021533758}}\n    at w.onmessage (http://127.0.0.1:5199/s2-storage/main.ts:11:29)"
+        ],
+        "diskFreeGBAfter": 133.22
+      }
+    ]
+  },
+  "env": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "cores": 16,
+    "deviceMemoryGB": 16,
+    "webgl2": true,
+    "glRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "webgpu": true,
+    "crossOriginIsolated": false,
+    "secureContext": true,
+    "os": "Windows_NT 10.0.26300",
+    "totalRamGB": 15.7,
+    "freeRamGBAtStart": 2.8,
+    "diskFreeGBAtStart": 133.25,
+    "tmpdir": "C:\\Users\\USER\\AppData\\Local\\Temp",
+    "heapApiAvailable": "number"
+  },
+  "error": "page.reload: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for navigation until \"load\"\u001b[22m\n\u001b[2m    - navigated to \"http://127.0.0.1:5199/s2-storage/index.html\"\u001b[22m\n\n    at reloadClean (D:\\My GitHub\\rachit404\\media-studio\\spikes\\s2-storage\\run.mjs:48:43)\n    at retry (D:\\My GitHub\\rachit404\\media-studio\\spikes\\s2-storage\\run.mjs:54:108)\n    at async file:///D:/My%20GitHub/rachit404/media-studio/spikes/s2-storage/run.mjs:82:15",
+  "finishedAt": "2026-11-17T17:20:02.000Z",
+  "diskFreeGBAtEnd": 133.23
+}
