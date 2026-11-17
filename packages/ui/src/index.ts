@@ -1,4 +1,10 @@
-// @media-studio/ui
-// Design-system components built on accessible primitives and the semantic Tailwind tokens.
-// Public API of this package is exported from here only. Implementation arrives in the milestone listed in docs/engineering/roadmap.md.
-export {};
+// @media-studio/ui: design-system components. Styling uses semantic tokens only (apps/web/src/styles/theme.css).
+export { Button } from './button';
+export type { ButtonProps, ButtonVariant } from './button';
+export { Dialog } from './dialog';
+export type { DialogProps } from './dialog';
+export { PanelSplitter } from './panel-splitter';
+export type { PanelSplitterProps } from './panel-splitter';
+export { Tabs } from './tabs';
+export type { TabItem, TabsProps } from './tabs';
+export { clamp } from './splitter-math';

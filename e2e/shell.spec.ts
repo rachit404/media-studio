@@ -15,8 +15,9 @@ test.describe('app shell (production build, production headers)', () => {
 
     page.on('request', (request) => {
       const url = new URL(request.url());
-      if (url.protocol !== 'data:' && url.protocol !== 'blob:' && url.origin !== ORIGIN)
+      if (url.protocol !== 'data:' && url.protocol !== 'blob:' && url.origin !== ORIGIN) {
         external.push(request.url());
+      }
     });
     page.on('console', (message) => {
       if (message.type() === 'error') errors.push(message.text());
@@ -26,7 +27,9 @@ test.describe('app shell (production build, production headers)', () => {
       const w = window as CspWindow;
       w.__cspViolations = [];
       document.addEventListener('securitypolicyviolation', (event) => {
-        w.__cspViolations?.push(`${event.violatedDirective} ${event.blockedURI}`);
+        w.__cspViolations?.push(
+          `${event.violatedDirective} ${event.blockedURI} ${event.sample} @${event.sourceFile}:${String(event.lineNumber)}`,
+        );
       });
     });
 
@@ -40,7 +43,14 @@ test.describe('app shell (production build, production headers)', () => {
 
     await expect(page).toHaveTitle('Media Studio');
     await expect(page.getByRole('heading', { level: 1, name: 'Media Studio' })).toBeVisible();
-    await expect(page.getByRole('heading', { level: 2, name: 'Foundation build' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Start a project' })).toBeVisible();
+
+    // Exercise more of the app under the CSP: dialog, tabs, workspace route.
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.goto('/#/image');
+    await expect(page.getByRole('heading', { name: 'Image workspace' })).toBeVisible();
 
     const violations = await page.evaluate(() => (window as CspWindow).__cspViolations ?? []);
     expect(violations).toEqual([]);
@@ -48,7 +58,7 @@ test.describe('app shell (production build, production headers)', () => {
     expect(external).toEqual([]);
   });
 
-  test('theme toggle swaps the tokens app-wide and persists (PLAT-5)', async ({ page }) => {
+  test('theme switch changes the tokens app-wide and persists (PLAT-5)', async ({ page }) => {
     await page.goto('/');
     const html = page.locator('html');
     await expect(html).toHaveAttribute('data-theme', 'dark');
@@ -56,15 +66,14 @@ test.describe('app shell (production build, production headers)', () => {
     const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
     const dark = await background();
 
-    await page.getByRole('button', { name: 'Switch to light theme' }).click();
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await page.getByRole('button', { name: 'Light', exact: true }).click();
     await expect(html).toHaveAttribute('data-theme', 'light');
-    const light = await background();
-    expect(light).not.toBe(dark);
+    expect(await background()).not.toBe(dark);
 
     await page.reload();
     await expect(html).toHaveAttribute('data-theme', 'light');
     expect(await page.evaluate(() => window.localStorage.getItem('ms-theme'))).toBe('light');
-    await expect(page.getByRole('button', { name: 'Switch to dark theme' })).toBeVisible();
   });
 
   test("Tailwind's default palette is removed so raw colours cannot exist", async ({ page }) => {

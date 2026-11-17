@@ -1,4 +1,15 @@
-// @media-studio/core
-// Document model, schemas, commands, history, journal, time maths and error taxonomy. Pure TypeScript: no DOM, no browser APIs.
-// Public API of this package is exported from here only. Implementation arrives in the milestone listed in docs/engineering/roadmap.md.
-export {};
+// @media-studio/core: pure TypeScript domain layer (no DOM, no browser APIs).
+export { AppError, isAppError, toAppError } from './errors';
+export type { AppErrorInit, ErrorCode } from './errors';
+export { createDiagnosticsLog } from './diagnostics';
+export type { DiagnosticsLog, DiagnosticsOptions, LogEntry, LogLevel } from './diagnostics';
+export {
+  ShortcutRegistry,
+  canonicalCombo,
+  comboFromEvent,
+  displayCombo,
+  formatCombo,
+  normalizeKey,
+  parseCombo,
+} from './shortcuts';
+export type { Combo, CommandDef, KeyEventLike, RebindResult } from './shortcuts';

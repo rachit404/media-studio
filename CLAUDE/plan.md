@@ -6,7 +6,7 @@ Scope, modules, acceptance criteria, tests and limitations per step: `docs/engin
 | #   | Step                               | Branch                    | Deliverable (summary)                                                                   | Status  |
 | --- | ---------------------------------- | ------------------------- | --------------------------------------------------------------------------------------- | ------- |
 | 1   | Foundation (M0)                    | `feat/m0-foundation`      | Monorepo, strict tooling, CI, token theme, boundary/licence/CSP gates                   | done    |
-| 2   | App shell and workspace (M1)       | `feat/m1-app-shell`       | Capability probe, panels, theme, shortcuts, errors, diagnostics, a11y UI kit, PWA shell | pending |
+| 2   | App shell and workspace (M1)       | `feat/m1-app-shell`       | Capability probe, panels, theme, shortcuts, errors, diagnostics, a11y UI kit, PWA shell | done    |
 | 3   | Storage, project format, undo (M2) | `feat/m2-storage-project` | FSA+OPFS storage, project package, command history, journal recovery, asset import      | pending |
 | 4   | Image engine essentials (M3)       | `feat/m3-image-engine`    | Renderer, tiles, layers, transform/crop, adjustments, blend shaders, image export       | pending |
 | 5   | Image editor tier 2 (M4)           | `feat/m4-image-editor`    | Masks, all blend modes, selections, brush, text, shapes, filters                        | pending |
