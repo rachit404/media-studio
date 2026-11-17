@@ -1,0 +1,5 @@
+{
+  "$comment": "App shell budget (gzip, all JS/CSS in the initial build). PERF-6 targets under 300 KB for the shell; engines are lazy-loaded and get their own budgets in later milestones.",
+  "jsGzipKb": 300,
+  "cssGzipKb": 40
+}

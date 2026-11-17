@@ -1,0 +1,22 @@
+{
+  "$comment": "Dependency licence policy, see docs/adr/0011-dependency-licence-policy.md. Applies to the production dependency tree.",
+  "allowed": [
+    "MIT",
+    "MIT-0",
+    "ISC",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Apache-2.0",
+    "0BSD",
+    "Unlicense",
+    "CC0-1.0",
+    "BlueOak-1.0.0",
+    "Zlib",
+    "Python-2.0",
+    "CC-BY-4.0"
+  ],
+  "allowedWithCare": ["MPL-2.0"],
+  "needsReview": ["LGPL-2.0", "LGPL-2.1", "LGPL-3.0"],
+  "forbidden": ["GPL", "AGPL", "SSPL", "CC-BY-NC", "Commons-Clause", "UNLICENSED", "SEE LICENSE"],
+  "exceptions": []
+}
