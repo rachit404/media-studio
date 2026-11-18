@@ -11,7 +11,8 @@ MyProject.msproj/
   project.json          # the document (versioned, schema-validated)
   manifest.json         # asset table: id, kind, original name, size, hash, probe info, relink hints
   journal/              # write-ahead command log segments (recovery)
-  tiles/                # raster layer tiles (image projects), content-addressed
+  pixels/               # one manifest per saved version of a painted surface: tile key -> tile id (JSON)
+  tiles/                # painted tiles, one deflated 256x256 file each (immutable, shared between versions)
   cache/                # thumbnails, waveform peaks, proxies (rebuildable; excluded from archives by default)
   media/                # optional: collected copies of media (when "Collect media" is used or on non-FSA browsers)
 ```

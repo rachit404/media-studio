@@ -20,7 +20,7 @@ import {
 } from '@media-studio/engine-image';
 import { rasterMetrics } from '@media-studio/render';
 import { Button } from '@media-studio/ui';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { WorkspaceScreen } from '../../screens/WorkspaceScreen';
 import { useGlobalShortcuts } from '../../use-shortcuts';
 import { AssetLibrary } from '../AssetLibrary';
@@ -64,6 +64,11 @@ export function ImageWorkspace({ session, project, heading, toolbar }: ImageWork
 
   const content = project.content;
   if (content.kind !== 'image') throw new Error('ImageWorkspace needs an image project');
+
+  // A selection belongs to one canvas size: drop it when crop, resize or rotate changes the canvas.
+  useEffect(() => {
+    setSelection(null);
+  }, [content.width, content.height]);
 
   // Painted pixels come from the session's store, except for the layer being painted right now.
   const built = useMemo(

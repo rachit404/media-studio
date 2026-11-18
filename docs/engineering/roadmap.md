@@ -93,15 +93,23 @@
 **Known limitations:** limited tools and blend set; large-document limits measured not yet enforced.
 
 ## M4: Image editor, tier 2 (L)
-**Status: partly done** (branch `feat/m4-image-editor`, "step 5a"). **Done:** all 16 W3C blend modes (CPU reference plus GPU shader, GPU within 2/255 for every mode at two opacities); text layers and shape layers (rectangle, ellipse, polygon, line) drawn from parameters; levels, black & white, blur and sharpen adjustment layers (levels and B&W checked against the CPU reference, blur and sharpen by property tests); five filter presets as editable adjustment stacks (one undo step); duplicate, copy and paste of layers (buttons and Mod+J / Mod+C / Mod+V / Delete); reorder by dragging and by buttons; drag from the asset library onto the canvas. Document format is now v3.
-**Not done, moved to step 5b (`feat/m4b-painting`):** raster layers and the tile store, brush and eraser, layer masks, clipping, rectangle/ellipse/lasso selections with algebra and feather, tile-delta history ([ADR-0015](../adr/0015-raster-history-tile-deltas.md)) and persistence of painted tiles. IMG acceptance for brush undo and selections is therefore not met yet.
-**Deviations:** only the generic font families (sans-serif, serif, monospace) are offered; no font files are bundled, so text looks different per operating system. Curves, SVG import, layer locking and groups are not implemented. Pasting is limited to the same project (a pasted image layer needs its image in the project). Copy and delete shortcuts are ignored while typing in a field.
-**Scope:** complete the v1 image feature set.
-**Files/modules:** `engine-image` (masks, selections, brush, text, shapes), `render` (all blend modes, effects), `ui` (colour picker, layer tree), fonts.
-**Implementation plan:** masks and clipping; all blend modes with golden tests; selections (rect/ellipse/lasso, algebra, feather) and marching-ants overlay; brush/eraser with tile-delta history ([ADR-0015](../adr/0015-raster-history-tile-deltas.md)); text layers and bundled fonts; shape layers; levels/curves/B&W/blur/sharpen; filter presets; clipboard and drag-drop; shortcuts.
-**Acceptance:** IMG-3 to IMG-13, UX-2, UX-3; every blend mode ≤ 2/255 vs reference; brush stroke undo restores exact pixels; PERF-1 on the reference document.
-**Tests:** selection algebra properties; brush determinism; blend and adjustment goldens; history memory growth test (many strokes); a11y checks on new panels.
-**Known limitations:** no magic wand, no ICC, text rasterised, 8-bit sRGB.
+**Status: done** (branches `feat/m4-image-editor` for the first part and `feat/m4b-painting` for painting). Document format is now v4.
+**Delivered:**
+- All 16 W3C blend modes (CPU reference plus GPU shader, GPU within 2/255 for every mode at two opacities); text layers and shape layers (rectangle, ellipse, polygon, line) drawn from parameters; levels, black & white, blur and sharpen adjustment layers; five filter presets as editable adjustment stacks; duplicate, copy, paste and delete of layers; reorder by dragging; drag from the asset library onto the canvas.
+- Paint layers: sparse 256 x 256 tiles of straight-alpha RGBA ([ADR-0015](../adr/0015-raster-history-tile-deltas.md)); brush and eraser with size, hardness, opacity, flow and pen pressure; each stroke is one undo step that restores the exact earlier pixels.
+- Layer masks on any layer (painted with the same brush: brush reveals, eraser hides), enable/disable/delete; clipping to the layer below.
+- Selections: rectangle, ellipse and lasso; new/add/subtract/intersect (also Shift/Alt); select all, deselect, invert, feather; "selection to layer mask"; marching-ants outline. Painting is limited to the selection.
+- Painted pixels are saved as tile files plus a manifest per version (`tiles/`, `pixels/`), written before the journal record that refers to them, restored after a crash, and included in `.msproj` archives.
+**Measurements:** brush cost per pointer move on a 4096 x 4096 layer (pointer moves 10 px apart, hardness 0.7): 1.0 ms at 20 px, 3.9 ms at 100 px, 10.6 ms at 300 px. Memory for undo grows with the area touched, not the surface size (test: identical bytes for 512 px and 8192 px surfaces after 100 strokes in one tile). PERF-1 baseline unchanged.
+**Deviations and known limitations:**
+- Only the generic font families (sans-serif, serif, monospace) are offered; no font files are bundled, so text looks different per operating system. Curves, SVG import, layer locking and layer groups are not implemented.
+- A paint layer is as large as the canvas when it is created and moves, scales and rotates like an image layer; strokes outside its bounds are clipped. Canvas resize scales the pixels (they are not resampled).
+- A layer mask lives in the layer's own pixel space, so it follows the layer. If a text or shape layer later changes size, its mask keeps its old pixel grid.
+- The selection is working state: it is not saved with the project and is not part of undo (use Deselect or select again). It is cleared when the canvas size changes (crop, resize, rotate) but not by a flip, which leaves an old selection mirrored from the picture.
+- Undo history keeps every tile version in memory (shared between versions) until the project is closed; old tile files stay on disk until the project is deleted. Spilling cold versions and collecting unused files are not built yet.
+- Pasting a layer only works inside the same project. Pen pressure scales size and flow but has not been tested with a real tablet.
+**Acceptance:** IMG-3 to IMG-13 and UX-2, UX-3 are met except where listed above (groups, lock, curves, SVG, bundled fonts); every blend mode within 2/255; brush stroke undo restores exact pixels (end-to-end test compares whole images).
+**Tests:** selection algebra properties, brush determinism and memory growth, tile store, manifest and archive round trips, durable-before-journal ordering, blend and adjustment references, end-to-end painting/selection/mask/clip tests, accessibility checks on the new panels in both themes.
 
 ## M5: Video engine and timeline core (XL)
 **Scope:** import, play, scrub, cut and export a basic video project on one or two tracks.
