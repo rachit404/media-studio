@@ -127,3 +127,30 @@ describe('FramePump', () => {
     expect(pump.alive).toBe(0);
   });
 });
+
+describe('FramePump.settled', () => {
+  it('waits until a later picture is queued, so the picture for a time is certain', async () => {
+    const fake = fakeSource({ total: 1000 });
+    const pump = new FramePump(fake.source, 3);
+    pump.start(0);
+    // Far beyond the lookahead: reading continues as the earlier pictures are discarded.
+    await pump.settled(2_000_000);
+    expect(pump.frameFor(2_000_000)?.timestamp).toBe(2_000_000);
+    pump.stop();
+    await settle();
+    expect(pump.alive).toBe(0);
+  });
+
+  it('returns at the end of the file and on failure', async () => {
+    const short = new FramePump(fakeSource({ total: 3 }).source, 6);
+    short.start(0);
+    await short.settled(10_000_000);
+    expect(short.finished).toBe(true);
+    short.stop();
+    const failing = new FramePump(fakeSource({ failAt: 2 }).source, 6);
+    failing.start(0);
+    await failing.settled(10_000_000);
+    expect(failing.error).toBeInstanceOf(Error);
+    failing.stop();
+  });
+});

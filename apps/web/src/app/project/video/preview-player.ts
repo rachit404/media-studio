@@ -261,6 +261,7 @@ export class PreviewPlayer {
                 blob,
                 start: segment.start,
                 end: segment.end,
+                clipEnd: segment.clipEnd,
                 sourceStart: segment.sourceStart,
               },
             ]

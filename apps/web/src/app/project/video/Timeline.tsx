@@ -37,6 +37,7 @@ import {
 import { Button } from '@media-studio/ui';
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { useGlobalShortcuts } from '../../use-shortcuts';
+import { AssetThumb } from '../AssetThumb';
 import type { ProjectSession } from '../project-session';
 import type { PreviewPlayer } from './preview-player';
 import { Waveform } from './waveform';
@@ -616,6 +617,13 @@ export function Timeline({
                           aria-hidden="true"
                           className={`absolute inset-x-0 top-0 h-1 ${track.kind === 'video' ? 'bg-track-video' : 'bg-track-audio'}`}
                         />
+                        {asset?.kind === 'video' && track.kind === 'video' && (
+                          <AssetThumb
+                            projectId={session.id}
+                            path={asset.thumb}
+                            className="pointer-events-none absolute left-0 top-1 h-[calc(100%-0.25rem)] w-16 opacity-60"
+                          />
+                        )}
                         {asset && track.kind === 'audio' && (
                           <Waveform
                             projectId={session.id}

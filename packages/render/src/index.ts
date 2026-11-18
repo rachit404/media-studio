@@ -16,3 +16,4 @@ export type {
   SceneNode,
   ViewTransform,
 } from './types';
+export { OffscreenRenderer } from './offscreen-renderer';

@@ -7,6 +7,8 @@ export interface AudioSegment {
   /** Timeline time where this stretch starts and ends. */
   start: number;
   end: number;
+  /** Where the whole clip ends on the timeline (the player feeds the clip to its end once it has started). */
+  clipEnd: number;
   /** Where in the source file it starts. */
   sourceStart: number;
 }
@@ -37,6 +39,7 @@ export function audioSegments(
         assetId: clip.assetId,
         start,
         end,
+        clipEnd: clipEnd(clip),
         sourceStart: clip.sourceIn + (start - clip.start),
       });
     }

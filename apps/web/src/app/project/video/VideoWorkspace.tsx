@@ -7,6 +7,7 @@ import { diagnostics } from '../../diagnostics';
 import { WorkspaceScreen } from '../../screens/WorkspaceScreen';
 import { useGlobalShortcuts } from '../../use-shortcuts';
 import type { ProjectSession } from '../project-session';
+import { ExportVideoDialog } from './ExportVideoDialog';
 import { MediaLibrary } from './MediaLibrary';
 import { PreviewPlayer } from './preview-player';
 import { Timeline } from './Timeline';
@@ -37,6 +38,7 @@ export function VideoWorkspace({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [graphicsProblem, setGraphicsProblem] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   // The renderer lives as long as the workspace; the canvas follows the size of its container.
   useEffect(() => {
@@ -219,7 +221,27 @@ export function VideoWorkspace({
     <WorkspaceScreen
       kind="video"
       heading={heading}
-      toolbar={toolbar}
+      toolbar={
+        <>
+          {toolbar}
+          <Button
+            variant="primary"
+            onPress={() => {
+              player?.pause();
+              setExporting(true);
+            }}
+          >
+            Export…
+          </Button>
+          <ExportVideoDialog
+            projectId={session.id}
+            project={project}
+            content={content}
+            isOpen={exporting}
+            onClose={() => setExporting(false)}
+          />
+        </>
+      }
       leftContent={
         <MediaLibrary
           session={session}

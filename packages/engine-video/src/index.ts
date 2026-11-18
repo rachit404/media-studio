@@ -34,3 +34,13 @@ export type { FrameStreamSource, TimedFrame } from './frame-pump';
 export { placeAsset } from './placement';
 export type { Placement } from './placement';
 export { isTrimChange, trimRange } from './drag-limits';
+export { mixAudioBlock } from './audio-mix';
+export type { AudioReader } from './audio-mix';
+export { exportFrameCount, exportSequence, hasExportAudio } from './export-sequence';
+export type {
+  ExportDependencies,
+  ExportFrame,
+  ExportOptions,
+  ExportRenderer,
+  ExportSink,
+} from './export-sequence';

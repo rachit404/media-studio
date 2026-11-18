@@ -76,6 +76,22 @@ export class FramePump<T extends Closable> {
   }
 
   /**
+   * Resolves when the picture for `sourceUs` is certain: a later picture is already queued, or the file ended, or
+   * decoding failed. Used by export, which must show exactly the right picture and cannot drop frames.
+   */
+  async settled(sourceUs: number): Promise<void> {
+    while (
+      this.failure === null &&
+      !this.ended &&
+      !((this.queue.at(-1)?.timestamp ?? -1) > sourceUs)
+    ) {
+      await new Promise<void>((resolve) => this.onChange.push(resolve));
+      // Make room by discarding pictures that are already in the past, or reading would stop at the lookahead.
+      this.frameFor(sourceUs);
+    }
+  }
+
+  /**
    * The picture to show at `sourceUs`: the last one that is not after it. Pictures before that are closed. Returns
    * null while nothing is ready. The picture stays valid until the next call to `frameFor`, `start` or `stop`.
    */

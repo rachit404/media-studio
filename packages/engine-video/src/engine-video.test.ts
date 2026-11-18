@@ -151,7 +151,14 @@ describe('audio segments', () => {
     const history = project();
     const segments = audioSegments(content(history), history.state.assets.byId, 3 * S, 4 * S);
     expect(segments).toEqual([
-      { clipId: 'a1', assetId: 'vid', start: 3 * S, end: 4 * S, sourceStart: 1 * S },
+      {
+        clipId: 'a1',
+        assetId: 'vid',
+        start: 3 * S,
+        end: 4 * S,
+        clipEnd: 12 * S,
+        sourceStart: 1 * S,
+      },
     ]);
     expect(audioSegments(content(history), history.state.assets.byId, 0, 1 * S)).toEqual([]);
     expect(audioSegments(content(history), history.state.assets.byId, 13 * S, 14 * S)).toEqual([]);

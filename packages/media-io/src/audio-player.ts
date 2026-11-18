@@ -8,6 +8,8 @@ export interface AudioSlice {
   /** Timeline time (microseconds) where the sound starts and ends. */
   start: number;
   end: number;
+  /** Where the whole clip ends on the timeline; sound is played to there once the clip has started. */
+  clipEnd: number;
   /** Where in the file it starts (microseconds). */
   sourceStart: number;
 }
@@ -84,7 +86,8 @@ export class AudioPlayer {
       const elapsed = Math.max(0, this.context.currentTime - t0);
       const windowStart = startedUs + elapsed * 1_000_000;
       for (const slice of slices(windowStart, windowStart + (AHEAD + 0.5) * 1_000_000)) {
-        const key = `${slice.clipId}:${String(slice.start)}`;
+        // One feeder per clip: it plays the clip from where we first met it to its end.
+        const key = slice.clipId;
         if (feeders.has(key)) continue;
         feeders.set(
           key,
@@ -105,7 +108,7 @@ export class AudioPlayer {
   ): Promise<void> {
     const { sink } = await this.open(slice.blob);
     const from = slice.sourceStart / 1_000_000;
-    const to = (slice.sourceStart + (slice.end - slice.start)) / 1_000_000;
+    const to = (slice.sourceStart + (slice.clipEnd - slice.start)) / 1_000_000;
     for await (const { buffer, timestamp } of sink.buffers(from, to)) {
       if (generation !== this.generation) return;
       // Where this buffer belongs on the timeline, and on the audio clock.
