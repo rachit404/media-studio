@@ -239,6 +239,85 @@ test.describe('image editor: canvas operations (IMG-2)', () => {
   const RED = [255, 0, 0, 255];
   const BLUE = [0, 0, 255, 255];
 
+  test('layers can be duplicated, copied, pasted and deleted from buttons and shortcuts', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Copies');
+    await addLayers(page, [
+      { name: 'one.png', bytes: solidPng(8, 8, [255, 0, 0, 255]) },
+      { name: 'two.png', bytes: solidPng(8, 8, [0, 0, 255, 255]) },
+    ]);
+    const layers = page.getByRole('region', { name: 'Layers' });
+    const names = async () =>
+      layers.getByRole('listitem').locator('button:not([aria-label])').allInnerTexts();
+
+    await layers.getByRole('button', { name: 'one.png', exact: true }).click();
+    await layers.getByRole('button', { name: 'Duplicate layer' }).click();
+    // The copy sits directly above the original (the list reads top to bottom).
+    expect(await names()).toEqual(['two.png', 'one.png copy', 'one.png']);
+
+    // Keyboard: copy the selected copy, paste it, then delete the pasted layer with the Delete key.
+    await page.keyboard.press('Control+c');
+    await page.keyboard.press('Control+v');
+    expect(await names()).toEqual(['two.png', 'one.png copy copy', 'one.png copy', 'one.png']);
+    await page.keyboard.press('Delete');
+    expect(await names()).toEqual(['two.png', 'one.png copy', 'one.png']);
+
+    // One undo per action.
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    expect(await names()).toEqual(['two.png', 'one.png copy copy', 'one.png copy', 'one.png']);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    expect(await names()).toEqual(['two.png', 'one.png copy', 'one.png']);
+  });
+
+  test('layers can be reordered by dragging in the layer list', async ({ page }) => {
+    await createImageProject(page, 'Drag');
+    await addLayers(page, [
+      { name: 'red.png', bytes: solidPng(8, 8, [255, 0, 0, 255]) },
+      { name: 'green.png', bytes: solidPng(8, 8, [0, 255, 0, 255]) },
+    ]);
+    const layers = page.getByRole('region', { name: 'Layers' });
+    const rows = layers.getByRole('listitem');
+    const before = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(before, 4, 4), [0, 255, 0, 255], 1, 'green on top');
+
+    await rows.filter({ hasText: 'red.png' }).dragTo(rows.filter({ hasText: 'green.png' }));
+    await expect(rows.first()).toContainText('red.png');
+    const after = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(after, 4, 4), [255, 0, 0, 255], 1, 'red on top');
+  });
+
+  test('an asset dragged from the library lands on the canvas where it is dropped', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Drop');
+    await addLayers(page, [{ name: 'base.png', bytes: solidPng(64, 64, [255, 0, 0, 255]) }]);
+    await page
+      .getByTestId('import-input')
+      .setInputFiles([
+        { name: 'dot.png', mimeType: 'image/png', buffer: solidPng(8, 8, [0, 0, 255, 255]) },
+      ]);
+    const assetRow = page
+      .getByRole('list', { name: 'Project assets' })
+      .getByRole('listitem')
+      .filter({ hasText: 'dot.png' });
+    await expect(assetRow).toBeVisible();
+
+    const canvas = page.getByTestId('image-canvas');
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('canvas not laid out');
+    await assetRow.dragTo(canvas, { targetPosition: { x: box.width * 0.4, y: box.height * 0.4 } });
+
+    const layers = page.getByRole('region', { name: 'Layers' });
+    await expect(layers.getByRole('button', { name: /^dot\.png/ })).toBeVisible();
+    const x = Number(await page.getByLabel('X (px)', { exact: true }).inputValue());
+    const y = Number(await page.getByLabel('Y (px)', { exact: true }).inputValue());
+    expect(x).toBeLessThan(32); // left of the 64 px canvas centre
+    expect(y).toBeLessThan(32);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(layers.getByRole('button', { name: /^dot\.png/ })).toHaveCount(0);
+  });
+
   test('rotate, flip, crop and resize change the output as expected and undo cleanly', async ({
     page,
   }) => {

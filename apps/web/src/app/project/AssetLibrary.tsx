@@ -1,3 +1,4 @@
+import { ASSET_DRAG_TYPE } from './asset-drag';
 import {
   addAssets,
   addImageLayer,
@@ -136,7 +137,15 @@ export function AssetLibrary({
       ) : (
         <ul aria-label="Project assets" className="min-h-0 flex-1 space-y-2 overflow-auto">
           {assets.map((asset) => (
-            <li key={asset.id} className="rounded-md border border-line bg-surface-raised p-2">
+            <li
+              key={asset.id}
+              draggable={onAddedAsLayer !== undefined}
+              onDragStart={(event) => {
+                event.dataTransfer.effectAllowed = 'copy';
+                event.dataTransfer.setData(ASSET_DRAG_TYPE, asset.id);
+              }}
+              className="rounded-md border border-line bg-surface-raised p-2"
+            >
               <div className="flex items-center gap-2">
                 <AssetThumb
                   projectId={session.id}

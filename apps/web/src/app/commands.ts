@@ -10,6 +10,10 @@ export const COMMANDS = [
   { id: 'tool.hand', label: 'Hand tool', defaults: ['H'] },
   { id: 'edit.undo', label: 'Undo', defaults: ['Mod+Z'] },
   { id: 'edit.redo', label: 'Redo', defaults: ['Mod+Shift+Z', 'Mod+Y'] },
+  { id: 'layer.copy', label: 'Copy the selected layer', defaults: ['Mod+C'] },
+  { id: 'layer.paste', label: 'Paste the copied layer', defaults: ['Mod+V'] },
+  { id: 'layer.duplicate', label: 'Duplicate the selected layer', defaults: ['Mod+J'] },
+  { id: 'layer.delete', label: 'Delete the selected layer', defaults: ['Delete', 'Backspace'] },
 ] as const satisfies readonly CommandDef[];
 
 export type CommandId = (typeof COMMANDS)[number]['id'];
