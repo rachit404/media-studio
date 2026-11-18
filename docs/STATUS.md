@@ -41,8 +41,8 @@ These were decided provisionally by the assistant to keep the docs consistent. P
 
 ## Open items and risks (from the spikes)
 - Real File System Access path not verified: owner to run `spikes/s2-storage/manual-fsa.html`.
-- GPU-process memory growth in long playback unexplained (S7): soak spike in M5.
-- Concurrent hardware decoder limit unknown: spike in M5.
+- GPU-process memory growth in long playback: the 30-minute soak (S9) shows it grows about 43 MB per minute on Iris Xe (shared system memory), slowing (59, 52, then 23 MB per minute per 10 minutes) but not plateaued; JS side is flat and nothing crashed. Cause unknown; 60-minute run and isolation runs in M8 ([s9-soak.md](../spikes/results/s9-soak.md)).
+- ~~Concurrent hardware decoder limit unknown~~: measured in S8, 16 decoders ran together on Iris Xe.
 - Pixi overlay blend inexact; all other blend modes untested: own blend shaders in M3/M4.
 - Undo latency on structural edits near 80 ms: normalised data model + re-measure in M2.
 - Linux/GitHub-runner codec support unverified: probe command in `spikes/results/s6-probe.md`.
