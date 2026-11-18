@@ -248,7 +248,7 @@ export function TransformHandles({
         r={7}
         aria-hidden="true"
         data-testid="transform-rotate"
-        className="pointer-events-auto cursor-grab fill-surface stroke-accent"
+        className="pointer-events-auto cursor-grab fill-accent stroke-accent"
         strokeWidth={2}
         {...handleProps('rotate')}
       />
@@ -261,7 +261,7 @@ export function TransformHandles({
           height={12}
           aria-hidden="true"
           data-testid={`transform-scale-${String(index)}`}
-          className="pointer-events-auto cursor-nwse-resize fill-surface stroke-accent"
+          className="pointer-events-auto cursor-nwse-resize fill-accent stroke-accent"
           strokeWidth={2}
           {...handleProps('scale')}
         />
