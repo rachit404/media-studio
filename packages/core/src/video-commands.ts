@@ -853,6 +853,57 @@ export function clearKeyframes(
   };
 }
 
+/**
+ * Change values of a clip as they are at `offset` (microseconds after its start): a property that has keyframes gets
+ * a keyframe at that moment (or the one there is changed), and a property without keyframes changes its fixed value.
+ * This is what dragging a handle on the preview or moving a slider does, so it works the same for animated and plain
+ * clips, in one undo step (repeated drags merge).
+ */
+export function setValuesAt(
+  clipId: string,
+  offset: number,
+  values: Partial<Record<KeyframeProperty, number>>,
+): Command<ProjectDocument> {
+  const properties = KEYFRAME_PROPERTIES.filter((property) => values[property] !== undefined);
+  return {
+    label: 'Change clip',
+    coalesceKey: `values-at:${clipId}:${properties.join(',')}:${String(offset)}`,
+    apply(draft) {
+      const content = videoDraft(draft);
+      const snapshot = before(content);
+      for (const property of properties) {
+        const value = values[property];
+        const { clip, frames } = keyframeTarget(snapshot, clipId, property);
+        const range = KEYFRAME_RANGES[property];
+        if (value === undefined || !(value >= range.min && value <= range.max)) {
+          throw invalid(`That value is not allowed for ${property}.`);
+        }
+        const target = clipDraft(content, clipId);
+        if (frames.length === 0) {
+          setFixedValue(target, property, value);
+          continue;
+        }
+        if (!Number.isSafeInteger(offset) || offset < 0 || offset > clip.duration) {
+          throw invalid('A keyframe has to be inside the clip.');
+        }
+        const current = (target.keyframes?.[property] ?? []) as readonly Keyframe[];
+        const existing = current.find((frame) => frame.time === offset);
+        if (!existing && current.length >= MAX_KEYFRAMES) {
+          throw invalid(`A property can have up to ${String(MAX_KEYFRAMES)} keyframes.`);
+        }
+        const frame: Keyframe = { time: offset, value, easing: existing?.easing ?? 'linear' };
+        storeKeyframes(
+          target,
+          property,
+          existing
+            ? current.map((candidate) => (candidate.time === offset ? frame : candidate))
+            : [...current, frame].sort((a, b) => a.time - b.time),
+        );
+      }
+    },
+  };
+}
+
 // Markers and in/out ------------------------------------------------------------------------------------
 
 function validTime(time: number): void {

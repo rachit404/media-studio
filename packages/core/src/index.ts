@@ -304,6 +304,7 @@ export {
   moveKeyframe,
   removeKeyframe,
   setKeyframe,
+  setValuesAt,
   addMediaToTimeline,
   addSubtitleTrack,
   addTextClip,

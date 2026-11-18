@@ -22,6 +22,7 @@ import {
   setClipSpeed,
   setKeyframe,
   setTrackState,
+  setValuesAt,
   splitClip,
   trimClip,
 } from './video-commands';
@@ -411,5 +412,41 @@ describe('keyframes in files', () => {
       false,
     );
     expect(videoContentSchema.safeParse(withKeyframes('pic', { x: [] })).success).toBe(false);
+  });
+});
+
+describe('changing values at a moment of the clip', () => {
+  it('writes keyframes for animated properties and fixed values for the others, in one undo step', () => {
+    const history = setup();
+    history.execute(setKeyframe('pic', 'x', 0, 0));
+    history.execute(setKeyframe('pic', 'x', 4 * S, 1));
+    history.execute(setValuesAt('pic', 2 * S, { x: 0.25, y: 0.1, scale: 2 }));
+    const clip = clipOf(history, 'pic');
+    expect(clip.keyframes?.x?.map((f) => [f.time, f.value])).toEqual([
+      [0, 0],
+      [2 * S, 0.25],
+      [4 * S, 1],
+    ]);
+    expect(clip.keyframes?.y).toBeUndefined();
+    expect(clip.transform).toMatchObject({ y: 0.1, scale: 2 });
+    history.undo();
+    const undone = clipOf(history, 'pic');
+    expect(undone.keyframes?.x).toHaveLength(2);
+    expect(undone.transform).toBeUndefined();
+  });
+
+  it('merges a drag into one undo step, keeps the easing, and refuses bad values', () => {
+    const history = setup();
+    history.execute(setKeyframe('pic', 'opacity', S, 1, 'ease-out'));
+    for (const value of [0.9, 0.8, 0.7]) history.execute(setValuesAt('pic', S, { opacity: value }));
+    expect(clipOf(history, 'pic').keyframes?.opacity).toEqual([frame(S, 0.7, 'ease-out')]);
+    history.undo();
+    expect(clipOf(history, 'pic').keyframes?.opacity).toEqual([frame(S, 1, 'ease-out')]);
+    expect(() => history.execute(setValuesAt('pic', S, { opacity: 2 }))).toThrow();
+    expect(() => history.execute(setValuesAt('pic', S, { volume: 1 }))).toThrow(/sound clips/i);
+    history.execute(setKeyframe('pic', 'x', 0, 0));
+    expect(() => history.execute(setValuesAt('pic', 11 * S, { x: 0.5 }))).toThrow(
+      /inside the clip/i,
+    );
   });
 });
