@@ -37,6 +37,20 @@ export {
   subtitleStyle,
   textTrackFor,
 } from './text-defaults';
+export {
+  MAX_OFFSET,
+  MAX_SCALE,
+  MIN_SCALE,
+  ROTATION_SNAP,
+  clipCorners,
+  moveTransform,
+  rotateKnob,
+  rotateTransform,
+  scaleTransform,
+  textCorners,
+  transformPivot,
+} from './transform-handles';
+export type { ClipCorners, FramePoint } from './transform-handles';
 export { SHUTTLE_RATES, formatRate, shuttle } from './shuttle';
 export type { ShuttleKey, ShuttleResult } from './shuttle';
 export { Transport } from './transport';
