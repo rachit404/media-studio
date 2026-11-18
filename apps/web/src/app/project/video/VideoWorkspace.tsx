@@ -1,5 +1,5 @@
 import { formatTimecode, type ProjectDocument } from '@media-studio/core';
-import { fitView, toViewTransform } from '@media-studio/engine-image';
+import { fitView, toViewTransform, type ViewState } from '@media-studio/engine-image';
 import { CanvasRenderer } from '@media-studio/render';
 import { Button } from '@media-studio/ui';
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
@@ -11,6 +11,7 @@ import { ExportVideoDialog } from './ExportVideoDialog';
 import { MediaLibrary } from './MediaLibrary';
 import { PreviewPlayer } from './preview-player';
 import { Timeline } from './Timeline';
+import { TransformHandles } from './TransformHandles';
 import { VideoInspector } from './VideoInspector';
 
 /** The video editor: media library, preview with transport, timeline and inspector. */
@@ -36,6 +37,8 @@ export function VideoWorkspace({
   const [renderer, setRenderer] = useState<CanvasRenderer | null>(null);
   const [player, setPlayer] = useState<PreviewPlayer | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [view, setView] = useState<ViewState | null>(null);
+  const [viewport, setViewport] = useState<{ width: number; height: number } | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [graphicsProblem, setGraphicsProblem] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -95,15 +98,14 @@ export function VideoWorkspace({
     if (!renderer || !container) return;
     const fit = () => {
       const box = container.getBoundingClientRect();
-      renderer.setView(
-        toViewTransform(
-          fitView(
-            { width: sequence.width, height: sequence.height },
-            { width: box.width, height: box.height },
-            8,
-          ),
-        ),
+      const fitted = fitView(
+        { width: sequence.width, height: sequence.height },
+        { width: box.width, height: box.height },
+        8,
       );
+      renderer.setView(toViewTransform(fitted));
+      setView(fitted);
+      setViewport({ width: box.width, height: box.height });
     };
     fit();
     const observer = new ResizeObserver(fit);
@@ -152,6 +154,17 @@ export function VideoWorkspace({
           aria-label="Video preview"
           data-testid="preview-canvas"
           className="absolute inset-0 size-full"
+        />
+        <TransformHandles
+          session={session}
+          content={content}
+          assets={assets}
+          clipId={selectedId}
+          time={state.time}
+          playing={state.playing}
+          view={view}
+          viewport={viewport}
+          onProblem={setProblem}
         />
         {content.clips && Object.keys(content.clips).length === 0 && (
           <p className="pointer-events-none absolute inset-0 grid place-items-center p-6 text-center text-sm text-fg-muted">
