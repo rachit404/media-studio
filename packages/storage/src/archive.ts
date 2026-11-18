@@ -9,7 +9,7 @@ export const ARCHIVE_LIMITS = {
   maxProjectJsonBytes: 32 * 1024 * 1024,
 } as const;
 
-const MEDIA_ENTRY = /^(?:media|thumbs)\/[A-Za-z0-9][A-Za-z0-9._-]{0,150}$/;
+const MEDIA_ENTRY = /^(?:media|thumbs|peaks)\/[A-Za-z0-9][A-Za-z0-9._-]{0,150}$/;
 /** Painted pixels: a manifest per version and one file per tile (see core/pixel-manifest.ts). */
 const PIXEL_ENTRY = /^(?:pixels\/[A-Za-z0-9-]{1,64}\.json|tiles\/[A-Za-z0-9-]{1,64}\.bin)$/;
 

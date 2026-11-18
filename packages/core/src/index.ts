@@ -32,7 +32,12 @@ export {
   MIGRATIONS,
   PROJECT_FORMAT,
   addAssets,
+  assetFilePaths,
   assetSchema,
+  assetThumb,
+  audioAssetSchema,
+  imageAssetSchema,
+  videoAssetSchema,
   createProject,
   idSchema,
   migrateToVersion,
@@ -48,6 +53,10 @@ export {
 } from './project';
 export type {
   Asset,
+  AudioAsset,
+  AudioInfo,
+  ImageAsset,
+  VideoAsset,
   Migration,
   NewAsset,
   NewProjectInit,
@@ -179,3 +188,68 @@ export {
   tilePath,
 } from './pixel-manifest';
 export type { PixelManifest } from './pixel-manifest';
+export {
+  FPS_24,
+  FPS_25,
+  FPS_30,
+  FPS_60,
+  MAX_TIME_US,
+  US_PER_SECOND,
+  formatTimecode,
+  frameDuration,
+  frameRateFromNumber,
+  frameRateSchema,
+  frameToTime,
+  fpsValue,
+  parseTimecode,
+  samplesToTime,
+  secondsToTime,
+  snapToFrame,
+  timeToFrame,
+  timeToSamples,
+  timeToSeconds,
+} from './time';
+export type { FrameRate } from './time';
+export {
+  DEFAULT_SEQUENCE,
+  MAX_CLIPS,
+  MAX_SEQUENCE_SIZE,
+  MAX_TRACKS,
+  SAMPLE_RATES,
+  clipEnd,
+  clipSchema,
+  emptyVideoContent,
+  sequenceSchema,
+  trackSchema,
+  videoContentSchema,
+} from './video-document';
+export type { Clip, Sequence, Track, TrackKind, VideoContent } from './video-document';
+export {
+  clampMoveDelta,
+  clipAt,
+  clipsAt,
+  expandLinked,
+  firstFreeStart,
+  isFree,
+  linkedGroup,
+  sequenceDuration,
+  sortedTracks,
+  trackClips,
+  tracksOfKind,
+} from './timeline';
+export {
+  addMediaToTimeline,
+  addTrack,
+  appendPosition,
+  clipsUsingAsset,
+  deleteClips,
+  joinClips,
+  moveClips,
+  removeTrack,
+  setSequence,
+  setTrackState,
+  splitClip,
+  trimClip,
+  unlinkClips,
+} from './video-commands';
+export type { AddMediaParams, TrimEdge } from './video-commands';

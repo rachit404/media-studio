@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@media-studio/core": "workspace:*"
+    "@media-studio/core": "workspace:*",
+    "mediabunny": "1.66.0"
   }
 }

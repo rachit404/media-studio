@@ -11,6 +11,8 @@ import {
   parseProjectFile,
   pixelContentIds,
   pixelManifestSchema,
+  assetFilePaths,
+  assetThumb,
   rawTileBytes,
   replayRecords,
   sortedItems,
@@ -172,7 +174,7 @@ export class ProjectStore {
           type: file.project.type,
           modifiedAt: file.modifiedAt,
           assetCount: Object.keys(file.project.assets.byId).length,
-          thumbPath: first?.thumb ?? null,
+          thumbPath: first ? assetThumb(first) : null,
         });
       } catch (error) {
         broken.push({
@@ -367,7 +369,7 @@ export class ProjectStore {
         'project.json': encodeText(JSON.stringify(file)),
       };
       for (const asset of Object.values(file.project.assets.byId)) {
-        for (const path of [asset.file, asset.thumb]) {
+        for (const path of assetFilePaths(asset)) {
           const data = await this.fs.read(`${this.dir(id)}/${safeAssetPath(path)}`);
           if (!data) {
             throw new AppError({
@@ -402,7 +404,7 @@ export class ProjectStore {
     }
     const project = parseProject({ ...parsed.project, id: safeId(newId) });
     for (const asset of Object.values(project.assets.byId)) {
-      if (!files[asset.file] || !files[asset.thumb]) {
+      if (assetFilePaths(asset).some((path) => !files[path])) {
         throw new AppError({
           code: 'invalid-project',
           message: `The archive is missing files for "${asset.name}".`,
@@ -419,7 +421,7 @@ export class ProjectStore {
       }
       try {
         for (const asset of Object.values(project.assets.byId)) {
-          for (const path of [asset.file, asset.thumb]) {
+          for (const path of assetFilePaths(asset)) {
             await this.fs.write(`${this.dir(newId)}/${path}`, files[path] as Uint8Array);
           }
         }

@@ -2,34 +2,94 @@ import { z } from 'zod';
 import { AppError } from './errors';
 import type { Command } from './history';
 import { emptyImageContent, imageContentSchema } from './image-document';
-import { appendItems, createOrdered, removeItem } from './ordered';
+import { appendItems, createOrdered, removeItem, type WithoutKey } from './ordered';
 import { idSchema, orderedSchema, relativePathSchema } from './schema-common';
+import { frameRateSchema, MAX_TIME_US } from './time';
+import { emptyVideoContent, videoContentSchema } from './video-document';
 
 export { idSchema, relativePathSchema };
 
-export const assetSchema = z.strictObject({
+const assetBase = {
   id: idSchema,
   /** Fractional-index order key (see ordered.ts). */
   key: z.string().min(1),
-  kind: z.literal('image'),
   name: z.string().min(1).max(255),
   mime: z.string().min(1).max(100),
   size: z.number().int().nonnegative(),
-  width: z.number().int().positive(),
-  height: z.number().int().positive(),
   /** Original bytes, relative to the project folder. */
   file: relativePathSchema,
+};
+
+export const imageAssetSchema = z.strictObject({
+  ...assetBase,
+  kind: z.literal('image'),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
   thumb: relativePathSchema,
 });
+export type ImageAsset = z.infer<typeof imageAssetSchema>;
+
+const durationSchema = z.number().int().min(1).max(MAX_TIME_US);
+
+/** Audio facts about a media file. */
+export const audioInfoSchema = z.strictObject({
+  sampleRate: z.number().int().min(8000).max(192_000),
+  channels: z.number().int().min(1).max(32),
+  codec: z.string().max(40),
+});
+export type AudioInfo = z.infer<typeof audioInfoSchema>;
+
+export const videoAssetSchema = z.strictObject({
+  ...assetBase,
+  kind: z.literal('video'),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  /** Length in microseconds. */
+  duration: durationSchema,
+  fps: frameRateSchema,
+  codec: z.string().max(40),
+  /** Average gap between keyframes in microseconds, or null when it was not measured. */
+  keyframeInterval: z.number().int().positive().nullable(),
+  audio: audioInfoSchema.nullable(),
+  thumb: relativePathSchema,
+  /** Waveform peaks of the audio (see media-io/peaks), or null without audio. */
+  peaks: relativePathSchema.nullable(),
+});
+export type VideoAsset = z.infer<typeof videoAssetSchema>;
+
+export const audioAssetSchema = z.strictObject({
+  ...assetBase,
+  kind: z.literal('audio'),
+  duration: durationSchema,
+  audio: audioInfoSchema,
+  peaks: relativePathSchema.nullable(),
+});
+export type AudioAsset = z.infer<typeof audioAssetSchema>;
+
+export const assetSchema = z.discriminatedUnion('kind', [
+  imageAssetSchema,
+  videoAssetSchema,
+  audioAssetSchema,
+]);
 export type Asset = z.infer<typeof assetSchema>;
+
+/** Every file inside the project folder that belongs to an asset (original, thumbnail, waveform peaks). */
+export function assetFilePaths(asset: Asset): string[] {
+  const paths = [asset.file];
+  if ('thumb' in asset) paths.push(asset.thumb);
+  if ('peaks' in asset && asset.peaks) paths.push(asset.peaks);
+  return paths;
+}
+
+/** The thumbnail of an asset, or null for assets without one (audio). */
+export function assetThumb(asset: Asset): string | null {
+  return 'thumb' in asset ? asset.thumb : null;
+}
 
 const assetsSchema = orderedSchema(assetSchema);
 
-/** Content of the editors: the image document (v2), or just the kind for video until step 6. */
-const contentSchema = z.discriminatedUnion('kind', [
-  imageContentSchema,
-  z.strictObject({ kind: z.literal('video') }),
-]);
+/** Content of the editors: the image document or the video sequence. */
+const contentSchema = z.discriminatedUnion('kind', [imageContentSchema, videoContentSchema]);
 
 export const projectSchema = z
   .strictObject({
@@ -44,7 +104,7 @@ export const projectSchema = z
 export type ProjectDocument = z.infer<typeof projectSchema>;
 export type ProjectType = ProjectDocument['type'];
 
-export const CURRENT_FORMAT_VERSION = 4;
+export const CURRENT_FORMAT_VERSION = 5;
 export const PROJECT_FORMAT = 'media-studio-project';
 
 export const projectFileSchema = z.strictObject({
@@ -77,10 +137,23 @@ const migrateV2ToV3: Migration = (raw) => raw;
 /** v4 only adds optional fields (layer masks, clipping) and raster layers, so existing documents stay valid. */
 const migrateV3ToV4: Migration = (raw) => raw;
 
+/** v5: video projects get a sequence with tracks and clips; video and audio assets exist. */
+const migrateV4ToV5: Migration = (raw) => {
+  const project = raw['project'];
+  if (typeof project === 'object' && project !== null) {
+    const content = (project as { content?: { kind?: unknown } }).content;
+    if (content?.kind === 'video' && !('sequence' in content)) {
+      (project as { content: unknown }).content = emptyVideoContent();
+    }
+  }
+  return raw;
+};
+
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   1: migrateV1ToV2,
   2: migrateV2ToV3,
   3: migrateV3ToV4,
+  4: migrateV4ToV5,
 };
 
 function invalidProject(cause?: unknown): AppError {
@@ -147,7 +220,7 @@ export function createProject(init: NewProjectInit): ProjectDocument {
     type: init.type,
     createdAt: init.createdAt,
     assets: createOrdered<Asset>(),
-    content: init.type === 'image' ? emptyImageContent() : { kind: 'video' },
+    content: init.type === 'image' ? emptyImageContent() : emptyVideoContent(),
   });
 }
 
@@ -175,13 +248,13 @@ export function renameProject(name: string): Command<ProjectDocument> {
   };
 }
 
-export type NewAsset = Omit<Asset, 'key'>;
+export type NewAsset = WithoutKey<Asset>;
 
 export function addAssets(assets: readonly NewAsset[]): Command<ProjectDocument> {
   return {
     label: assets.length === 1 ? 'Import asset' : `Import ${String(assets.length)} assets`,
     apply(draft) {
-      appendItems(draft.assets, assets);
+      appendItems<Asset>(draft.assets, assets);
     },
   };
 }
