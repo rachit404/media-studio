@@ -1,11 +1,12 @@
 import {
-  clipTransform,
+  clipTransformAt,
   isTextClip,
-  setClipLook,
+  setValuesAt,
   toAppError,
   type Asset,
   type Clip,
   type ClipTransform,
+  type KeyframeProperty,
   type VideoContent,
 } from '@media-studio/core';
 import {
@@ -22,6 +23,7 @@ import { rasterMetrics } from '@media-studio/render';
 import type { ViewState } from '@media-studio/engine-image';
 import { useRef, type KeyboardEvent, type PointerEvent } from 'react';
 import type { ProjectSession } from '../project-session';
+import { changedValues } from './keyframe-ui';
 
 type Gesture = 'move' | 'scale' | 'rotate';
 
@@ -39,15 +41,18 @@ const NUDGE_LARGE = 10;
 const SCALE_LABELS = ['top left', 'top right', 'bottom right', 'bottom left'] as const;
 
 /**
- * The one place a handle drag writes to the document: one undoable `setClipLook` per pointer move (repeated edits of
- * one field merge). Keyframes will replace this call to write at the playhead instead. Throws what the command throws.
+ * The one place a handle drag writes to the document: one undoable `setValuesAt` per pointer move. A property that is
+ * animated gets (or updates) a keyframe at `offset`, microseconds after the clip start; a plain one changes its fixed
+ * value. A whole drag is one undo step. Throws what the command throws.
  */
 export function commitTransform(
   session: ProjectSession,
   clipId: string,
-  transform: ClipTransform,
+  offset: number,
+  values: Partial<Record<KeyframeProperty, number>>,
 ): void {
-  session.history.execute(setClipLook([clipId], { transform }));
+  if (Object.keys(values).length === 0) return;
+  session.history.execute(setValuesAt(clipId, offset, values));
 }
 
 /** How big the clip's picture is, in the pixels its box is drawn from; null when it has no picture to show. */
@@ -105,7 +110,9 @@ export function TransformHandles({
   if (time < clip.start || time >= clip.start + clip.duration) return null;
 
   const frame = content.sequence;
-  const transform = clipTransform(clip);
+  // The box follows the animation: where the clip is at the playhead, not its fixed value.
+  const offset = time - clip.start;
+  const transform = clipTransformAt(clip, offset);
   const corners = boxOf(clip, assets, frame, transform);
   if (!corners) return null;
 
@@ -126,10 +133,10 @@ export function TransformHandles({
   };
   const outline = screen.map((point) => `${String(point.x)},${String(point.y)}`).join(' ');
 
-  const apply = (next: ClipTransform) => {
+  const apply = (from: ClipTransform, next: ClipTransform) => {
     onProblem(null);
     try {
-      commitTransform(session, clip.id, next);
+      commitTransform(session, clip.id, offset, changedValues(from, next));
     } catch (error) {
       const appError = toAppError(error);
       onProblem(appError.hint ? `${appError.message} ${appError.hint}` : appError.message);
@@ -161,6 +168,7 @@ export function TransformHandles({
     if (!active || active.pointerId !== event.pointerId || !pointer) return;
     if (active.gesture === 'move') {
       apply(
+        active.start,
         moveTransform(
           active.start,
           pointer.x - active.grab.x,
@@ -170,9 +178,13 @@ export function TransformHandles({
         ),
       );
     } else if (active.gesture === 'scale') {
-      apply(scaleTransform(active.start, active.grab, pointer, frame.width, frame.height));
+      apply(
+        active.start,
+        scaleTransform(active.start, active.grab, pointer, frame.width, frame.height),
+      );
     } else {
       apply(
+        active.start,
         rotateTransform(
           active.start,
           active.grab,
@@ -205,7 +217,7 @@ export function TransformHandles({
     if (!by) return;
     event.preventDefault();
     event.stopPropagation();
-    apply(moveTransform(transform, by[0], by[1], frame.width, frame.height));
+    apply(transform, moveTransform(transform, by[0], by[1], frame.width, frame.height));
   };
 
   const handleProps = (gesture: Gesture) => ({

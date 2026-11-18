@@ -61,6 +61,18 @@ export const COMMANDS = [
     defaults: ['Mod+ArrowLeft'],
     scope: 'video',
   },
+  {
+    id: 'keyframe.next',
+    label: 'Go to the next keyframe of the selected clip',
+    defaults: ['.'],
+    scope: 'video',
+  },
+  {
+    id: 'keyframe.previous',
+    label: 'Go to the previous keyframe of the selected clip',
+    defaults: [','],
+    scope: 'video',
+  },
   { id: 'range.in', label: 'Set the in point', defaults: ['I'], scope: 'video' },
   { id: 'range.out', label: 'Set the out point', defaults: ['O'], scope: 'video' },
   { id: 'range.clear', label: 'Clear the in and out points', defaults: ['Alt+X'], scope: 'video' },
