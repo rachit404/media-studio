@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
 import { diagnostics, installGlobalErrorLogging } from './app/diagnostics';
+import { preloadEditors } from './app/preload-editors';
 import { startStorageProbe } from './app/storage-client';
 import './styles/theme.css';
 
@@ -26,4 +27,5 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
       reason: error instanceof Error ? error.message : 'unknown',
     });
   });
+  preloadEditors();
 }

@@ -108,7 +108,10 @@ export function peaksForRange(
   const span = ((endSeconds - startSeconds) * peaks.perSecond) / out.length;
   for (let bin = 0; bin < out.length; bin += 1) {
     const first = Math.max(0, Math.floor(from + bin * span));
-    const last = Math.min(peaks.data.length - 1, Math.max(first, Math.ceil(from + (bin + 1) * span) - 1));
+    const last = Math.min(
+      peaks.data.length - 1,
+      Math.max(first, Math.ceil(from + (bin + 1) * span) - 1),
+    );
     let loudest = 0;
     for (let i = first; i <= last; i += 1) loudest = Math.max(loudest, peaks.data[i] ?? 0);
     out[bin] = loudest;

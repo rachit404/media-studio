@@ -59,6 +59,9 @@ importers:
       '@media-studio/engine-image':
         specifier: workspace:*
         version: link:../../packages/engine-image
+      '@media-studio/engine-video':
+        specifier: workspace:*
+        version: link:../../packages/engine-video
       '@media-studio/media-io':
         specifier: workspace:*
         version: link:../../packages/media-io

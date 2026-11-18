@@ -6,12 +6,14 @@ import {
   addTrack,
   createProject,
   setTrackState,
+  trimClip,
   type NewAsset,
   type ProjectDocument,
   type VideoContent,
 } from '@media-studio/core';
 import { describe, expect, it } from 'vitest';
 import { audioSegments } from './audio-plan';
+import { isTrimChange, trimRange } from './drag-limits';
 import { FrameCache, type Closable } from './frame-cache';
 import { buildPreviewScene, containMatrix, previewPlan } from './preview';
 import {
@@ -25,6 +27,7 @@ import {
   xToTime,
   zoomAround,
 } from './timeline-view';
+import { placeAsset } from './placement';
 import { Transport } from './transport';
 
 const S = 1_000_000;
@@ -313,5 +316,60 @@ describe('frame cache', () => {
     expect(cache.has('huge')).toBe(true);
     cache.removeWhere((key) => key === 'huge');
     expect(cache.alive).toBe(0);
+  });
+});
+
+describe('placing assets', () => {
+  it('puts a file after what is there, on a track that fits the picture and the sound', () => {
+    const history = project(); // a clip from 2 s to 12 s on V1 and A1
+    const asset = history.state.assets.byId['vid'];
+    if (!asset) throw new Error('asset');
+    const first = placeAsset(content(history), asset, 0);
+    // 10 s do not fit before the clip at 2 s, so it goes after it.
+    expect(first).toEqual({ start: 12 * S, videoTrackId: 'V1', audioTrackId: 'A1' });
+    expect(placeAsset(content(history), asset, 20 * S)?.start).toBe(20 * S);
+  });
+
+  it('skips locked tracks and returns null when nothing can take the file', () => {
+    const history = project();
+    const asset = history.state.assets.byId['vid'];
+    if (!asset) throw new Error('asset');
+    history.execute(addTrack('video', 'V2'));
+    history.execute(setTrackState('V1', { locked: true }));
+    expect(placeAsset(content(history), asset, 0)?.videoTrackId).toBe('V2');
+    history.execute(setTrackState('V2', { locked: true }));
+    expect(placeAsset(content(history), asset, 0)).toBeNull();
+  });
+});
+
+describe('trim limits', () => {
+  it('stop at neighbours, the ends of the file, and one frame from the other edge', () => {
+    const history = project(); // clip 2 s..12 s, whole 10 s file
+    history.execute(addAssets([{ ...VIDEO, id: 'other', file: 'media/other.mp4' }]));
+    history.execute(
+      addMediaToTimeline({
+        assetId: 'other',
+        start: 14 * S,
+        clipId: 'c9',
+        audioClipId: 'a9',
+        linkId: 'l9',
+      }),
+    );
+    const assets = history.state.assets.byId;
+    const frame = 33_334;
+    // Start edge: cannot go before the timeline start-of-file (clip is at the start of its file) nor past the end.
+    const start = trimRange(content(history), assets, 'c1', 'start', FPS_30);
+    expect(start.min).toBe(2 * S);
+    expect(start.max).toBe(12 * S - frame);
+    // End edge: the file has no more material; the neighbour at 14 s does not matter.
+    const end = trimRange(content(history), assets, 'c1', 'end', FPS_30);
+    expect(end.min).toBe(2 * S + frame);
+    expect(end.max).toBe(12 * S);
+    // After shortening the clip there is room to extend again, up to the next clip.
+    history.execute(trimClip('c1', 'end', 6 * S));
+    const again = trimRange(content(history), assets, 'c1', 'end', FPS_30);
+    expect(again.max).toBe(12 * S);
+    expect(isTrimChange(content(history), 'c1', 'end', 6 * S)).toBe(false);
+    expect(isTrimChange(content(history), 'c1', 'end', 7 * S)).toBe(true);
   });
 });

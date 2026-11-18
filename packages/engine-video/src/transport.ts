@@ -66,11 +66,21 @@ export class Transport {
     this.seek(frameToTime(frame, this.fps));
   }
 
-  play(): void {
-    if (this.isPlaying) return;
+  /**
+   * Start (or, while playing, re-anchor) playback. `atClock` is the clock time at which the current time is
+   * heard; sound is scheduled a moment ahead, so the picture is told when that moment is.
+   */
+  play(atClock?: number): void {
+    if (this.isPlaying) {
+      if (atClock !== undefined) {
+        this.startedAtClock = atClock;
+        this.startedAtTime = this.current;
+      }
+      return;
+    }
     if (this.current >= this.length) this.current = 0;
     this.isPlaying = true;
-    this.startedAtClock = this.options.clock();
+    this.startedAtClock = atClock ?? this.options.clock();
     this.startedAtTime = this.current;
     this.lastFrame = timeToFrame(this.current, this.fps);
   }

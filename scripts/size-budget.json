@@ -1,5 +1,6 @@
 {
-  "$comment": "App shell budget (gzip, all JS/CSS in the initial build). PERF-6 targets under 300 KB for the shell; engines are lazy-loaded and get their own budgets in later milestones.",
+  "$comment": "Gzip budgets. jsGzipKb is the app shell (scripts loaded at start, plus the storage worker); PERF-6 targets under 300 KB. lazyJsGzipKb covers everything loaded on demand (the image and video editors and the analysis worker).",
   "jsGzipKb": 300,
+  "lazyJsGzipKb": 700,
   "cssGzipKb": 40
 }

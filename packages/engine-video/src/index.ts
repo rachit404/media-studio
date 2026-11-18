@@ -29,3 +29,8 @@ export {
 export type { RulerTick, SnapResult, TimelineScale } from './timeline-view';
 export { Transport } from './transport';
 export type { PlaybackStats, TransportOptions } from './transport';
+export { FramePump } from './frame-pump';
+export type { FrameStreamSource, TimedFrame } from './frame-pump';
+export { placeAsset } from './placement';
+export type { Placement } from './placement';
+export { isTrimChange, trimRange } from './drag-limits';

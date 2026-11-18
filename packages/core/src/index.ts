@@ -249,6 +249,7 @@ export {
   setSequence,
   setTrackState,
   splitClip,
+  splitClips,
   trimClip,
   unlinkClips,
 } from './video-commands';

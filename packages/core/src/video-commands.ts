@@ -379,24 +379,27 @@ export function trimClip(
 }
 
 /**
- * Split a clip (and its linked clips) at timeline time `time`. `makeId` supplies the ids of the new second halves
- * and the new link; the pieces after the cut keep the link among themselves.
+ * Split clips (and the clips linked to them) at timeline time `time`. `makeId` supplies the ids of the new second
+ * halves and of the new links; the pieces after the cut keep their links among themselves.
  */
-export function splitClip(
+export function splitClips(
   content: VideoContent,
-  clipId: string,
+  clipIds: readonly string[],
   time: number,
   makeId: () => string,
 ): Command<ProjectDocument> {
-  const group = linkedGroup(content, clipId);
+  const group = expandLinked(content, clipIds);
   const rightIds = new Map(group.map((clip) => [clip.id, makeId()]));
-  const rightLink = group.length > 1 ? makeId() : null;
+  const rightLinks = new Map<string, string>();
+  for (const clip of group) {
+    if (clip.linkId !== null && !rightLinks.has(clip.linkId)) rightLinks.set(clip.linkId, makeId());
+  }
   return {
-    label: 'Split clip',
+    label: group.length > 1 ? 'Split clips' : 'Split clip',
     apply(draft) {
       const target = videoDraft(draft);
       const snapshot = before(target);
-      const members = linkedGroup(snapshot, clipId);
+      const members = expandLinked(snapshot, clipIds);
       assertEditable(snapshot, members);
       if (Object.keys(snapshot.clips).length + members.length > MAX_CLIPS) {
         throw invalid(`A sequence can have up to ${String(MAX_CLIPS)} clips.`);
@@ -421,7 +424,7 @@ export function splitClip(
           start: time,
           duration: clipEnd(clip) - time,
           sourceIn: clip.sourceIn + (time - clip.start),
-          linkId: clip.linkId === null ? null : rightLink,
+          linkId: clip.linkId === null ? null : (rightLinks.get(clip.linkId) ?? null),
         };
         const track = target.tracks.byId[clip.trackId];
         if (track) {
@@ -430,6 +433,16 @@ export function splitClip(
       }
     },
   };
+}
+
+/** Split one clip (and its linked clips); see `splitClips`. */
+export function splitClip(
+  content: VideoContent,
+  clipId: string,
+  time: number,
+  makeId: () => string,
+): Command<ProjectDocument> {
+  return splitClips(content, [clipId], time, makeId);
 }
 
 /** Delete clips and the clips linked to them. `ripple` closes the gaps they leave on their tracks. */

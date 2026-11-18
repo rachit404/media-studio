@@ -64,11 +64,9 @@ describe('importMediaFiles', () => {
     );
     expect(result.failures).toEqual([]);
     expect(result.imported.map((a) => a.kind)).toEqual(['video', 'audio']);
-    expect(result.imported[0]).toMatchObject({
-      width: 640,
-      duration: 5_000_000,
-      peaks: expect.stringMatching(/^peaks\//),
-    });
+    const first = result.imported[0];
+    expect(first).toMatchObject({ width: 640, duration: 5_000_000 });
+    expect(first && 'peaks' in first ? first.peaks : null).toMatch(/^peaks\//);
     expect(written.filter((p) => p.startsWith('thumbs/'))).toHaveLength(1);
     expect(written.filter((p) => p.startsWith('media/'))).toHaveLength(2);
   });

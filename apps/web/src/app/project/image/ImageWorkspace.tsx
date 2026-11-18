@@ -152,7 +152,7 @@ export function ImageWorkspace({ session, project, heading, toolbar }: ImageWork
     'layer.copy': copyLayer,
     'layer.paste': pasteLayerFromClipboard,
     'layer.duplicate': duplicateSelected,
-    'layer.delete': deleteSelected,
+    'edit.delete': deleteSelected,
   });
 
   return (

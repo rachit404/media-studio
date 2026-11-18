@@ -15,6 +15,7 @@
     "@media-studio/capabilities": "workspace:*",
     "@media-studio/core": "workspace:*",
     "@media-studio/engine-image": "workspace:*",
+    "@media-studio/engine-video": "workspace:*",
     "@media-studio/media-io": "workspace:*",
     "@media-studio/render": "workspace:*",
     "@media-studio/storage": "workspace:*",

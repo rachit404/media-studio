@@ -20,7 +20,22 @@ export const COMMANDS = [
   { id: 'layer.copy', label: 'Copy the selected layer', defaults: ['Mod+C'] },
   { id: 'layer.paste', label: 'Paste the copied layer', defaults: ['Mod+V'] },
   { id: 'layer.duplicate', label: 'Duplicate the selected layer', defaults: ['Mod+J'] },
-  { id: 'layer.delete', label: 'Delete the selected layer', defaults: ['Delete', 'Backspace'] },
+  {
+    id: 'edit.delete',
+    label: 'Delete the selected layer or clip',
+    defaults: ['Delete', 'Backspace'],
+  },
+  { id: 'transport.toggle', label: 'Play or pause', defaults: ['Space'] },
+  { id: 'transport.back', label: 'Back one frame', defaults: ['ArrowLeft'] },
+  { id: 'transport.forward', label: 'Forward one frame', defaults: ['ArrowRight'] },
+  { id: 'transport.start', label: 'Go to the start', defaults: ['Home'] },
+  { id: 'transport.end', label: 'Go to the end', defaults: ['End'] },
+  { id: 'timeline.split', label: 'Split the clip at the playhead', defaults: ['S'] },
+  {
+    id: 'timeline.rippleDelete',
+    label: 'Delete the clip and close the gap',
+    defaults: ['Shift+Delete', 'Shift+Backspace'],
+  },
 ] as const satisfies readonly CommandDef[];
 
 export type CommandId = (typeof COMMANDS)[number]['id'];

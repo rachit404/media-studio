@@ -1,7 +1,7 @@
 // Tests for the CI check scripts themselves: licence gate, theme contrast, bundle budget.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { checkBudget } from './check-bundle-size.mjs';
+import { checkBudget, splitShell } from './check-bundle-size.mjs';
 import { classifyExpression, evaluateLicences, loadPolicy } from './check-licences.mjs';
 import { checkThemes, contrastRatio, loadThemes, THEME_FILE } from './check-theme-contrast.mjs';
 
@@ -91,5 +91,29 @@ describe('bundle budget gate', () => {
     expect(
       checkBudget({ jsGzipKb: 301, cssGzipKb: 5 }, { jsGzipKb: 300, cssGzipKb: 40 }),
     ).toHaveLength(1);
+  });
+});
+
+describe('bundle shell split', () => {
+  it('counts the scripts index.html names and the storage worker as the shell, the rest as lazy', () => {
+    const files = [
+      'dist/assets/index-abc.js',
+      'dist/assets/storage.worker-def.js',
+      'dist/assets/analysis.worker-ghi.js',
+      'dist/assets/VideoWorkspace-jkl.js',
+      'dist/assets/vendor-mno.js',
+    ];
+    const html =
+      '<script type="module" src="/assets/index-abc.js"></script><link rel="modulepreload" href="/assets/vendor-mno.js">';
+    const { shell, lazy } = splitShell(files, html);
+    expect(shell).toEqual([
+      'dist/assets/index-abc.js',
+      'dist/assets/storage.worker-def.js',
+      'dist/assets/vendor-mno.js',
+    ]);
+    expect(lazy).toEqual([
+      'dist/assets/analysis.worker-ghi.js',
+      'dist/assets/VideoWorkspace-jkl.js',
+    ]);
   });
 });

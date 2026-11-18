@@ -32,6 +32,24 @@ export function checkBudget(sizes, budget) {
     .map(([key, limit]) => `${key}: ${(sizes[key] ?? 0).toFixed(1)} KB exceeds budget ${limit} KB`);
 }
 
+/**
+ * Split built files into the app shell (loaded at start: the scripts index.html names, plus the storage worker) and
+ * the lazy chunks (editors, analysis worker) that load only when needed.
+ * @param {string[]} files @param {string} html
+ */
+export function splitShell(files, html) {
+  const named = new Set(
+    [...html.matchAll(/(?:src|href)="([^"]+\.js)"/g)].map((match) =>
+      (match[1] ?? '').split('/').pop(),
+    ),
+  );
+  const isShell = (file) => {
+    const name = file.split(/[\\/]/).pop() ?? '';
+    return named.has(name) || name.startsWith('storage.worker');
+  };
+  return { shell: files.filter(isShell), lazy: files.filter((file) => !isShell(file)) };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const budget = JSON.parse(readFileSync(BUDGET_FILE, 'utf8'));
   let files;
@@ -41,12 +59,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error('apps/web/dist not found. Run `pnpm build` first.');
     process.exit(1);
   }
+  const { shell, lazy } = splitShell(files, readFileSync(join(DIST, 'index.html'), 'utf8'));
   const sizes = {
-    jsGzipKb: gzipKb(files, ['.js']),
+    jsGzipKb: gzipKb(shell, ['.js']),
+    lazyJsGzipKb: gzipKb(lazy, ['.js']),
     cssGzipKb: gzipKb(files, ['.css']),
   };
   console.log(
-    `JS gzip: ${sizes.jsGzipKb.toFixed(1)} KB, CSS gzip: ${sizes.cssGzipKb.toFixed(1)} KB`,
+    `Shell JS gzip: ${sizes.jsGzipKb.toFixed(1)} KB, lazy JS gzip: ${sizes.lazyJsGzipKb.toFixed(1)} KB, CSS gzip: ${sizes.cssGzipKb.toFixed(1)} KB`,
   );
   const failures = checkBudget(sizes, budget);
   if (failures.length > 0) {
