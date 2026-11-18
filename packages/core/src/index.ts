@@ -232,12 +232,16 @@ export {
   clipColourSchema,
   clipEnd,
   clipGainAt,
+  KEYFRAME_RANGES,
   clipOpacity,
+  clipOpacityAt,
   clipSchema,
   clipSourceAt,
   clipSpeed,
   sourceSpan,
   clipTransform,
+  clipTransformAt,
+  keyframePropertyFits,
   emptyVideoContent,
   sequenceSchema,
   clipTransformSchema,
@@ -252,6 +256,7 @@ export type {
   TextClip,
   ClipTransform,
   ClipTransition,
+  Keyframes,
   Marker,
   Sequence,
   Track,
@@ -278,10 +283,27 @@ export {
   trackClips,
   tracksOfKind,
 } from './timeline';
+export {
+  EASINGS,
+  KEYFRAME_PROPERTIES,
+  MAX_KEYFRAMES,
+  ease,
+  isAnimated,
+  keyframeAt,
+  keyframeSchema,
+  keyframesSchema,
+  remapKeyframes,
+  valueAt,
+} from './keyframes';
+export type { Easing, Keyframe, KeyframeProperty } from './keyframes';
 export { MAX_CUE_TEXT, parseSubtitles } from './subtitles';
 export type { Cue, ParsedSubtitles } from './subtitles';
 export {
   addMarker,
+  clearKeyframes,
+  moveKeyframe,
+  removeKeyframe,
+  setKeyframe,
   addMediaToTimeline,
   addSubtitleTrack,
   addTextClip,

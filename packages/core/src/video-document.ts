@@ -1,5 +1,12 @@
 import { z } from 'zod';
 import { textSpecSchema, type TextSpec } from './image-document';
+import {
+  KEYFRAME_PROPERTIES,
+  keyframesSchema,
+  valueAt,
+  type KeyframeProperty,
+  type Keyframes,
+} from './keyframes';
 import { createOrdered, type Ordered } from './ordered';
 import { idSchema, orderedSchema } from './schema-common';
 import { FPS_30, MAX_TIME_US, frameRateSchema } from './time';
@@ -69,6 +76,7 @@ export const clipTransformSchema = z.strictObject({
 });
 export type ClipTransform = z.infer<typeof clipTransformSchema>;
 
+export type { Keyframes };
 export const IDENTITY_TRANSFORM: ClipTransform = {
   x: 0,
   y: 0,
@@ -150,6 +158,11 @@ export const clipSchema = z.strictObject({
    * `duration * speed` of the file; sound changes pitch with speed.
    */
   speed: z.number().min(MIN_SPEED).max(MAX_SPEED).optional(),
+  /**
+   * Properties that change over time (VID-12). A property with keyframes follows them, and the fixed value of the
+   * same property (`transform`, `opacity`, `volume`) is only the fallback.
+   */
+  keyframes: keyframesSchema.optional(),
   /** Text clips (no media): what to write and how. Its size is in sequence pixels. */
   text: textSpecSchema.optional(),
   /** Text clips: a box behind the text (absent = none). */
@@ -176,6 +189,43 @@ export function clipTransform(clip: Pick<Clip, 'transform'>): ClipTransform {
 export function clipOpacity(clip: Pick<Clip, 'opacity'>): number {
   return clip.opacity ?? 1;
 }
+
+/** The values a keyframed property may take; keyframes are held to the same ranges as the fixed values. */
+export const KEYFRAME_RANGES: Readonly<Record<KeyframeProperty, { min: number; max: number }>> = {
+  x: { min: -4, max: 4 },
+  y: { min: -4, max: 4 },
+  scale: { min: 0.01, max: 16 },
+  rotation: { min: -360, max: 360 },
+  opacity: { min: 0, max: 1 },
+  volume: { min: 0, max: MAX_VOLUME },
+};
+
+/** The picture properties are for video tracks, volume is for audio tracks. */
+export function keyframePropertyFits(property: KeyframeProperty, trackKind: TrackKind): boolean {
+  return property === 'volume' ? trackKind === 'audio' : trackKind === 'video';
+}
+
+/** The placement of a picture or text clip `offset` microseconds after its start, with any keyframes applied. */
+export function clipTransformAt(
+  clip: Pick<Clip, 'transform' | 'keyframes'>,
+  offset: number,
+): ClipTransform {
+  const base = clipTransform(clip);
+  const frames = clip.keyframes;
+  if (!frames?.x && !frames?.y && !frames?.scale && !frames?.rotation) return base;
+  return {
+    ...base,
+    x: valueAt(frames.x, offset, base.x),
+    y: valueAt(frames.y, offset, base.y),
+    scale: valueAt(frames.scale, offset, base.scale),
+    rotation: valueAt(frames.rotation, offset, base.rotation),
+  };
+}
+
+/** The opacity of a picture or text clip `offset` microseconds after its start, with any keyframes applied. */
+export function clipOpacityAt(clip: Pick<Clip, 'opacity' | 'keyframes'>, offset: number): number {
+  return valueAt(clip.keyframes?.opacity, offset, clipOpacity(clip));
+}
 export function clipSpeed(clip: Pick<Clip, 'speed'>): number {
   return clip.speed ?? 1;
 }
@@ -199,10 +249,10 @@ export function clipColour(clip: Pick<Clip, 'colour'>): ClipColour {
  * the fades never overlap because they are limited to the clip length when set and again here).
  */
 export function clipGainAt(
-  clip: Pick<Clip, 'duration' | 'volume' | 'fadeIn' | 'fadeOut'>,
+  clip: Pick<Clip, 'duration' | 'volume' | 'fadeIn' | 'fadeOut' | 'keyframes'>,
   offset: number,
 ): number {
-  const base = clip.volume ?? 1;
+  const base = valueAt(clip.keyframes?.volume, offset, clip.volume ?? 1);
   const fadeIn = Math.min(clip.fadeIn ?? 0, clip.duration);
   const fadeOut = Math.min(clip.fadeOut ?? 0, clip.duration);
   let gain = base;
@@ -280,6 +330,24 @@ export const videoContentSchema = z
         fail(`clip ${id} must have either media or text`);
       }
       if (clip.text === undefined && clip.backdrop !== undefined) fail(`clip ${id} has no text`);
+      for (const property of KEYFRAME_PROPERTIES) {
+        const frames = clip.keyframes?.[property] ?? [];
+        const range = KEYFRAME_RANGES[property];
+        if (
+          frames.length > 0 &&
+          !keyframePropertyFits(property, content.tracks.byId[clip.trackId]?.kind ?? 'video')
+        ) {
+          fail(`clip ${id} cannot animate ${property}`);
+        }
+        for (let i = 0; i < frames.length; i += 1) {
+          const frame = frames[i];
+          if (!frame) continue;
+          if (frame.value < range.min || frame.value > range.max)
+            fail(`${property} keyframe out of range`);
+          if (i > 0 && frame.time <= (frames[i - 1]?.time ?? 0))
+            fail(`${property} keyframes must be in time order`);
+        }
+      }
       if (clip.text !== undefined) {
         if (content.tracks.byId[clip.trackId]?.kind !== 'video')
           fail(`text clip ${id} is on sound`);

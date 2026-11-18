@@ -3,6 +3,18 @@ import { z } from 'zod';
 import { AppError } from './errors';
 import type { Command } from './history';
 import { textSpecSchema, type TextSpec } from './image-document';
+import {
+  KEYFRAME_PROPERTIES,
+  MAX_KEYFRAMES,
+  joinKeyframes,
+  keyframeAt,
+  keyframesAfterStartMoved,
+  scaleKeyframes,
+  valueAt,
+  type Easing,
+  type Keyframe,
+  type KeyframeProperty,
+} from './keyframes';
 import { insertAt, removeItem, sortedItems } from './ordered';
 import type { ProjectDocument } from './project';
 import type { Cue } from './subtitles';
@@ -31,9 +43,12 @@ import {
   clipSourceAt,
   clipSpeed,
   sourceSpan,
+  KEYFRAME_RANGES,
+  clipTransform,
   clipTransformSchema,
   clipTransitionSchema,
   isTextClip,
+  keyframePropertyFits,
   type Clip,
   type ClipBackdrop,
   type ClipLook,
@@ -417,6 +432,9 @@ export function trimClip(
         const target = clipDraft(content, clip.id);
         if (edge === 'start') {
           target.start = clip.start + delta;
+          const moved = keyframesAfterStartMoved(clip.keyframes, delta);
+          if (moved) target.keyframes = moved;
+          else delete target.keyframes;
           if (clip.assetId !== null) {
             target.sourceIn = clip.sourceIn + sourceSpan(delta, clipSpeed(clip));
           }
@@ -488,6 +506,12 @@ export function splitClips(
           sourceIn: clip.assetId === null ? 0 : clipSourceAt(clip, time - clip.start),
           linkId: clip.linkId === null ? null : (rightLinks.get(clip.linkId) ?? null),
           ...(clip.speed === undefined ? {} : { speed: clip.speed }),
+          ...(clip.keyframes === undefined
+            ? {}
+            : (() => {
+                const rest = keyframesAfterStartMoved(clip.keyframes, time - clip.start);
+                return rest ? { keyframes: rest } : {};
+              })()),
           ...(clip.text === undefined ? {} : { text: clip.text }),
           ...(clip.backdrop === undefined ? {} : { backdrop: clip.backdrop }),
           ...splitLook(clip),
@@ -662,9 +686,169 @@ export function setClipSpeed(clipId: string, speed: number): Command<ProjectDocu
       for (const { clip, duration } of changes) {
         const target = clipDraft(content, clip.id);
         target.duration = duration;
+        const scaled = scaleKeyframes(clip.keyframes, duration / clip.duration);
+        if (scaled) target.keyframes = scaled;
+        else delete target.keyframes;
         if (speed === 1) delete target.speed;
         else target.speed = speed;
       }
+    },
+  };
+}
+
+// Keyframes ----------------------------------------------------------------------------------------------
+
+/** The fixed value of a property takes over when its keyframes are removed. */
+function setFixedValue(target: Draft<Clip>, property: KeyframeProperty, value: number): void {
+  if (property === 'opacity') {
+    if (value === 1) delete target.opacity;
+    else target.opacity = value;
+  } else if (property === 'volume') {
+    if (value === 1) delete target.volume;
+    else target.volume = value;
+  } else {
+    target.transform = { ...clipTransform(target), [property]: value };
+  }
+}
+
+function keyframeTarget(
+  snapshot: VideoContent,
+  clipId: string,
+  property: KeyframeProperty,
+): { clip: Clip; frames: readonly Keyframe[] } {
+  const clip = snapshot.clips[clipId];
+  if (!clip) throw new RangeError(`Clip ${clipId} does not exist`);
+  assertEditable(snapshot, [clip]);
+  const kind = snapshot.tracks.byId[clip.trackId]?.kind ?? 'video';
+  if (
+    !(KEYFRAME_PROPERTIES as readonly string[]).includes(property) ||
+    !keyframePropertyFits(property, kind)
+  ) {
+    throw invalid(
+      property === 'volume'
+        ? 'Only sound clips can have volume keyframes.'
+        : 'Only picture and text clips can have position, scale, rotation or opacity keyframes.',
+    );
+  }
+  return { clip, frames: clip.keyframes?.[property] ?? [] };
+}
+
+function storeKeyframes(
+  target: Draft<Clip>,
+  property: KeyframeProperty,
+  frames: readonly Keyframe[],
+): void {
+  const next = { ...(target.keyframes ?? {}) };
+  if (frames.length === 0) delete next[property];
+  else next[property] = [...frames];
+  if (Object.keys(next).length === 0) delete target.keyframes;
+  else target.keyframes = next;
+}
+
+/**
+ * Put a keyframe on a property at `time` (microseconds after the clip's start), or change the one that is there.
+ * The first keyframe on a property starts its animation. `easing` shapes the move to the next keyframe; left out,
+ * a new keyframe is linear and an existing one keeps its shape. Dragging a value merges into one undo step.
+ */
+export function setKeyframe(
+  clipId: string,
+  property: KeyframeProperty,
+  time: number,
+  value: number,
+  easing?: Easing,
+): Command<ProjectDocument> {
+  return {
+    label: 'Set keyframe',
+    coalesceKey: `keyframe:${clipId}:${property}:${String(time)}`,
+    apply(draft) {
+      const content = videoDraft(draft);
+      const snapshot = before(content);
+      const { clip, frames } = keyframeTarget(snapshot, clipId, property);
+      const range = KEYFRAME_RANGES[property];
+      if (!Number.isSafeInteger(time) || time < 0 || time > clip.duration) {
+        throw invalid('A keyframe has to be inside the clip.');
+      }
+      if (!(value >= range.min && value <= range.max)) {
+        throw invalid(`That value is not allowed for ${property}.`);
+      }
+      const existing = frames.find((frame) => frame.time === time);
+      if (!existing && frames.length >= MAX_KEYFRAMES) {
+        throw invalid(`A property can have up to ${String(MAX_KEYFRAMES)} keyframes.`);
+      }
+      const frame: Keyframe = { time, value, easing: easing ?? existing?.easing ?? 'linear' };
+      const next = existing
+        ? frames.map((candidate) => (candidate.time === time ? frame : candidate))
+        : [...frames, frame].sort((a, b) => a.time - b.time);
+      storeKeyframes(clipDraft(content, clipId), property, next);
+    },
+  };
+}
+
+/** Remove the keyframe at `time`. Removing the last one leaves the property fixed at that value. */
+export function removeKeyframe(
+  clipId: string,
+  property: KeyframeProperty,
+  time: number,
+): Command<ProjectDocument> {
+  return {
+    label: 'Remove keyframe',
+    apply(draft) {
+      const content = videoDraft(draft);
+      const { clip, frames } = keyframeTarget(before(content), clipId, property);
+      const existing = keyframeAt(clip, property, time);
+      if (!existing) throw invalid('There is no keyframe there.');
+      const target = clipDraft(content, clipId);
+      const rest = frames.filter((frame) => frame.time !== time);
+      storeKeyframes(target, property, rest);
+      if (rest.length === 0) setFixedValue(target, property, existing.value);
+    },
+  };
+}
+
+/** Move a keyframe to another time in the clip (not onto another keyframe). Dragging merges into one undo step. */
+export function moveKeyframe(
+  clipId: string,
+  property: KeyframeProperty,
+  from: number,
+  to: number,
+): Command<ProjectDocument> {
+  return {
+    label: 'Move keyframe',
+    coalesceKey: `keyframe-move:${clipId}:${property}`,
+    apply(draft) {
+      const content = videoDraft(draft);
+      const { clip, frames } = keyframeTarget(before(content), clipId, property);
+      const moving = keyframeAt(clip, property, from);
+      if (!moving) throw invalid('There is no keyframe there.');
+      if (!Number.isSafeInteger(to) || to < 0 || to > clip.duration) {
+        throw invalid('A keyframe has to be inside the clip.');
+      }
+      if (to !== from && frames.some((frame) => frame.time === to)) {
+        throw invalid('There is already a keyframe there.');
+      }
+      const next = frames
+        .map((frame) => (frame.time === from ? { ...frame, time: to } : frame))
+        .sort((a, b) => a.time - b.time);
+      storeKeyframes(clipDraft(content, clipId), property, next);
+    },
+  };
+}
+
+/** Remove every keyframe of a property; it stays fixed at the value of the first one. */
+export function clearKeyframes(
+  clipId: string,
+  property: KeyframeProperty,
+): Command<ProjectDocument> {
+  return {
+    label: 'Remove animation',
+    apply(draft) {
+      const content = videoDraft(draft);
+      const { frames } = keyframeTarget(before(content), clipId, property);
+      const first = frames[0];
+      if (!first) throw invalid('That property is not animated.');
+      const target = clipDraft(content, clipId);
+      storeKeyframes(target, property, []);
+      setFixedValue(target, property, valueAt(frames, 0, first.value));
     },
   };
 }
@@ -987,10 +1171,17 @@ export function joinClips(clipId: string): Command<ProjectDocument> {
           clipSpeed(next) === clipSpeed(clip) &&
           next.sourceIn === clip.sourceIn + sourceSpan(clip.duration, clipSpeed(clip));
         if (!joinable) throw invalid('These clips are not one continuous piece of the same file.');
-        return { clip, next };
+        const joined = joinKeyframes(clip.keyframes, next.keyframes, clip.duration);
+        if (!joined) {
+          throw invalid('These clips are animated differently, so they cannot be joined.');
+        }
+        return { clip, next, keyframes: joined.keyframes };
       });
-      for (const { clip, next } of pairs) {
-        clipDraft(content, clip.id).duration = clip.duration + next.duration;
+      for (const { clip, next, keyframes } of pairs) {
+        const target = clipDraft(content, clip.id);
+        target.duration = clip.duration + next.duration;
+        if (keyframes) target.keyframes = keyframes;
+        else delete target.keyframes;
         const track = content.tracks.byId[clip.trackId];
         if (track) track.clipIds = track.clipIds.filter((id) => id !== next.id);
         Reflect.deleteProperty(content.clips, next.id);
