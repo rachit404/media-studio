@@ -3,6 +3,8 @@ import {
   History,
   addAdjustmentLayer,
   addImageLayer,
+  addShapeLayer,
+  addTextLayer,
   createProject,
   setLayerBlendMode,
   setLayerVisible,
@@ -10,6 +12,7 @@ import {
   type NewAsset,
   type ProjectDocument,
 } from '@media-studio/core';
+import type { RasterMetrics } from '@media-studio/render';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_EXPORT_SETTINGS, exportFilename, planExport } from './export-plan';
 import { buildScene, parseHexColor } from './scene';
@@ -26,6 +29,14 @@ const asset = (id: string, width = 100, height = 50): NewAsset => ({
   file: `media/${id}.png`,
   thumb: `thumbs/${id}.webp`,
 });
+
+/** A stand-in for canvas measuring: 10 px per character, shapes as specified. */
+const metrics: RasterMetrics = {
+  measure: (spec) =>
+    spec.kind === 'text'
+      ? { width: spec.text.length * 10, height: 20 }
+      : { width: spec.width, height: spec.height },
+};
 
 function imageContent(project: ProjectDocument): ImageContent {
   if (project.content.kind !== 'image') throw new Error('expected image');
@@ -50,7 +61,11 @@ describe('buildScene', () => {
   it('lists visible layers bottom to top with matrices, blend modes and texture ids', () => {
     const { history, assets } = setup();
     history.execute(setLayerBlendMode('L2', 'multiply'));
-    const { scene, textureIds, missingAssets } = buildScene(imageContent(history.state), assets);
+    const { scene, textureIds, missingAssets } = buildScene(
+      imageContent(history.state),
+      assets,
+      metrics,
+    );
     expect(scene).toMatchObject({ width: 100, height: 50, background: null });
     expect(scene.nodes.map((n) => n.id)).toEqual(['L1', 'L2', 'A1']);
     expect(scene.nodes[1]).toMatchObject({
@@ -68,9 +83,50 @@ describe('buildScene', () => {
     const { history, assets } = setup();
     history.execute(setLayerVisible('L2', false));
     const withoutL1 = { a2: assets['a2'] } as unknown as Parameters<typeof buildScene>[1];
-    const result = buildScene(imageContent(history.state), withoutL1);
+    const result = buildScene(imageContent(history.state), withoutL1, metrics);
     expect(result.scene.nodes.map((n) => n.id)).toEqual(['A1']);
     expect(result.missingAssets).toEqual(['a1']);
+  });
+
+  it('turns text and shape layers into generated nodes sized by the metrics', () => {
+    const { history, assets } = setup();
+    history.execute(addTextLayer('T1', 'Hello'));
+    history.execute(addShapeLayer('S1', 'ellipse'));
+    const { scene, textureIds } = buildScene(imageContent(history.state), assets, metrics);
+    const text = scene.nodes.find((n) => n.id === 'T1');
+    const shape = scene.nodes.find((n) => n.id === 'S1');
+    expect(text).toMatchObject({
+      type: 'image',
+      width: 50,
+      height: 20,
+      raster: { kind: 'text', text: 'Hello' },
+    });
+    expect(shape).toMatchObject({ type: 'image', raster: { kind: 'shape', shape: 'ellipse' } });
+    if (text?.type !== 'image' || shape?.type !== 'image') throw new Error('expected image nodes');
+    expect(text.textureId.startsWith('raster:')).toBe(true);
+    expect(text.textureId).not.toBe(shape.textureId);
+    // Generated layers are not stored assets, so they never ask the app to load a texture.
+    expect(textureIds).not.toContain(text.textureId);
+    expect(textureIds.sort()).toEqual(['a1', 'a2']);
+  });
+
+  it('gives the same texture key to identical text and a new key when it changes', () => {
+    const { history, assets } = setup();
+    history.execute(addTextLayer('T1', 'Same'));
+    const first = buildScene(imageContent(history.state), assets, metrics).scene.nodes.find(
+      (n) => n.id === 'T1',
+    );
+    const again = buildScene(imageContent(history.state), assets, metrics).scene.nodes.find(
+      (n) => n.id === 'T1',
+    );
+    history.execute(addTextLayer('T2', 'Same'));
+    const twin = buildScene(imageContent(history.state), assets, metrics).scene.nodes.find(
+      (n) => n.id === 'T2',
+    );
+    if (first?.type !== 'image' || again?.type !== 'image' || twin?.type !== 'image')
+      throw new Error('expected image nodes');
+    expect(again.textureId).toBe(first.textureId);
+    expect(twin.textureId).toBe(first.textureId); // two layers with identical text share one texture
   });
 
   it('parses colours', () => {

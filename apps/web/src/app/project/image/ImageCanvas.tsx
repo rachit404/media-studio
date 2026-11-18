@@ -4,6 +4,7 @@ import {
   fitView,
   panBy,
   toViewTransform,
+  viewToDoc,
   zoomAt,
   type ViewState,
 } from '@media-studio/engine-image';
@@ -11,6 +12,7 @@ import { CanvasRenderer, type RenderScene } from '@media-studio/render';
 import { Button } from '@media-studio/ui';
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { diagnostics } from '../../diagnostics';
+import { ASSET_DRAG_TYPE } from '../asset-drag';
 import type { ProjectSession } from '../project-session';
 import { loadAssetBitmap } from './bitmap-loader';
 
@@ -26,7 +28,11 @@ export interface ImageCanvasProps {
   /** Canvas size, to refit the view when it changes (crop, resize, rotate). */
   canvasWidth: number;
   canvasHeight: number;
+  onDropAsset: DropAssetHandler;
 }
+
+/** An asset from the library was dropped on the canvas at this point (document pixels). */
+export type DropAssetHandler = (assetId: string, at: { x: number; y: number }) => void;
 
 interface Drag {
   pointerId: number;
@@ -49,6 +55,7 @@ export function ImageCanvas({
   selectedLayerId,
   canvasWidth,
   canvasHeight,
+  onDropAsset,
 }: ImageCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -332,6 +339,22 @@ export function ImageCanvas({
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onKeyDown={onKeyDown}
+        onDragOver={(event) => {
+          if (event.dataTransfer.types.includes(ASSET_DRAG_TYPE)) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+          }
+        }}
+        onDrop={(event) => {
+          const assetId = event.dataTransfer.getData(ASSET_DRAG_TYPE);
+          const box = containerRef.current?.getBoundingClientRect();
+          if (!assetId || !box) return;
+          event.preventDefault();
+          onDropAsset(
+            assetId,
+            viewToDoc(viewRef.current, event.clientX - box.left, event.clientY - box.top),
+          );
+        }}
         className={`relative min-h-0 flex-1 overflow-hidden bg-canvas ${tool === 'hand' ? 'cursor-grab' : 'cursor-default'}`}
       >
         <canvas ref={canvasRef} data-testid="image-canvas" className="absolute inset-0 size-full" />

@@ -9,7 +9,7 @@ import {
   type ExportFormat,
   type ExportSettings,
 } from '@media-studio/engine-image';
-import { renderSceneToBlob } from '@media-studio/render';
+import { rasterMetrics, renderSceneToBlob } from '@media-studio/render';
 import { Button, Dialog } from '@media-studio/ui';
 import { useState } from 'react';
 import { diagnostics } from '../../diagnostics';
@@ -62,7 +62,7 @@ export function ExportDialog({
     setMessage(null);
     try {
       const plan = planExport(content, settings);
-      const { scene, textureIds } = buildScene(content, assets);
+      const { scene, textureIds } = buildScene(content, assets, rasterMetrics);
       if (scene.nodes.length === 0) {
         setMessage({ kind: 'error', text: 'There is nothing to export yet. Add a layer first.' });
         return;

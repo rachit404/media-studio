@@ -1,9 +1,4 @@
-import {
-  applyAdjustment,
-  compositeOver,
-  type BlendMode,
-  type Rgba,
-} from '../packages/core/src/index';
+import { BLEND_MODES, applyAdjustment, compositeOver, type Rgba } from '../packages/core/src/index';
 import { expect, test } from '@playwright/test';
 import {
   addLayers,
@@ -38,7 +33,7 @@ test.describe('image editor: layers and export (IMG-1, IMG-3, IMG-4, IMG-13)', (
   });
 
   test('blend modes and opacity match the W3C reference within 2/255', async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(300_000);
     const base = [200, 100, 50] as const;
     const top = [50, 150, 250] as const;
     await createImageProject(page, 'Blend');
@@ -47,12 +42,7 @@ test.describe('image editor: layers and export (IMG-1, IMG-3, IMG-4, IMG-13)', (
       { name: 'top.png', bytes: solidPng(8, 8, [...top, 255]) },
     ]);
 
-    for (const mode of [
-      'normal',
-      'multiply',
-      'screen',
-      'overlay',
-    ] as const satisfies readonly BlendMode[]) {
+    for (const mode of BLEND_MODES) {
       for (const opacity of [100, 50]) {
         await page.getByRole('combobox', { name: 'Blend mode' }).selectOption(mode);
         await setRange(page.getByRole('slider', { name: 'Opacity' }), opacity);
@@ -119,6 +109,106 @@ test.describe('image editor: layers and export (IMG-1, IMG-3, IMG-4, IMG-13)', (
     expectNear(pixelAt(plain, 4, 4), [180, 120, 60, 255], 1);
   });
 
+  test('levels and black & white match the reference within 2/255', async ({ page }) => {
+    await createImageProject(page, 'Levels');
+    await addLayers(page, [{ name: 'base.png', bytes: solidPng(8, 8, [180, 120, 60, 255]) }]);
+
+    await page.getByRole('button', { name: 'Levels', exact: true }).click();
+    await setRange(page.getByRole('slider', { name: 'Input black' }), 30);
+    await setRange(page.getByRole('slider', { name: 'Input white' }), 230);
+    await setRange(page.getByRole('slider', { name: 'Gamma' }), 1.6);
+    await setRange(page.getByRole('slider', { name: 'Output black' }), 10);
+    await setRange(page.getByRole('slider', { name: 'Output white' }), 245);
+    const levels = {
+      kind: 'levels',
+      inBlack: 30 / 255,
+      inWhite: 230 / 255,
+      gamma: 1.6,
+      outBlack: 10 / 255,
+      outWhite: 245 / 255,
+    } as const;
+    const afterLevels = applyAdjustment(rgba(180, 120, 60), levels);
+    const first = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(first, 4, 4), [...to255(afterLevels), 255], 2, 'levels');
+
+    await page.getByRole('button', { name: 'Black & White', exact: true }).click();
+    await setRange(page.getByRole('slider', { name: 'Amount' }), 60);
+    const afterBw = applyAdjustment(afterLevels, { kind: 'black-white', amount: 0.6 });
+    const second = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(second, 4, 4), [...to255(afterBw), 255], 2, 'black & white');
+  });
+
+  test('blur softens an edge, keeps flat areas and stays inside the canvas', async ({ page }) => {
+    await createImageProject(page, 'Blur');
+    await addLayers(page, [
+      {
+        name: 'edge.png',
+        bytes: encodePng(64, 32, (x) => (x < 32 ? [0, 0, 0, 255] : [255, 255, 255, 255])),
+      },
+    ]);
+    const sharp = await decodeImage(page, await exportAs(page));
+    expect(pixelAt(sharp, 31, 16)[0]).toBe(0);
+    expect(pixelAt(sharp, 32, 16)[0]).toBe(255);
+
+    await page.getByRole('button', { name: 'Blur', exact: true }).click();
+    await setRange(page.getByRole('slider', { name: 'Radius' }), 8);
+    const soft = await decodeImage(page, await exportAs(page));
+    const left = pixelAt(soft, 31, 16);
+    const right = pixelAt(soft, 32, 16);
+    expect(left[0]).toBeGreaterThan(40);
+    expect(left[0]).toBeLessThan(128);
+    expect(right[0]).toBeGreaterThan(128);
+    expect(right[0]).toBeLessThan(215);
+    expect(left[0] + right[0]).toBeGreaterThanOrEqual(250); // symmetric around the edge
+    expect(left[0] + right[0]).toBeLessThanOrEqual(260);
+    expectNear(pixelAt(soft, 2, 16), [0, 0, 0, 255], 1, 'far from the edge');
+    expectNear(pixelAt(soft, 61, 16), [255, 255, 255, 255], 1, 'far from the edge');
+    // Nothing transparent bleeds in from outside the canvas, so the corners stay opaque.
+    expect(pixelAt(soft, 0, 0)[3]).toBe(255);
+    expect(pixelAt(soft, 63, 31)[3]).toBe(255);
+  });
+
+  test('sharpen adds contrast at an edge and leaves flat areas alone', async ({ page }) => {
+    await createImageProject(page, 'Sharpen');
+    await addLayers(page, [
+      {
+        name: 'soft.png',
+        bytes: encodePng(64, 32, (x) => (x < 32 ? [100, 100, 100, 255] : [150, 150, 150, 255])),
+      },
+    ]);
+    await page.getByRole('button', { name: 'Sharpen', exact: true }).click();
+    await setRange(page.getByRole('slider', { name: 'Amount' }), 2);
+    await setRange(page.getByRole('slider', { name: 'Radius' }), 4);
+    const image = await decodeImage(page, await exportAs(page));
+    expect(pixelAt(image, 31, 16)[0]).toBeLessThan(95);
+    expect(pixelAt(image, 32, 16)[0]).toBeGreaterThan(155);
+    expectNear(pixelAt(image, 3, 16), [100, 100, 100, 255], 1, 'flat left');
+    expectNear(pixelAt(image, 60, 16), [150, 150, 150, 255], 1, 'flat right');
+  });
+
+  test('a filter preset adds editable adjustment layers in one undo step', async ({ page }) => {
+    await createImageProject(page, 'Presets');
+    await addLayers(page, [{ name: 'base.png', bytes: solidPng(8, 8, [180, 120, 60, 255]) }]);
+    await page.getByRole('button', { name: 'Mono', exact: true }).click();
+
+    let expected = applyAdjustment(rgba(180, 120, 60), { kind: 'black-white', amount: 1 });
+    expected = applyAdjustment(expected, {
+      kind: 'brightness-contrast',
+      brightness: 0,
+      contrast: 0.1,
+    });
+    const image = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(image, 4, 4), [...to255(expected), 255], 2, 'mono');
+    const layers = page.getByRole('region', { name: 'Layers' });
+    await expect(layers.getByRole('button', { name: /^Mono\(adjustment\)/ })).toBeVisible();
+    await expect(layers.getByRole('button', { name: /^Mono contrast/ })).toBeVisible();
+
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(layers.getByRole('button', { name: /^Mono contrast/ })).toHaveCount(0);
+    const plain = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(plain, 4, 4), [180, 120, 60, 255], 1, 'after undo');
+  });
+
   test('layers can be hidden, reordered, deleted and restored with undo', async ({ page }) => {
     await createImageProject(page, 'Stack');
     await addLayers(page, [
@@ -148,6 +238,85 @@ test.describe('image editor: canvas operations (IMG-2)', () => {
   const twoTone = () => encodePng(8, 4, (x) => (x < 4 ? [255, 0, 0, 255] : [0, 0, 255, 255]));
   const RED = [255, 0, 0, 255];
   const BLUE = [0, 0, 255, 255];
+
+  test('layers can be duplicated, copied, pasted and deleted from buttons and shortcuts', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Copies');
+    await addLayers(page, [
+      { name: 'one.png', bytes: solidPng(8, 8, [255, 0, 0, 255]) },
+      { name: 'two.png', bytes: solidPng(8, 8, [0, 0, 255, 255]) },
+    ]);
+    const layers = page.getByRole('region', { name: 'Layers' });
+    const names = async () =>
+      layers.getByRole('listitem').locator('button:not([aria-label])').allInnerTexts();
+
+    await layers.getByRole('button', { name: 'one.png', exact: true }).click();
+    await layers.getByRole('button', { name: 'Duplicate layer' }).click();
+    // The copy sits directly above the original (the list reads top to bottom).
+    expect(await names()).toEqual(['two.png', 'one.png copy', 'one.png']);
+
+    // Keyboard: copy the selected copy, paste it, then delete the pasted layer with the Delete key.
+    await page.keyboard.press('Control+c');
+    await page.keyboard.press('Control+v');
+    expect(await names()).toEqual(['two.png', 'one.png copy copy', 'one.png copy', 'one.png']);
+    await page.keyboard.press('Delete');
+    expect(await names()).toEqual(['two.png', 'one.png copy', 'one.png']);
+
+    // One undo per action.
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    expect(await names()).toEqual(['two.png', 'one.png copy copy', 'one.png copy', 'one.png']);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    expect(await names()).toEqual(['two.png', 'one.png copy', 'one.png']);
+  });
+
+  test('layers can be reordered by dragging in the layer list', async ({ page }) => {
+    await createImageProject(page, 'Drag');
+    await addLayers(page, [
+      { name: 'red.png', bytes: solidPng(8, 8, [255, 0, 0, 255]) },
+      { name: 'green.png', bytes: solidPng(8, 8, [0, 255, 0, 255]) },
+    ]);
+    const layers = page.getByRole('region', { name: 'Layers' });
+    const rows = layers.getByRole('listitem');
+    const before = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(before, 4, 4), [0, 255, 0, 255], 1, 'green on top');
+
+    await rows.filter({ hasText: 'red.png' }).dragTo(rows.filter({ hasText: 'green.png' }));
+    await expect(rows.first()).toContainText('red.png');
+    const after = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(after, 4, 4), [255, 0, 0, 255], 1, 'red on top');
+  });
+
+  test('an asset dragged from the library lands on the canvas where it is dropped', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Drop');
+    await addLayers(page, [{ name: 'base.png', bytes: solidPng(64, 64, [255, 0, 0, 255]) }]);
+    await page
+      .getByTestId('import-input')
+      .setInputFiles([
+        { name: 'dot.png', mimeType: 'image/png', buffer: solidPng(8, 8, [0, 0, 255, 255]) },
+      ]);
+    const assetRow = page
+      .getByRole('list', { name: 'Project assets' })
+      .getByRole('listitem')
+      .filter({ hasText: 'dot.png' });
+    await expect(assetRow).toBeVisible();
+
+    const canvas = page.getByTestId('image-canvas');
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('canvas not laid out');
+    await assetRow.dragTo(canvas, { targetPosition: { x: box.width * 0.4, y: box.height * 0.4 } });
+
+    const layers = page.getByRole('region', { name: 'Layers' });
+    await expect(layers.getByRole('button', { name: /^dot\.png/ })).toBeVisible();
+    const x = Number(await page.getByLabel('X (px)', { exact: true }).inputValue());
+    const y = Number(await page.getByLabel('Y (px)', { exact: true }).inputValue());
+    expect(x).toBeLessThan(32); // left of the 64 px canvas centre
+    expect(y).toBeLessThan(32);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(layers.getByRole('button', { name: /^dot\.png/ })).toHaveCount(0);
+  });
 
   test('rotate, flip, crop and resize change the output as expected and undo cleanly', async ({
     page,
@@ -415,5 +584,110 @@ test.describe('graphics failure', () => {
     });
     await createImageProject(page, 'NoGL');
     await expect(page.getByRole('alert').filter({ hasText: 'WebGL 2' })).toBeVisible();
+  });
+});
+
+test.describe('text and shape layers (IMG-7, IMG-8)', () => {
+  const base = () => solidPng(200, 100, [255, 255, 255, 255]);
+
+  async function addGenerated(page: Parameters<typeof createImageProject>[0], button: string) {
+    await page
+      .getByRole('region', { name: 'Layers' })
+      .getByRole('button', { name: button, exact: true })
+      .click();
+  }
+
+  test('a filled rectangle is drawn at its size and position, and follows its settings', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Shapes');
+    await addLayers(page, [{ name: 'paper.png', bytes: base() }]);
+    await addGenerated(page, 'Rectangle');
+    await page.getByLabel('Width (px)', { exact: true }).fill('40');
+    await page.getByLabel('Height (px)', { exact: true }).fill('20');
+    await page.getByLabel('Fill colour').fill('#ff0000');
+
+    let image = await decodeImage(page, await exportAs(page));
+    expect([image.width, image.height]).toEqual([200, 100]);
+    expectNear(pixelAt(image, 100, 50), [255, 0, 0, 255], 2); // centre of the rectangle
+    expectNear(pixelAt(image, 85, 45), [255, 0, 0, 255], 2); // inside near the left edge
+    expectNear(pixelAt(image, 70, 50), [255, 255, 255, 255], 2); // outside, 30 px from the centre
+    expectNear(pixelAt(image, 100, 70), [255, 255, 255, 255], 2); // outside below (half height is 10)
+
+    // Turn the fill off and add a stroke instead: the centre becomes the paper colour again.
+    await page.getByRole('checkbox', { name: 'Fill' }).uncheck();
+    await page.getByRole('checkbox', { name: 'Stroke' }).check();
+    await page.getByLabel('Stroke width (px)').fill('6');
+    image = await decodeImage(page, await exportAs(page));
+    expectNear(pixelAt(image, 100, 50), [255, 255, 255, 255], 2);
+    expectNear(pixelAt(image, 100, 40), [0, 0, 0, 255], 40); // on the top edge of the outline (strokes are anti-aliased)
+  });
+
+  test('ellipse and polygon cover their centre but not the corners of their box', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Round');
+    await addLayers(page, [{ name: 'paper.png', bytes: base() }]);
+    for (const shape of ['Ellipse', 'Polygon']) {
+      await addGenerated(page, shape);
+      await page.getByLabel('Width (px)', { exact: true }).fill('60');
+      await page.getByLabel('Height (px)', { exact: true }).fill('60');
+    }
+    const image = await decodeImage(page, await exportAs(page));
+    const [r, g, b] = pixelAt(image, 100, 50);
+    expect([r, g, b]).not.toEqual([255, 255, 255]); // painted
+    expectNear(pixelAt(image, 72, 22), [255, 255, 255, 255], 2); // the corner of the 60x60 box is empty for both shapes
+  });
+
+  test('text is drawn in its colour, changes with its settings, and can be undone', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Words');
+    await addLayers(page, [{ name: 'paper.png', bytes: base() }]);
+    await addGenerated(page, 'Text');
+    await page.getByLabel('Content').fill('MMMM');
+    await page.getByLabel('Size (px)').fill('90');
+    await page.getByLabel('Weight').selectOption('700');
+    await page.getByLabel('Text colour').fill('#ff0000');
+
+    const redPixels = (image: Awaited<ReturnType<typeof decodeImage>>) => {
+      let count = 0;
+      for (let i = 0; i < image.data.length; i += 4) {
+        if (
+          (image.data[i] ?? 0) > 200 &&
+          (image.data[i + 1] ?? 255) < 60 &&
+          (image.data[i + 2] ?? 255) < 60
+        )
+          count += 1;
+      }
+      return count;
+    };
+    const large = await decodeImage(page, await exportAs(page));
+    expect(redPixels(large)).toBeGreaterThan(200);
+
+    await page.getByLabel('Size (px)').fill('20');
+    const small = await decodeImage(page, await exportAs(page));
+    expect(redPixels(small)).toBeGreaterThan(0);
+    expect(redPixels(small)).toBeLessThan(redPixels(large));
+
+    await page.getByRole('button', { name: /^Undo/ }).click(); // back to the 90 px text (typing coalesces)
+    const undone = await decodeImage(page, await exportAs(page));
+    expect(redPixels(undone)).toBe(redPixels(large));
+  });
+
+  test('generated layers support blend modes and opacity like any other layer', async ({
+    page,
+  }) => {
+    await createImageProject(page, 'Blendy');
+    await addLayers(page, [{ name: 'paper.png', bytes: solidPng(200, 100, [200, 100, 50, 255]) }]);
+    await addGenerated(page, 'Rectangle');
+    await page.getByLabel('Width (px)', { exact: true }).fill('400');
+    await page.getByLabel('Height (px)', { exact: true }).fill('400');
+    await page.getByLabel('Fill colour').fill('#3296fa');
+    await page.getByRole('combobox', { name: 'Blend mode' }).selectOption('multiply');
+    await setRange(page.getByRole('slider', { name: 'Opacity' }), 50);
+    const image = await decodeImage(page, await exportAs(page));
+    const expected = compositeOver(rgba(200, 100, 50), rgba(50, 150, 250), 'multiply', 0.5);
+    expectNear(pixelAt(image, 100, 50), [...to255(expected), 255], 2);
   });
 });

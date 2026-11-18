@@ -1,5 +1,6 @@
 import {
   AppError,
+  CURRENT_FORMAT_VERSION,
   History,
   addAssets,
   createProject,
@@ -306,7 +307,10 @@ describe('archives', () => {
   it('keeps project.json readable text', async () => {
     await store.create(project('p1'));
     const text = decodeText((await fs.read('projects/p1/project.json')) as Uint8Array);
-    expect(JSON.parse(text)).toMatchObject({ format: 'media-studio-project', formatVersion: 2 });
+    expect(JSON.parse(text)).toMatchObject({
+      format: 'media-studio-project',
+      formatVersion: CURRENT_FORMAT_VERSION,
+    });
     void renameProject;
   });
 });

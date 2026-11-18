@@ -58,16 +58,34 @@ export type {
 export {
   BLEND_MODES,
   applyAdjustment,
+  isFilterAdjustment,
   blendChannel,
+  blendRgb,
   compositeOver,
   defaultAdjustment,
   linearToSrgb,
   srgbToLinear,
 } from './color';
-export type { Adjustment, AdjustmentKind, BlendMode, Rgba } from './color';
+export type {
+  Adjustment,
+  AdjustmentKind,
+  BlendMode,
+  FilterAdjustment,
+  PointAdjustment,
+  Rgba,
+  Vec3,
+} from './color';
 export {
+  FONT_FAMILIES,
   MAX_CANVAS_SIZE,
+  SHAPES,
+  TEXT_ALIGNMENTS,
   adjustmentLayerSchema,
+  rasterKey,
+  shapeLayerSchema,
+  shapeSpecSchema,
+  textLayerSchema,
+  textSpecSchema,
   adjustmentSchema,
   emptyImageContent,
   imageContentSchema,
@@ -75,7 +93,20 @@ export {
   layerSchema,
   transformSchema,
 } from './image-document';
-export type { AdjustmentLayer, ImageContent, ImageLayer, Layer, Transform } from './image-document';
+export type {
+  AdjustmentLayer,
+  ImageContent,
+  ImageLayer,
+  Layer,
+  PlacedLayer,
+  RasterSpec,
+  ShapeKind,
+  ShapeLayer,
+  ShapeSpec,
+  TextLayer,
+  TextSpec,
+  Transform,
+} from './image-document';
 export {
   IDENTITY,
   applyAffine,
@@ -86,10 +117,15 @@ export {
 export type { Affine, Rect } from './image-geometry';
 export {
   addAdjustmentLayer,
+  addAdjustmentLayers,
   addImageLayer,
+  addShapeLayer,
+  addTextLayer,
   cropCanvas,
+  duplicateLayer,
   flipCanvas,
   moveLayer,
+  pasteLayer,
   removeLayer,
   renameLayer,
   resizeCanvas,
@@ -100,6 +136,9 @@ export {
   setLayerOpacity,
   setLayerTransform,
   setLayerVisible,
+  setShapeSpec,
+  setTextSpec,
+  snapshotLayer,
 } from './image-commands';
-export type { LayerAssetRef } from './image-commands';
+export type { LayerAssetRef, LayerSnapshot } from './image-commands';
 export type { WithoutKey } from './ordered';

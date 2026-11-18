@@ -3,10 +3,15 @@ import { AppError } from './errors';
 import { History } from './history';
 import {
   addAdjustmentLayer,
+  addAdjustmentLayers,
   addImageLayer,
+  addShapeLayer,
+  addTextLayer,
   cropCanvas,
+  duplicateLayer,
   flipCanvas,
   moveLayer,
+  pasteLayer,
   removeLayer,
   renameLayer,
   resizeCanvas,
@@ -17,14 +22,18 @@ import {
   setLayerOpacity,
   setLayerTransform,
   setLayerVisible,
+  setShapeSpec,
+  setTextSpec,
+  snapshotLayer,
 } from './image-commands';
-import type { Layer } from './image-document';
+import { rasterKey, type Layer } from './image-document';
 import { applyAffine, layerMatrix } from './image-geometry';
 import { sortedItems } from './ordered';
 import {
   CURRENT_FORMAT_VERSION,
   createProject,
   parseProject,
+  addAssets,
   parseProjectFile,
   type ProjectDocument,
 } from './project';
@@ -137,10 +146,9 @@ describe('layers', () => {
       adjustment: { brightness: 0.2, contrast: -0.5 },
     });
     expect(() => history.execute(setAdjustmentParams('A1', { nonsense: 1 }))).toThrow(AppError);
-    expect(() =>
-      history.execute(setAdjustmentParams('A1', { brightness: 5 })).valueOf(),
-    ).not.toThrow();
-    expect(() => parseProject(history.state)).toThrow(AppError); // out-of-range values are caught by the schema
+    const before = history.state;
+    expect(() => history.execute(setAdjustmentParams('A1', { brightness: 5 }))).toThrow(AppError);
+    expect(history.state).toBe(before); // an invalid value changes nothing
   });
 
   it('rejects invalid operations with typed or range errors', () => {
@@ -332,5 +340,284 @@ describe('format migration v1 -> v2', () => {
   it('leaves video projects unchanged', () => {
     const { file } = parseProjectFile(v1('video'));
     expect(file.project.content).toEqual({ kind: 'video' });
+  });
+});
+
+describe('text and shape layers', () => {
+  it('adds a centred text layer with readable defaults and edits it', () => {
+    const history = withLayers();
+    history.execute(addTextLayer('T1', 'Hello'));
+    const layer = layers(history).at(-1);
+    expect(layer).toMatchObject({
+      type: 'text',
+      name: 'Text',
+      transform: { x: 200, y: 100 },
+      spec: { text: 'Hello', fontFamily: 'sans-serif', fontWeight: 400, align: 'left' },
+    });
+    history.execute(
+      setTextSpec('T1', { text: 'Changed', fontSize: 42, color: '#ff0000', align: 'center' }),
+    );
+    expect(layers(history).at(-1)).toMatchObject({
+      spec: { text: 'Changed', fontSize: 42, color: '#ff0000', align: 'center' },
+    });
+    expect(() => parseProject(history.state)).not.toThrow();
+  });
+
+  it('rejects invalid text and shape settings before changing anything', () => {
+    expect(() => setTextSpec('T1', { fontSize: 0 })).toThrow(AppError);
+    expect(() => setTextSpec('T1', { color: 'red' })).toThrow(AppError);
+    expect(() => setTextSpec('T1', { text: '' })).toThrow(AppError);
+    expect(() => setShapeSpec('S1', { sides: 2 })).toThrow(AppError);
+    expect(() => setShapeSpec('S1', { width: 0 })).toThrow(AppError);
+    const history = withLayers();
+    expect(() => history.execute(setTextSpec('L1', { fontSize: 20 }))).toThrow(AppError); // not a text layer
+    expect(() => history.execute(setShapeSpec('L1', { width: 20 }))).toThrow(AppError);
+  });
+
+  it('adds each kind of shape with sensible defaults', () => {
+    const history = withLayers();
+    for (const shape of ['rectangle', 'ellipse', 'line', 'polygon'] as const) {
+      history.execute(addShapeLayer(`S-${shape}`, shape));
+    }
+    const shapes = layers(history).filter((l) => l.type === 'shape');
+    expect(shapes.map((l) => l.name)).toEqual(['Rectangle', 'Ellipse', 'Line', 'Polygon']);
+    const line = shapes[2];
+    expect(line).toMatchObject({
+      spec: { shape: 'line', fill: null, stroke: '#000000', strokeWidth: 6 },
+    });
+    expect(() => parseProject(history.state)).not.toThrow();
+    history.execute(
+      setShapeSpec('S-rectangle', {
+        width: 120,
+        cornerRadius: 12,
+        fill: null,
+        stroke: '#112233',
+        strokeWidth: 4,
+      }),
+    );
+    expect(layers(history).find((l) => l.id === 'S-rectangle')).toMatchObject({
+      spec: { width: 120, cornerRadius: 12, fill: null },
+    });
+  });
+
+  it('text and shape layers take part in transforms, blend modes and canvas operations', () => {
+    const history = withLayers();
+    history.execute(addTextLayer('T1'));
+    history.execute(addShapeLayer('S1', 'ellipse'));
+    history.execute(setLayerBlendMode('T1', 'multiply'));
+    history.execute(setLayerTransform('S1', { x: 50, y: 60, rotation: 30 }));
+    history.execute(rotateCanvas('cw'));
+    expect(layers(history).find((l) => l.id === 'S1')).toMatchObject({
+      transform: { x: 200 - 60, y: 50, rotation: 120 },
+    });
+    history.execute(flipCanvas('horizontal'));
+    expect(layers(history).find((l) => l.id === 'T1')).toMatchObject({
+      blendMode: 'multiply',
+      transform: { scaleX: -1 },
+    });
+    history.execute(cropCanvas({ x: 10, y: 10, width: 100, height: 100 }));
+    history.execute(resizeCanvas(50));
+    expect(() => parseProject(history.state)).not.toThrow();
+  });
+
+  it('adjustment layers still refuse blend modes and transforms', () => {
+    const history = withLayers();
+    history.execute(addAdjustmentLayer('A1', 'exposure'));
+    expect(() => history.execute(setLayerTransform('A1', { x: 1 }))).toThrow(AppError);
+  });
+
+  it('undo and redo round-trip the new commands', () => {
+    for (const command of [addTextLayer('T9'), addShapeLayer('S9', 'polygon')]) {
+      const history = withLayers();
+      const before = history.state;
+      history.execute(command);
+      const after = history.state;
+      history.undo();
+      expect(history.state).toEqual(before);
+      history.redo();
+      expect(history.state).toEqual(after);
+    }
+  });
+
+  it('rasterKey is stable for equal specs and changes with any property', () => {
+    const history = withLayers();
+    history.execute(addTextLayer('T1'));
+    const text = layers(history).at(-1);
+    if (text?.type !== 'text') throw new Error('expected text');
+    const a = rasterKey({ kind: 'text', ...text.spec });
+    const reordered = rasterKey({
+      kind: 'text',
+      ...Object.fromEntries(Object.entries(text.spec).reverse()),
+    } as never);
+    expect(reordered).toBe(a);
+    expect(rasterKey({ kind: 'text', ...text.spec, fontSize: text.spec.fontSize + 1 })).not.toBe(a);
+  });
+});
+
+describe('levels, black & white, blur, sharpen and presets', () => {
+  it('adds the new adjustment kinds with identity-like defaults and validates their settings', () => {
+    const history = withLayers();
+    for (const kind of ['levels', 'black-white', 'blur', 'sharpen'] as const) {
+      history.execute(addAdjustmentLayer(`A-${kind}`, kind));
+    }
+    expect(
+      layers(history)
+        .slice(2)
+        .map((l) => l.name),
+    ).toEqual(['Levels', 'Black & White', 'Blur', 'Sharpen']);
+    expect(() => parseProject(history.state)).not.toThrow();
+
+    history.execute(setAdjustmentParams('A-levels', { inBlack: 0.1, inWhite: 0.9, gamma: 1.5 }));
+    expect(() => history.execute(setAdjustmentParams('A-levels', { inBlack: 0.95 }))).toThrow(
+      AppError,
+    ); // would pass the white point
+    expect(() => history.execute(setAdjustmentParams('A-blur', { radius: 500 }))).toThrow(AppError);
+    expect(() => history.execute(setAdjustmentParams('A-sharpen', { radius: 0 }))).toThrow(
+      AppError,
+    );
+    history.execute(setAdjustmentParams('A-blur', { radius: 12 }));
+    expect(layers(history).find((l) => l.id === 'A-blur')).toMatchObject({
+      adjustment: { kind: 'blur', radius: 12 },
+    });
+  });
+
+  it('adds several adjustment layers as one undo step (presets)', () => {
+    const history = withLayers();
+    const before = history.state;
+    history.execute(
+      addAdjustmentLayers(
+        [
+          {
+            id: 'P1',
+            name: 'Vivid: saturation',
+            adjustment: { kind: 'saturation', saturation: 0.3 },
+          },
+          {
+            id: 'P2',
+            name: 'Vivid: contrast',
+            adjustment: { kind: 'brightness-contrast', brightness: 0, contrast: 0.2 },
+          },
+        ],
+        'Apply Vivid',
+      ),
+    );
+    expect(
+      layers(history)
+        .slice(2)
+        .map((l) => l.id),
+    ).toEqual(['P1', 'P2']);
+    expect(history.undoLabel).toBe('Apply Vivid');
+    history.undo();
+    expect(history.state).toEqual(before);
+  });
+});
+
+describe('duplicate and paste layers', () => {
+  const setup = () => {
+    const history = newHistory();
+    history.execute(
+      addAssets([
+        {
+          id: 'a1',
+          kind: 'image',
+          name: 'photo.png',
+          mime: 'image/png',
+          size: 1,
+          width: 400,
+          height: 200,
+          file: 'media/a1.png',
+          thumb: 'thumbs/a1.webp',
+        },
+      ]),
+    );
+    history.execute(addImageLayer('L1', photo));
+    history.execute(addShapeLayer('S1', 'rectangle'));
+    history.execute(addAdjustmentLayer('A1', 'levels'));
+    return history;
+  };
+  const order = (history: History<ProjectDocument>) =>
+    sortedItems(content(history).layers).map((l) => l.id);
+
+  it('duplicates a layer directly above the original with the same settings and a new id', () => {
+    const history = setup();
+    history.execute(setLayerOpacity('L1', 0.4));
+    history.execute(duplicateLayer('L1', 'L1b'));
+    expect(order(history)).toEqual(['L1', 'L1b', 'S1', 'A1']);
+    const copy = content(history).layers.byId['L1b'];
+    expect(copy).toMatchObject({
+      type: 'image',
+      opacity: 0.4,
+      name: 'photo.png copy',
+      assetId: 'a1',
+    });
+  });
+
+  it('keeps copies independent of the original', () => {
+    const history = setup();
+    history.execute(duplicateLayer('S1', 'S2'));
+    history.execute(setShapeSpec('S2', { width: 12 }));
+    const original = content(history).layers.byId['S1'];
+    const copy = content(history).layers.byId['S2'];
+    expect(original?.type === 'shape' && original.spec.width).not.toBe(12);
+    expect(copy?.type === 'shape' && copy.spec.width).toBe(12);
+  });
+
+  it('duplicates adjustment layers with their parameters', () => {
+    const history = setup();
+    history.execute(setAdjustmentParams('A1', { gamma: 2 }));
+    history.execute(duplicateLayer('A1', 'A2'));
+    const copy = content(history).layers.byId['A2'];
+    expect(copy?.type === 'adjustment' && copy.adjustment).toMatchObject({
+      kind: 'levels',
+      gamma: 2,
+    });
+  });
+
+  it('pastes a snapshot above a given layer, or on top when that layer is gone', () => {
+    const history = setup();
+    const layer = content(history).layers.byId['S1'];
+    if (!layer) throw new Error('missing');
+    const snapshot = snapshotLayer(layer);
+    history.execute(removeLayer('S1'));
+    history.execute(pasteLayer(snapshot, 'P1', 'L1'));
+    expect(order(history)).toEqual(['L1', 'P1', 'A1']);
+    history.execute(pasteLayer(snapshot, 'P2', 'gone'));
+    expect(order(history)).toEqual(['L1', 'P1', 'A1', 'P2']);
+  });
+
+  it('refuses to paste an image layer whose image is not in the project, and reused ids', () => {
+    const history = setup();
+    const layer = content(history).layers.byId['L1'];
+    if (!layer) throw new Error('missing');
+    const snapshot = snapshotLayer(layer);
+    const other = newHistory();
+    expect(() => {
+      other.execute(pasteLayer(snapshot, 'X', null));
+    }).toThrow(AppError);
+    expect(() => {
+      history.execute(pasteLayer(snapshot, 'L1', null));
+    }).toThrow(AppError);
+    expect(order(history)).toEqual(['L1', 'S1', 'A1']);
+  });
+
+  it('is one undo step', () => {
+    const history = setup();
+    history.execute(duplicateLayer('L1', 'L1b'));
+    history.undo();
+    expect(order(history)).toEqual(['L1', 'S1', 'A1']);
+    history.redo();
+    expect(order(history)).toEqual(['L1', 'L1b', 'S1', 'A1']);
+  });
+});
+
+describe('addImageLayer position', () => {
+  it('puts a later layer where it was dropped, but centres the first layer', () => {
+    const history = newHistory();
+    history.execute(addImageLayer('L1', { ...photo, id: 'a1' }, { x: 5, y: 5 }));
+    expect(content(history).layers.byId['L1']).toMatchObject({ transform: { x: 200, y: 100 } });
+    history.execute(
+      addImageLayer('L2', { id: 'a2', name: 'small.png', width: 20, height: 20 }, { x: 30, y: 40 }),
+    );
+    expect(content(history).layers.byId['L2']).toMatchObject({ transform: { x: 30, y: 40 } });
   });
 });

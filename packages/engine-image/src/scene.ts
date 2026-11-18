@@ -1,5 +1,12 @@
-import { layerMatrix, sortedItems, type Asset, type ImageContent } from '@media-studio/core';
-import type { RenderScene, Rgb, SceneNode } from '@media-studio/render';
+import {
+  layerMatrix,
+  rasterKey,
+  sortedItems,
+  type Asset,
+  type ImageContent,
+  type RasterSpec,
+} from '@media-studio/core';
+import type { RasterMetrics, RenderScene, Rgb, SceneNode } from '@media-studio/render';
 
 /** `#RRGGBB` to 0..1 channels. */
 export function parseHexColor(hex: string): Rgb {
@@ -21,6 +28,7 @@ export interface BuiltScene {
 export function buildScene(
   content: ImageContent,
   assets: Readonly<Record<string, Asset>>,
+  metrics: RasterMetrics,
 ): BuiltScene {
   const nodes: SceneNode[] = [];
   const textureIds = new Set<string>();
@@ -34,6 +42,23 @@ export function buildScene(
         id: layer.id,
         adjustment: layer.adjustment,
         opacity: layer.opacity,
+      });
+      continue;
+    }
+    if (layer.type === 'text' || layer.type === 'shape') {
+      const raster: RasterSpec =
+        layer.type === 'text' ? { kind: 'text', ...layer.spec } : { kind: 'shape', ...layer.spec };
+      const { width, height } = metrics.measure(raster);
+      nodes.push({
+        type: 'image',
+        id: layer.id,
+        textureId: rasterKey(raster),
+        width,
+        height,
+        matrix: layerMatrix(layer.transform, width, height),
+        opacity: layer.opacity,
+        blendMode: layer.blendMode,
+        raster,
       });
       continue;
     }

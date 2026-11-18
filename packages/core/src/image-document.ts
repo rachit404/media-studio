@@ -35,6 +35,26 @@ export const adjustmentSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({ kind: z.literal('exposure'), exposure: z.number().min(-4).max(4) }),
   z.strictObject({ kind: z.literal('saturation'), saturation: z.number().min(-1).max(1) }),
+  z
+    .strictObject({
+      kind: z.literal('levels'),
+      inBlack: z.number().min(0).max(1),
+      inWhite: z.number().min(0).max(1),
+      gamma: z.number().min(0.1).max(10),
+      outBlack: z.number().min(0).max(1),
+      outWhite: z.number().min(0).max(1),
+    })
+    .refine(
+      (levels) => levels.inWhite - levels.inBlack >= 0.01,
+      'white point must be above the black point',
+    ),
+  z.strictObject({ kind: z.literal('black-white'), amount: z.number().min(0).max(1) }),
+  z.strictObject({ kind: z.literal('blur'), radius: z.number().min(0).max(100) }),
+  z.strictObject({
+    kind: z.literal('sharpen'),
+    amount: z.number().min(0).max(5),
+    radius: z.number().min(0.5).max(50),
+  }),
 ]);
 
 export const imageLayerSchema = z.strictObject({
@@ -54,8 +74,79 @@ export const adjustmentLayerSchema = z.strictObject({
 });
 export type AdjustmentLayer = z.infer<typeof adjustmentLayerSchema>;
 
-export const layerSchema = z.discriminatedUnion('type', [imageLayerSchema, adjustmentLayerSchema]);
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
+export const FONT_FAMILIES = ['sans-serif', 'serif', 'monospace'] as const;
+export const TEXT_ALIGNMENTS = ['left', 'center', 'right'] as const;
+
+/** Everything needed to draw a text layer. Fonts are generic families: no font files are shipped or downloaded. */
+export const textSpecSchema = z.strictObject({
+  text: z.string().min(1).max(2000),
+  fontFamily: z.enum(FONT_FAMILIES),
+  fontSize: z.number().min(4).max(1000),
+  fontWeight: z.union([z.literal(400), z.literal(700)]),
+  color: hexColor,
+  align: z.enum(TEXT_ALIGNMENTS),
+  lineHeight: z.number().min(0.8).max(3),
+  /** Extra space between letters, in pixels. */
+  letterSpacing: z.number().min(-10).max(100),
+});
+export type TextSpec = z.infer<typeof textSpecSchema>;
+
+export const SHAPES = ['rectangle', 'ellipse', 'line', 'polygon'] as const;
+export type ShapeKind = (typeof SHAPES)[number];
+
+export const shapeSpecSchema = z.strictObject({
+  shape: z.enum(SHAPES),
+  width: z.number().min(1).max(8192),
+  height: z.number().min(1).max(8192),
+  fill: hexColor.nullable(),
+  stroke: hexColor.nullable(),
+  strokeWidth: z.number().min(0).max(200),
+  /** Rectangles only. */
+  cornerRadius: z.number().min(0).max(4096),
+  /** Polygons only. */
+  sides: z.number().int().min(3).max(12),
+});
+export type ShapeSpec = z.infer<typeof shapeSpecSchema>;
+
+/** A layer drawn from parameters (text or shape) instead of from an imported image. */
+export type RasterSpec = ({ kind: 'text' } & TextSpec) | ({ kind: 'shape' } & ShapeSpec);
+
+const placed = { blendMode: z.enum(BLEND_MODES), transform: transformSchema };
+
+export const textLayerSchema = z.strictObject({
+  ...layerBase,
+  type: z.literal('text'),
+  ...placed,
+  spec: textSpecSchema,
+});
+export type TextLayer = z.infer<typeof textLayerSchema>;
+
+export const shapeLayerSchema = z.strictObject({
+  ...layerBase,
+  type: z.literal('shape'),
+  ...placed,
+  spec: shapeSpecSchema,
+});
+export type ShapeLayer = z.infer<typeof shapeLayerSchema>;
+
+export const layerSchema = z.discriminatedUnion('type', [
+  imageLayerSchema,
+  textLayerSchema,
+  shapeLayerSchema,
+  adjustmentLayerSchema,
+]);
 export type Layer = z.infer<typeof layerSchema>;
+
+/** Layers that have a position, blend mode and transform (everything except adjustment layers). */
+export type PlacedLayer = ImageLayer | TextLayer | ShapeLayer;
+
+/** Stable text key for generated pixels: equal specs always give equal keys. */
+export function rasterKey(spec: RasterSpec): string {
+  const entries = Object.entries(spec).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `raster:${JSON.stringify(entries)}`;
+}
 
 export const imageContentSchema = z.strictObject({
   kind: z.literal('image'),
