@@ -8,7 +8,9 @@ import {
   moveClips,
   outgoingClip,
   parseTimecode,
+  isTextClip,
   setClipLook,
+  setClipText,
   setSequence,
   setTrackState,
   setTransition,
@@ -22,6 +24,7 @@ import { useId, useState } from 'react';
 import type { ProjectSession } from '../project-session';
 import { NumberField } from '../image/fields';
 import { ClipLookEditor } from './ClipLookEditor';
+import { TextClipEditor } from './TextClipEditor';
 import { TransitionEditor } from './TransitionEditor';
 
 const RATES: readonly { label: string; fps: FrameRate }[] = [
@@ -98,7 +101,7 @@ export function VideoInspector({
 }) {
   const { sequence } = content;
   const clip = selectedId ? content.clips[selectedId] : undefined;
-  const asset = clip ? assets[clip.assetId] : undefined;
+  const asset = clip?.assetId ? assets[clip.assetId] : undefined;
   const track = clip ? content.tracks.byId[clip.trackId] : undefined;
   const rateId = useId();
   const rateIndex = RATES.findIndex(
@@ -176,7 +179,9 @@ export function VideoInspector({
           <p className="text-sm text-fg-muted">Select a clip on the timeline to see its details.</p>
         ) : (
           <>
-            <p className="break-words text-sm">{asset?.name ?? 'Missing media'}</p>
+            <p className="break-words text-sm">
+              {isTextClip(clip) ? 'Text clip' : (asset?.name ?? 'Missing media')}
+            </p>
             <p className="text-xs text-fg-muted">
               {track.name} ·{' '}
               {asset?.kind === 'video' && `${String(asset.width)} × ${String(asset.height)}`}
@@ -202,15 +207,32 @@ export function VideoInspector({
             <dl className="grid grid-cols-2 gap-x-2 text-xs text-fg-muted">
               <dt>Ends</dt>
               <dd className="tabular-nums">{formatTimecode(clipEnd(clip), sequence.fps)}</dd>
-              <dt>Starts in file at</dt>
-              <dd className="tabular-nums">{formatTimecode(clip.sourceIn, sequence.fps)}</dd>
+              {!isTextClip(clip) && (
+                <>
+                  <dt>Starts in file at</dt>
+                  <dd className="tabular-nums">{formatTimecode(clip.sourceIn, sequence.fps)}</dd>
+                </>
+              )}
             </dl>
             {track.locked && <p className="text-xs text-fg-muted">This track is locked.</p>}
+            {isTextClip(clip) && (
+              <div className="space-y-3 border-t border-line pt-3">
+                <h3 className="text-sm font-semibold">Text</h3>
+                <TextClipEditor
+                  key={`text:${clip.id}`}
+                  clip={clip}
+                  content={content}
+                  change={(ids, patch) =>
+                    run(() => session.history.execute(setClipText(ids, patch)))
+                  }
+                />
+              </div>
+            )}
             <div className="space-y-3 border-t border-line pt-3">
               <h3 className="text-sm font-semibold">
                 {track.kind === 'video' ? 'Picture' : 'Sound'}
               </h3>
-              {track.kind === 'video' && (
+              {track.kind === 'video' && !isTextClip(clip) && (
                 <TransitionEditor
                   key={`transition:${clip.id}`}
                   clip={clip}

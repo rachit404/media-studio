@@ -222,6 +222,8 @@ export {
   TRANSITION_DIRECTIONS,
   TRANSITION_KINDS,
   clipTransitionSchema,
+  clipBackdropSchema,
+  isTextClip,
   clipColour,
   clipColourSchema,
   clipEnd,
@@ -237,8 +239,10 @@ export {
 } from './video-document';
 export type {
   Clip,
+  ClipBackdrop,
   ClipColour,
   ClipLook,
+  TextClip,
   ClipTransform,
   ClipTransition,
   Sequence,
@@ -263,8 +267,12 @@ export {
   trackClips,
   tracksOfKind,
 } from './timeline';
+export { MAX_CUE_TEXT, parseSubtitles } from './subtitles';
+export type { Cue, ParsedSubtitles } from './subtitles';
 export {
   addMediaToTimeline,
+  addSubtitleTrack,
+  addTextClip,
   addTrack,
   appendPosition,
   clipsUsingAsset,
@@ -273,6 +281,7 @@ export {
   moveClips,
   removeTrack,
   setClipLook,
+  setClipText,
   setSequence,
   setTrackState,
   setTransition,
@@ -281,7 +290,15 @@ export {
   trimClip,
   unlinkClips,
 } from './video-commands';
-export type { AddMediaParams, ClipLookPatch, TrackPatch, TrimEdge } from './video-commands';
+export type {
+  AddMediaParams,
+  AddTextParams,
+  ClipLookPatch,
+  ClipTextPatch,
+  SubtitleStyle,
+  TrackPatch,
+  TrimEdge,
+} from './video-commands';
 export {
   MAX_PEAKS,
   PEAKS_PER_SECOND,

@@ -1,3 +1,4 @@
+import { fakeMetrics } from './fake-metrics';
 import {
   History,
   FPS_30,
@@ -101,7 +102,7 @@ describe('transition plan', () => {
 
 describe('transition scene', () => {
   const sceneAt = (history: History<ProjectDocument>, time: number) =>
-    buildPreviewScene(content(history), history.state.assets.byId, time, sizes);
+    buildPreviewScene(content(history), history.state.assets.byId, time, sizes, fakeMetrics);
 
   it('cross-fades: the old picture stays solid and the new one fades in over it', () => {
     const history = project({ kind: 'crossfade', duration: 4 * S });

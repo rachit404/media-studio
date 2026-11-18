@@ -110,7 +110,9 @@ export function startVideoExport(
     });
   });
 
-  const used = new Set(Object.values(content.clips).map((clip) => clip.assetId));
+  const used = new Set(
+    Object.values(content.clips).flatMap((clip) => (clip.assetId === null ? [] : [clip.assetId])),
+  );
   const start = async (): Promise<void> => {
     const files: Record<string, Blob> = {};
     const assets: Record<string, Asset> = {};

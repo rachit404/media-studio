@@ -4,16 +4,20 @@ import {
   clipOpacity,
   clipTransform,
   clipsAt,
+  isTextClip,
   multiplyAffine,
+  rasterKey,
   sortedTracks,
   type Affine,
   type Asset,
   type ClipTransform,
+  type RasterSpec,
+  type TextClip,
   type TransitionDirection,
   type TransitionKind,
   type VideoContent,
 } from '@media-studio/core';
-import type { ImageNode, RenderScene } from '@media-studio/render';
+import type { ImageNode, RasterMetrics, RenderScene } from '@media-studio/render';
 import { isAudible } from './audio-gain';
 
 /** A picture that is part of a transition: the clip going out (still showing past its end) or the one coming in. */
@@ -28,7 +32,8 @@ export interface LayerTransition {
 /** One picture that has to be on screen at a given time. */
 export interface VideoLayerPlan {
   clipId: string;
-  assetId: string;
+  /** The media file, or null for a text clip (drawn from its description, with no picture to decode). */
+  assetId: string | null;
   trackId: string;
   /** Position in the source file, microseconds. */
   sourceTime: number;
@@ -68,6 +73,11 @@ export function previewPlan(
   for (const { track, clip } of clipsAt(content, time)) {
     if (track.muted) continue;
     if (track.kind === 'audio' && !isAudible(content, track)) continue;
+    if (track.kind === 'video' && isTextClip(clip)) {
+      video.push({ clipId: clip.id, assetId: null, trackId: track.id, sourceTime: 0 });
+      continue;
+    }
+    if (clip.assetId === null) continue;
     const asset = assets[clip.assetId];
     if (!asset) continue;
     const entry = {
@@ -81,11 +91,12 @@ export function previewPlan(
       const progress = transition ? (time - clip.start) / transition.duration : 1;
       if (transition && progress < 1) {
         // The clip going out carries on underneath, past its end (it holds its last picture if the file ends).
-        const outgoingAsset = assets[transition.from.assetId];
+        const outgoingId = transition.from.assetId;
+        const outgoingAsset = outgoingId === null ? undefined : assets[outgoingId];
         if (outgoingAsset?.kind === 'video') {
           video.push({
             clipId: transition.from.id,
-            assetId: transition.from.assetId,
+            assetId: outgoingAsset.id,
             trackId: track.id,
             // Never past the end of the file, so its last picture is what holds on screen.
             sourceTime: Math.min(
@@ -149,7 +160,21 @@ export function clipMatrix(
   frameWidth: number,
   frameHeight: number,
 ): Affine {
-  const fit = containMatrix(sourceWidth, sourceHeight, frameWidth, frameHeight);
+  return placeMatrix(
+    containMatrix(sourceWidth, sourceHeight, frameWidth, frameHeight),
+    transform,
+    frameWidth,
+    frameHeight,
+  );
+}
+
+/** Applies a clip's scale, rotation and offset (about the frame centre) to where its picture sits before them. */
+function placeMatrix(
+  fit: Affine,
+  transform: ClipTransform,
+  frameWidth: number,
+  frameHeight: number,
+): Affine {
   if (transform.x === 0 && transform.y === 0 && transform.scale === 1 && transform.rotation === 0) {
     return fit;
   }
@@ -183,6 +208,7 @@ export function buildPreviewScene(
   assets: Readonly<Record<string, Asset>>,
   time: number,
   sizes: ReadonlyMap<string, { width: number; height: number }>,
+  metrics: RasterMetrics,
 ): RenderScene {
   const { width, height } = content.sequence;
   const nodes: ImageNode[] = [];
@@ -194,8 +220,12 @@ export function buildPreviewScene(
       Number(a.transition?.role === 'incoming') - Number(b.transition?.role === 'incoming'),
   );
   for (const layer of layers) {
-    const size = sizes.get(layer.clipId);
     const clip = content.clips[layer.clipId];
+    if (clip && isTextClip(clip)) {
+      nodes.push(...textNodes(clip, width, height, metrics));
+      continue;
+    }
+    const size = sizes.get(layer.clipId);
     if (!size || !clip) continue;
     const transform = clipTransform(clip);
     const colour = clipColour(clip);
@@ -227,6 +257,61 @@ export function buildPreviewScene(
     });
   }
   return { width, height, background: { r: 0, g: 0, b: 0 }, nodes };
+}
+
+/**
+ * The nodes of a text clip: the box behind it (if any) and the text, both centred in the frame at their own size
+ * (one text pixel is one sequence pixel) and then moved, scaled and rotated like any other clip.
+ */
+function textNodes(
+  clip: TextClip,
+  frameWidth: number,
+  frameHeight: number,
+  metrics: RasterMetrics,
+): ImageNode[] {
+  const transform = clipTransform(clip);
+  const colour = clipColour(clip);
+  const cropped = Object.values(transform.crop).some((amount) => amount > 0);
+  const corrected = Object.values(colour).some((amount) => amount !== 0);
+  const build = (id: string, raster: RasterSpec, opacity: number): ImageNode => {
+    const { width, height } = metrics.measure(raster);
+    return {
+      type: 'image',
+      id,
+      textureId: rasterKey(raster),
+      width,
+      height,
+      matrix: placeMatrix(
+        [1, 0, 0, 1, (frameWidth - width) / 2, (frameHeight - height) / 2],
+        transform,
+        frameWidth,
+        frameHeight,
+      ),
+      opacity,
+      blendMode: 'normal',
+      raster,
+      ...(cropped ? { crop: transform.crop } : {}),
+      ...(corrected ? { colour } : {}),
+    };
+  };
+
+  const text: RasterSpec = { kind: 'text', ...clip.text };
+  const textNode = build(clip.id, text, clipOpacity(clip));
+  if (!clip.backdrop) return [textNode];
+  const padX = clip.text.fontSize * 0.4;
+  const padY = clip.text.fontSize * 0.15;
+  const box: RasterSpec = {
+    kind: 'shape',
+    shape: 'rectangle',
+    width: Math.max(1, textNode.width + padX * 2),
+    height: Math.max(1, textNode.height + padY * 2),
+    fill: clip.backdrop.color,
+    stroke: null,
+    strokeWidth: 0,
+    cornerRadius: clip.text.fontSize * 0.2,
+    sides: 3,
+  };
+  return [build(`${clip.id}:backdrop`, box, clipOpacity(clip) * clip.backdrop.opacity), textNode];
 }
 
 interface TransitionLook {

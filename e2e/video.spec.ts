@@ -509,6 +509,176 @@ test.describe('transitions', () => {
   });
 });
 
+/** How many pixels of the preview are (nearly) white: the text of titles and subtitles in these tests. */
+async function whitePixels(page: Page): Promise<number> {
+  const png = await page.getByTestId('preview-canvas').screenshot();
+  return page.evaluate(async (base64) => {
+    const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+    const bitmap = await createImageBitmap(new Blob([bytes]));
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('no 2d context');
+    context.drawImage(bitmap, 0, 0);
+    const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height);
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if ((data[i] ?? 0) > 200 && (data[i + 1] ?? 0) > 200 && (data[i + 2] ?? 0) > 200) count += 1;
+    }
+    return count;
+  }, png.toString('base64'));
+}
+
+const SUBTITLES = [
+  '1',
+  '00:00:00,200 --> 00:00:01,000',
+  'Hello <i>there</i>',
+  '',
+  '2',
+  '00:00:01,400 --> 00:00:01,900',
+  'Second line',
+  '',
+].join('\n');
+const subtitleFile = (text: string) => ({
+  name: 'captions.srt',
+  mimeType: 'application/x-subrip',
+  buffer: Buffer.from(text),
+});
+
+async function stepFrames(page: Page, frames: number): Promise<void> {
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('Home');
+  for (let i = 0; i < frames; i += 1) await page.keyboard.press('ArrowRight');
+}
+
+test.describe('text and subtitles', () => {
+  test('adds a title over the picture, edits its words, and deleting it takes it away', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Title test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 20_000 }).toBe(true);
+    expect(await whitePixels(page)).toBeLessThan(20);
+
+    await page.getByRole('button', { name: 'Add text' }).click();
+    await expect(clip(page, 'Text: Your text', 'Video 2')).toBeVisible();
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(50);
+
+    await page.getByRole('textbox', { name: 'Words' }).fill('Hi');
+    await expect(clip(page, 'Text: Hi', 'Video 2')).toBeVisible();
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(20);
+
+    await page.getByRole('button', { name: 'Delete clip', exact: true }).click();
+    await expect(clip(page, 'Text: Hi', 'Video 2')).toHaveCount(0);
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeLessThan(20);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(20);
+  });
+
+  test('imports subtitles as a track, shows them at their times, and undo removes them', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Subtitle test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await page.getByTestId('import-subtitles-input').setInputFiles(subtitleFile(SUBTITLES));
+    const track = page.getByRole('group', { name: 'Subtitles' });
+    await expect(track.getByRole('button', { name: /^Text: Hello there/ })).toBeVisible();
+    await expect(track.getByRole('button', { name: /^Text: Second line/ })).toBeVisible();
+
+    await stepFrames(page, 15); // 0.6 s: the first subtitle
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(20);
+    await stepFrames(page, 28); // 1.12 s: between the two
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeLessThan(5);
+    await stepFrames(page, 40); // 1.6 s: the second
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(20);
+
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(page.getByRole('group', { name: 'Subtitles' })).toHaveCount(0);
+  });
+
+  test('a file with no subtitles in it is refused with a message', async ({ page }) => {
+    await createVideoProject(page, 'Bad subtitles');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await page.getByTestId('import-subtitles-input').setInputFiles(subtitleFile('not subtitles'));
+    await expect(page.getByText('No subtitles were found in that file.')).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Subtitles' })).toHaveCount(0);
+  });
+
+  test('a subtitle track survives a reload', async ({ page }) => {
+    await createVideoProject(page, 'Subtitle reload');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await page.getByTestId('import-subtitles-input').setInputFiles(subtitleFile(SUBTITLES));
+    await expect(page.getByRole('button', { name: /^Text: Second line/ })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'All changes saved' })).toBeVisible();
+    await page.reload();
+    await page
+      .getByRole('alertdialog', { name: 'Restore unsaved changes?' })
+      .getByRole('button', { name: 'Restore changes' })
+      .click();
+    await expect(page.getByRole('button', { name: /^Text: Second line/ })).toBeVisible();
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('subtitles are burned into the picture at their times', async ({ page }, testInfo) => {
+      test.setTimeout(120_000);
+      await createVideoProject(page, 'Subtitle export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4');
+      await page.getByTestId('import-subtitles-input').setInputFiles(subtitleFile(SUBTITLES));
+      await expect(page.getByRole('button', { name: /^Text: Second line/ })).toBeVisible();
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('subtitled.mp4');
+      await (await downloading).saveAs(file);
+
+      expect(whitePixelsAt(file, 0.6)).toBeGreaterThan(20); // while the first one shows
+      expect(whitePixelsAt(file, 1.12)).toBeLessThan(5); // between the two
+      expect(whitePixelsAt(file, 1.6)).toBeGreaterThan(20); // while the second one shows
+    });
+  });
+});
+
+/** How many pixels of the frame at `seconds` of an exported file are (nearly) white (the file is 320 by 240). */
+function whitePixelsAt(path: string, seconds: number): number {
+  const raw = execFileSync(
+    'ffmpeg',
+    [
+      '-v',
+      'error',
+      '-ss',
+      String(seconds),
+      '-i',
+      path,
+      '-frames:v',
+      '1',
+      '-f',
+      'rawvideo',
+      '-pix_fmt',
+      'rgb24',
+      '-',
+    ],
+    { maxBuffer: 10_000_000 },
+  );
+  let count = 0;
+  for (let i = 0; i + 2 < raw.length; i += 3) {
+    if ((raw[i] ?? 0) > 200 && (raw[i + 1] ?? 0) > 200 && (raw[i + 2] ?? 0) > 200) count += 1;
+  }
+  return count;
+}
+
 test.describe('clip look (picture and sound properties)', () => {
   test('cropping and opacity change the preview, and undo restores it', async ({ page }) => {
     await createVideoProject(page, 'Look test');

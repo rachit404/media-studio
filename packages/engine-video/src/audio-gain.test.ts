@@ -1,3 +1,4 @@
+import { fakeMetrics } from './fake-metrics';
 import {
   History,
   IDENTITY_TRANSFORM,
@@ -224,7 +225,8 @@ describe('preview scene with clip look', () => {
       return history.state.content;
     };
     const sizes = new Map([['pic', { width: 640, height: 360 }]]);
-    const plain = buildPreviewScene(content(), history.state.assets.byId, S, sizes).nodes[0];
+    const plain = buildPreviewScene(content(), history.state.assets.byId, S, sizes, fakeMetrics)
+      .nodes[0];
     expect(plain).toMatchObject({ opacity: 1 });
     expect(plain && 'crop' in plain).toBe(false);
     expect(plain && 'colour' in plain).toBe(false);
@@ -236,7 +238,8 @@ describe('preview scene with clip look', () => {
         colour: { brightness: 0.1, contrast: 0, saturation: -0.5, temperature: 0 },
       }),
     );
-    const node = buildPreviewScene(content(), history.state.assets.byId, S, sizes).nodes[0];
+    const node = buildPreviewScene(content(), history.state.assets.byId, S, sizes, fakeMetrics)
+      .nodes[0];
     expect(node).toMatchObject({
       opacity: 0.5,
       crop: { left: 0.1, top: 0, right: 0, bottom: 0.2 },

@@ -10,7 +10,7 @@ import {
   type TimedFrame,
 } from '@media-studio/engine-video';
 import { AudioPlayer, VideoSource } from '@media-studio/media-io';
-import type { CanvasRenderer } from '@media-studio/render';
+import { rasterMetrics, type CanvasRenderer } from '@media-studio/render';
 import { diagnostics } from '../../diagnostics';
 import { getStorage } from '../../storage-client';
 
@@ -242,7 +242,7 @@ export class PreviewPlayer {
     const { content, assets } = this.getDocument();
     const wanted = new Map<string, Asset>();
     for (const clip of Object.values(content.clips)) {
-      const asset = assets[clip.assetId];
+      const asset = clip.assetId === null ? undefined : assets[clip.assetId];
       if (asset && (asset.kind === 'audio' || (asset.kind === 'video' && asset.audio))) {
         wanted.set(asset.id, asset);
       }
@@ -365,6 +365,7 @@ export class PreviewPlayer {
     const active = new Set(plan.video.map((layer) => layer.clipId));
 
     for (const layer of plan.video) {
+      if (layer.assetId === null) continue; // text is drawn from its description, with no picture to decode
       const asset = assets[layer.assetId];
       if (!asset) continue;
       const stream = this.streamFor(layer.clipId, asset, layer.sourceTime);
@@ -388,7 +389,7 @@ export class PreviewPlayer {
     // Decode ahead for clips that begin soon, and release clips we have left behind.
     if (this.transport.playing) {
       for (const clip of Object.values(content.clips)) {
-        const asset = assets[clip.assetId];
+        const asset = clip.assetId === null ? undefined : assets[clip.assetId];
         if (asset?.kind !== 'video' || content.tracks.byId[clip.trackId]?.kind !== 'video')
           continue;
         if (active.has(clip.id)) continue;
@@ -403,7 +404,7 @@ export class PreviewPlayer {
       if (!active.has(clipId) && !upcoming) this.release(clipId);
     }
 
-    this.renderer.setScene(buildPreviewScene(content, assets, time, this.sizes));
+    this.renderer.setScene(buildPreviewScene(content, assets, time, this.sizes, rasterMetrics));
     for (const listener of this.timeListeners) listener(time);
 
     if (wasPlaying && !this.transport.playing) {

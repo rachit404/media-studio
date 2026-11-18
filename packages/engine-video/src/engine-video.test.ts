@@ -1,3 +1,4 @@
+import { fakeMetrics } from './fake-metrics';
 import {
   History,
   FPS_30,
@@ -115,7 +116,13 @@ describe('preview plan', () => {
       ['c1', { width: 640, height: 480 }],
       ['c2', { width: 640, height: 480 }],
     ]);
-    const scene = buildPreviewScene(content(history), history.state.assets.byId, 5 * S, sizes);
+    const scene = buildPreviewScene(
+      content(history),
+      history.state.assets.byId,
+      5 * S,
+      sizes,
+      fakeMetrics,
+    );
     expect(scene.nodes.map((node) => node.id)).toEqual(['c1', 'c2']);
   });
 
@@ -136,12 +143,14 @@ describe('scene', () => {
       history.state.assets.byId,
       5 * S,
       new Map([['c1', { width: 640, height: 480 }]]),
+      fakeMetrics,
     );
     expect(scene).toMatchObject({ width: 640, height: 480, background: { r: 0, g: 0, b: 0 } });
     expect(scene.nodes).toHaveLength(1);
     expect(scene.nodes[0]).toMatchObject({ id: 'c1', textureId: 'clip:c1' });
     expect(
-      buildPreviewScene(content(history), history.state.assets.byId, 5 * S, new Map()).nodes,
+      buildPreviewScene(content(history), history.state.assets.byId, 5 * S, new Map(), fakeMetrics)
+        .nodes,
     ).toHaveLength(0);
   });
 });

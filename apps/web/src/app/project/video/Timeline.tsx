@@ -45,6 +45,7 @@ import { ASSET_DRAG_TYPE } from '../asset-drag';
 import { AssetThumb } from '../AssetThumb';
 import type { ProjectSession } from '../project-session';
 import type { PreviewPlayer } from './preview-player';
+import { TitleTools } from './TitleTools';
 import { Waveform } from './waveform';
 
 const HEADER_WIDTH = 168;
@@ -482,6 +483,14 @@ export function Timeline({
         >
           Add audio track
         </Button>
+        <TitleTools
+          session={session}
+          content={content}
+          playheadTime={playheadTime}
+          run={run}
+          onSelect={onSelect}
+          onProblem={onProblem}
+        />
         <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
         <Button
           variant="secondary"
@@ -642,7 +651,7 @@ export function Timeline({
                     ({ at }) => at.start + at.duration >= visibleFrom && at.start <= visibleTo,
                   )
                   .map(({ clip, at }) => {
-                    const asset = assets[clip.assetId];
+                    const asset = clip.assetId === null ? undefined : assets[clip.assetId];
                     const left = timeToX(scale, at.start);
                     const width = Math.max(2, (at.duration / US_PER_SECOND) * pxPerSecond);
                     const selected =
@@ -652,6 +661,9 @@ export function Timeline({
                       selectedId !== null &&
                       content.clips[selectedId]?.linkId != null &&
                       content.clips[selectedId]?.linkId === clip.linkId;
+                    const label = clip.text
+                      ? `Text: ${clip.text.text.split('\n')[0] ?? ''}`
+                      : (asset?.name ?? 'Missing media');
                     const transition = clip.transitionIn
                       ? activeTransition(content, clip)
                       : undefined;
@@ -661,7 +673,7 @@ export function Timeline({
                         type="button"
                         data-clip-id={clip.id}
                         aria-pressed={selectedId === clip.id}
-                        aria-label={`${asset?.name ?? 'Missing media'}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}`}
+                        aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}`}
                         onPointerDown={(event) => onClipPointerDown(event, clip)}
                         onPointerMove={(event) => onClipPointerMove(event, clip)}
                         onPointerUp={(event) => onClipPointerUp(event, clip)}
@@ -710,7 +722,7 @@ export function Timeline({
                           />
                         )}
                         <span className="relative block truncate px-1.5 pt-1.5 text-fg">
-                          {asset?.name ?? 'Missing media'}
+                          {label}
                         </span>
                       </button>
                     );

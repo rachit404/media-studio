@@ -26,12 +26,19 @@ export function trimRange(
   let min = Number.NEGATIVE_INFINITY;
   let max = Number.POSITIVE_INFINITY;
   for (const clip of group) {
-    const asset = assets[clip.assetId];
-    const fileLength = asset?.kind === 'video' || asset?.kind === 'audio' ? asset.duration : 0;
+    // Text has no file behind it, so only the neighbours and the timeline limit it.
+    const asset = clip.assetId === null ? undefined : assets[clip.assetId];
+    const fileLength =
+      clip.assetId === null
+        ? Number.POSITIVE_INFINITY
+        : asset?.kind === 'video' || asset?.kind === 'audio'
+          ? asset.duration
+          : 0;
+    const sourceIn = clip.assetId === null ? clip.start : clip.sourceIn;
     const neighbours = trackClips(content, clip.trackId).filter((other) => !inGroup.has(other.id));
     if (edge === 'start') {
       const before = neighbours.filter((other) => clipEnd(other) <= clip.start);
-      min = Math.max(min, 0, clip.start - clip.sourceIn, ...before.map(clipEnd));
+      min = Math.max(min, 0, clip.start - sourceIn, ...before.map(clipEnd));
       max = Math.min(max, clipEnd(clip) - frame);
     } else {
       const after = neighbours.filter((other) => other.start >= clipEnd(clip));

@@ -30,6 +30,13 @@ export {
   zoomAround,
 } from './timeline-view';
 export type { RulerTick, SnapResult, TimelineScale } from './timeline-view';
+export {
+  DEFAULT_BACKDROP,
+  DEFAULT_TEXT_DURATION_US,
+  defaultTextSpec,
+  subtitleStyle,
+  textTrackFor,
+} from './text-defaults';
 export { Transport } from './transport';
 export type { PlaybackStats, TransportOptions } from './transport';
 export { FramePump } from './frame-pump';

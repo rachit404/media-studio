@@ -1,3 +1,4 @@
+import { fakeMetrics } from './fake-metrics';
 import {
   AppError,
   FPS_30,
@@ -66,6 +67,7 @@ function fakes(
   };
   const fps = 25;
   const deps: ExportDependencies<Frame> = {
+    metrics: fakeMetrics,
     frameSource: (): FrameStreamSource<Frame> => ({
       async *frames(startUs: number): AsyncGenerator<TimedFrame<Frame>, void, undefined> {
         const first = Math.floor((startUs * fps) / S);

@@ -2,8 +2,10 @@ import { current, type Draft } from 'immer';
 import { z } from 'zod';
 import { AppError } from './errors';
 import type { Command } from './history';
+import { textSpecSchema, type TextSpec } from './image-document';
 import { insertAt, removeItem, sortedItems } from './ordered';
 import type { ProjectDocument } from './project';
+import type { Cue } from './subtitles';
 import {
   clampMoveDelta,
   expandLinked,
@@ -20,14 +22,19 @@ import {
   MAX_SEQUENCE_SIZE,
   MAX_TRACKS,
   MAX_VOLUME,
+  clipBackdropSchema,
   clipColourSchema,
   clipEnd,
   clipTransformSchema,
   clipTransitionSchema,
+  isTextClip,
   type Clip,
+  type ClipBackdrop,
   type ClipLook,
+  type ClipTransform,
   type ClipTransition,
   type Sequence,
+  type TextClip,
   type Track,
   type TrackKind,
   type VideoContent,
@@ -101,24 +108,31 @@ export function setSequence(patch: Partial<Sequence>): Command<ProjectDocument> 
   };
 }
 
+/** Add an empty track at the end (video tracks go on top, audio tracks below the others). */
+function createTrack(
+  content: Draft<VideoContent>,
+  kind: TrackKind,
+  id: string,
+  name?: string,
+): void {
+  const snapshot = before(content);
+  if (Object.keys(snapshot.tracks.byId).length >= MAX_TRACKS) {
+    throw invalid(`A sequence can have up to ${String(MAX_TRACKS)} tracks.`);
+  }
+  const same = tracksOfKind(snapshot, kind);
+  const label = name ?? `${kind === 'video' ? 'Video' : 'Audio'} ${String(same.length + 1)}`;
+  insertAt<Track>(
+    content.tracks,
+    { id, kind, name: label, muted: false, locked: false, clipIds: [] },
+    sortedItems(snapshot.tracks).length,
+  );
+}
+
 export function addTrack(kind: TrackKind, id: string): Command<ProjectDocument> {
   return {
     label: kind === 'video' ? 'Add video track' : 'Add audio track',
     apply(draft) {
-      const content = videoDraft(draft);
-      const snapshot = before(content);
-      if (Object.keys(snapshot.tracks.byId).length >= MAX_TRACKS) {
-        throw invalid(`A sequence can have up to ${String(MAX_TRACKS)} tracks.`);
-      }
-      const same = tracksOfKind(snapshot, kind);
-      const name = `${kind === 'video' ? 'Video' : 'Audio'} ${String(same.length + 1)}`;
-      // Video: new tracks go on top (end of its group). Audio: below the others. Both append in key order.
-      const all = sortedItems(snapshot.tracks);
-      insertAt<Track>(
-        content.tracks,
-        { id, kind, name, muted: false, locked: false, clipIds: [] },
-        all.length,
-      );
+      createTrack(videoDraft(draft), kind, id);
     },
   };
 }
@@ -367,10 +381,12 @@ export function trimClip(
       const ripple = options.ripple === true && edge === 'end';
 
       for (const clip of group) {
-        const limit = sourceDuration(draft, clip.assetId);
+        // Text has no file behind it: it can be any length, and its in-point stays 0.
+        const limit = clip.assetId === null ? Infinity : sourceDuration(draft, clip.assetId);
         const start = edge === 'start' ? clip.start + delta : clip.start;
         const end = edge === 'end' ? clipEnd(clip) + delta : clipEnd(clip);
-        const sourceIn = edge === 'start' ? clip.sourceIn + delta : clip.sourceIn;
+        const sourceIn =
+          edge === 'start' && clip.assetId !== null ? clip.sourceIn + delta : clip.sourceIn;
         if (start < 0 || end <= start || sourceIn < 0 || sourceIn + (end - start) > limit) {
           throw invalid('The clip cannot be trimmed that far.', 'There is no more of the file.');
         }
@@ -386,7 +402,7 @@ export function trimClip(
         const target = clipDraft(content, clip.id);
         if (edge === 'start') {
           target.start = clip.start + delta;
-          target.sourceIn = clip.sourceIn + delta;
+          if (clip.assetId !== null) target.sourceIn = clip.sourceIn + delta;
           target.duration = clip.duration - delta;
         } else {
           target.duration = clip.duration + delta;
@@ -452,8 +468,10 @@ export function splitClips(
           assetId: clip.assetId,
           start: time,
           duration: clipEnd(clip) - time,
-          sourceIn: clip.sourceIn + (time - clip.start),
+          sourceIn: clip.assetId === null ? 0 : clip.sourceIn + (time - clip.start),
           linkId: clip.linkId === null ? null : (rightLinks.get(clip.linkId) ?? null),
+          ...(clip.text === undefined ? {} : { text: clip.text }),
+          ...(clip.backdrop === undefined ? {} : { backdrop: clip.backdrop }),
           ...splitLook(clip),
         };
         // The fade in stays with the left half and the fade out moves to the right half.
@@ -561,7 +579,7 @@ export function setTransition(
         delete target.transitionIn;
         return;
       }
-      if (snapshot.tracks.byId[clip.trackId]?.kind !== 'video') {
+      if (snapshot.tracks.byId[clip.trackId]?.kind !== 'video' || clip.assetId === null) {
         throw invalid('Only picture clips can have a transition.');
       }
       if (!outgoingClip(snapshot, clip)) {
@@ -580,6 +598,173 @@ export function setTransition(
       target.transitionIn = { kind, duration, ...(wipes && direction ? { direction } : {}) };
     },
     ...(transition ? { coalesceKey: `transition:${clipId}` } : {}),
+  };
+}
+
+// Text and subtitles -------------------------------------------------------------------------------------
+
+export interface AddTextParams {
+  clipId: string;
+  /** The video track to put the text on (it must have room), or ... */
+  trackId?: string;
+  /** ... the id of a new video track to create for it (on top of the others). */
+  newTrackId?: string;
+  start: number;
+  duration: number;
+  text: TextSpec;
+  backdrop?: ClipBackdrop;
+  transform?: ClipTransform;
+}
+
+function parseText(text: TextSpec): TextSpec {
+  const parsed = textSpecSchema.safeParse(text);
+  if (!parsed.success) throw invalid('That text is not valid.', 'Check the size and the colour.');
+  return parsed.data;
+}
+
+function parseBackdrop(backdrop: ClipBackdrop): ClipBackdrop {
+  const parsed = clipBackdropSchema.safeParse(backdrop);
+  if (!parsed.success) throw invalid('That text box is not valid.');
+  return parsed.data;
+}
+
+/** Put a title on the timeline: a clip with text instead of media. */
+export function addTextClip(params: AddTextParams): Command<ProjectDocument> {
+  return {
+    label: 'Add text',
+    apply(draft) {
+      const content = videoDraft(draft);
+      const text = parseText(params.text);
+      if (
+        !Number.isSafeInteger(params.start) ||
+        !Number.isSafeInteger(params.duration) ||
+        params.start < 0 ||
+        params.duration < 1 ||
+        params.start + params.duration > MAX_TIME_US
+      ) {
+        throw invalid('That time is not valid.');
+      }
+      if (Object.keys(before(content).clips).length >= MAX_CLIPS) {
+        throw invalid(`A sequence can have up to ${String(MAX_CLIPS)} clips.`);
+      }
+      if (params.newTrackId) createTrack(content, 'video', params.newTrackId);
+      const trackId = params.newTrackId ?? params.trackId;
+      const track = trackId ? before(content).tracks.byId[trackId] : undefined;
+      if (track?.kind !== 'video') throw invalid('Text goes on a video track.');
+      if (track.locked) throw invalid('That track is locked.', 'Unlock the track first.');
+      if (!isFree(before(content), track.id, params.start, params.duration)) {
+        throw invalid('There is no room there.', 'Choose a free spot or another track.');
+      }
+      content.clips[params.clipId] = {
+        id: params.clipId,
+        trackId: track.id,
+        assetId: null,
+        start: params.start,
+        duration: params.duration,
+        sourceIn: 0,
+        linkId: null,
+        text,
+        ...(params.backdrop ? { backdrop: parseBackdrop(params.backdrop) } : {}),
+        ...(params.transform ? { transform: clipTransformSchema.parse(params.transform) } : {}),
+      };
+      content.tracks.byId[track.id]?.clipIds.push(params.clipId);
+      resort(content, track.id);
+    },
+  };
+}
+
+export interface SubtitleStyle {
+  /** Everything but the words. */
+  text: Omit<TextSpec, 'text'>;
+  backdrop?: ClipBackdrop;
+  transform?: ClipTransform;
+}
+
+/**
+ * Import subtitle cues as a new video track of text clips, one per cue (burned into the picture on export).
+ * `clipIds` has one id per cue. The cues must be in order and must not overlap (what `parseSubtitles` gives).
+ */
+export function addSubtitleTrack(params: {
+  trackId: string;
+  name: string;
+  cues: readonly Cue[];
+  clipIds: readonly string[];
+  style: SubtitleStyle;
+}): Command<ProjectDocument> {
+  return {
+    label: 'Import subtitles',
+    apply(draft) {
+      const content = videoDraft(draft);
+      const { cues, clipIds, style } = params;
+      if (cues.length === 0 || cues.length !== clipIds.length) {
+        throw invalid('There are no subtitles to add.');
+      }
+      if (Object.keys(before(content).clips).length + cues.length > MAX_CLIPS) {
+        throw invalid(`A sequence can have up to ${String(MAX_CLIPS)} clips.`);
+      }
+      const name = params.name.trim().slice(0, 60);
+      if (name === '') throw invalid('The track needs a name.');
+      createTrack(content, 'video', params.trackId, name);
+      const track = content.tracks.byId[params.trackId];
+      const backdrop = style.backdrop ? parseBackdrop(style.backdrop) : undefined;
+      const transform = style.transform ? clipTransformSchema.parse(style.transform) : undefined;
+      let previousEnd = 0;
+      cues.forEach((cue, index) => {
+        const id = clipIds[index];
+        if (id === undefined) return;
+        if (cue.start < previousEnd || cue.end <= cue.start || cue.end > MAX_TIME_US) {
+          throw invalid('The subtitles are out of order or overlap.');
+        }
+        previousEnd = cue.end;
+        content.clips[id] = {
+          id,
+          trackId: params.trackId,
+          assetId: null,
+          start: cue.start,
+          duration: cue.end - cue.start,
+          sourceIn: 0,
+          linkId: null,
+          text: parseText({ ...style.text, text: cue.text }),
+          ...(backdrop ? { backdrop } : {}),
+          ...(transform ? { transform } : {}),
+        };
+        track?.clipIds.push(id);
+      });
+    },
+  };
+}
+
+/** A change to text clips: the words and style, and the box behind (`null` removes it). */
+export type ClipTextPatch = Partial<TextSpec> & { backdrop?: ClipBackdrop | null };
+
+/** Change the text or style of text clips. Repeated edits of the same fields merge into one undo step. */
+export function setClipText(
+  clipIds: readonly string[],
+  patch: ClipTextPatch,
+): Command<ProjectDocument> {
+  const keys = Object.keys(patch).sort();
+  return {
+    label: 'Change text',
+    coalesceKey: `clip-text:${[...clipIds].sort().join(',')}:${keys.join(',')}`,
+    apply(draft) {
+      const content = videoDraft(draft);
+      const snapshot = before(content);
+      const clips = clipIds.map((id) => snapshot.clips[id]);
+      const texts = clips.filter(
+        (clip): clip is TextClip => clip !== undefined && isTextClip(clip),
+      );
+      if (texts.length !== clipIds.length) throw invalid('Only text clips have text to change.');
+      assertEditable(snapshot, texts);
+      const { backdrop, ...spec } = patch;
+      const nextBackdrop =
+        backdrop === undefined || backdrop === null ? backdrop : parseBackdrop(backdrop);
+      for (const clip of texts) {
+        const target = clipDraft(content, clip.id);
+        target.text = parseText({ ...clip.text, ...spec });
+        if (nextBackdrop === null) delete target.backdrop;
+        else if (nextBackdrop !== undefined) target.backdrop = nextBackdrop;
+      }
+    },
   };
 }
 
@@ -636,6 +821,7 @@ export function joinClips(clipId: string): Command<ProjectDocument> {
         const next = clips[clips.findIndex((other) => other.id === clip.id) + 1];
         const joinable =
           next !== undefined &&
+          clip.assetId !== null &&
           next.assetId === clip.assetId &&
           next.start === clipEnd(clip) &&
           next.sourceIn === clip.sourceIn + clip.duration;

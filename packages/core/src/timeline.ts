@@ -33,7 +33,10 @@ export function outgoingClip(content: VideoContent, clip: Clip): Clip | undefine
   const clips = trackClips(content, clip.trackId);
   const index = clips.findIndex((other) => other.id === clip.id);
   const previous = index > 0 ? clips[index - 1] : undefined;
-  return previous && clipEnd(previous) === clip.start ? previous : undefined;
+  // Text has no footage to carry on, so a transition only comes from a picture clip.
+  return previous && previous.assetId !== null && clipEnd(previous) === clip.start
+    ? previous
+    : undefined;
 }
 
 /**

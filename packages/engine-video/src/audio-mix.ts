@@ -39,7 +39,7 @@ export async function mixAudioBlock(
       const clip = content.clips[id];
       if (!clip || clipEnd(clip) <= blockStart) continue;
       if (clip.start >= blockEnd) break;
-      const asset = assets[clip.assetId];
+      const asset = clip.assetId === null ? undefined : assets[clip.assetId];
       if (asset?.kind !== 'audio' && asset?.kind !== 'video') continue;
 
       const overlapStart = Math.max(clip.start, blockStart);

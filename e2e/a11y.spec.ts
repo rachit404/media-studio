@@ -108,6 +108,12 @@ for (const colorScheme of ['dark', 'light'] as const) {
       await clip.click();
       await expect(page.getByRole('textbox', { name: 'Length' })).toBeVisible();
       await expectNoViolations(page);
+
+      // A title with its box on: the text and box controls.
+      await page.getByRole('button', { name: 'Add text' }).click();
+      await page.getByRole('checkbox', { name: 'Box behind the text' }).check();
+      await expect(page.getByRole('slider', { name: 'Box opacity' })).toBeVisible();
+      await expectNoViolations(page);
     });
   });
 }

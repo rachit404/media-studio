@@ -32,13 +32,13 @@ export function audioSegments(
       const clip = content.clips[id];
       if (!clip || clipEnd(clip) <= from) continue;
       if (clip.start >= to) break;
-      const asset = assets[clip.assetId];
+      const asset = clip.assetId === null ? undefined : assets[clip.assetId];
       if (asset?.kind !== 'audio' && asset?.kind !== 'video') continue;
       const start = Math.max(clip.start, from);
       const end = Math.min(clipEnd(clip), to);
       segments.push({
         clipId: clip.id,
-        assetId: clip.assetId,
+        assetId: asset.id,
         start,
         end,
         clipEnd: clipEnd(clip),

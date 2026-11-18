@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { textSpecSchema, type TextSpec } from './image-document';
 import { createOrdered, type Ordered } from './ordered';
 import { idSchema, orderedSchema } from './schema-common';
 import { FPS_30, MAX_TIME_US, frameRateSchema } from './time';
@@ -107,10 +108,18 @@ export const clipTransitionSchema = z.strictObject({
 });
 export type ClipTransition = z.infer<typeof clipTransitionSchema>;
 
+/** A box drawn behind a text clip's text (keeps subtitles readable on any picture). */
+export const clipBackdropSchema = z.strictObject({
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  opacity: z.number().min(0).max(1),
+});
+export type ClipBackdrop = z.infer<typeof clipBackdropSchema>;
+
 export const clipSchema = z.strictObject({
   id: idSchema,
   trackId: idSchema,
-  assetId: idSchema,
+  /** The media file this clip plays, or null for a text clip (which has `text` instead). */
+  assetId: idSchema.nullable(),
   /** Where the clip starts on the timeline (microseconds). */
   start: timeSchema,
   /** How long it plays on the timeline. */
@@ -132,8 +141,19 @@ export const clipSchema = z.strictObject({
   fadeOut: timeSchema.optional(),
   /** Picture clips: how this clip comes in from the clip before it (absent = a plain cut). */
   transitionIn: clipTransitionSchema.optional(),
+  /** Text clips (no media): what to write and how. Its size is in sequence pixels. */
+  text: textSpecSchema.optional(),
+  /** Text clips: a box behind the text (absent = none). */
+  backdrop: clipBackdropSchema.optional(),
 });
 export type Clip = z.infer<typeof clipSchema>;
+
+/** A text clip: titles and subtitles. It has no media, so it can be as long as the user likes. */
+export type TextClip = Clip & { assetId: null; text: TextSpec };
+
+export function isTextClip(clip: Clip): clip is TextClip {
+  return clip.assetId === null && clip.text !== undefined;
+}
 
 /** The properties a user can change on a clip without moving or cutting it. */
 export type ClipLook = Pick<
@@ -203,8 +223,19 @@ export const videoContentSchema = z
       }
     }
     for (const id of Object.keys(content.clips)) {
-      if (content.clips[id]?.id !== id) fail('clip id mismatch');
+      const clip = content.clips[id];
+      if (clip?.id !== id) fail('clip id mismatch');
       if (!listed.has(id)) fail(`clip ${id} is on no track`);
+      if (!clip) continue;
+      if ((clip.assetId === null) !== (clip.text !== undefined)) {
+        fail(`clip ${id} must have either media or text`);
+      }
+      if (clip.text === undefined && clip.backdrop !== undefined) fail(`clip ${id} has no text`);
+      if (clip.text !== undefined) {
+        if (content.tracks.byId[clip.trackId]?.kind !== 'video')
+          fail(`text clip ${id} is on sound`);
+        if (clip.transitionIn !== undefined) fail(`text clip ${id} has a transition`);
+      }
     }
   });
 export type VideoContent = z.infer<typeof videoContentSchema>;
