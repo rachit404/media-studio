@@ -1,9 +1,14 @@
 import {
+  AppError,
   History,
+  PixelStore,
+  createTile,
   toAppError,
-  type AppError,
+  type Channels,
   type JournalRecord,
   type ProjectDocument,
+  type Tile,
+  type TileMap,
 } from '@media-studio/core';
 
 export type SaveStatus = 'saved' | 'saving' | 'error';
@@ -12,6 +17,26 @@ export type SaveStatus = 'saved' | 'saving' | 'error';
 export interface SessionStorage {
   appendJournal(id: string, records: JournalRecord[]): Promise<void>;
   checkpoint(id: string, project: ProjectDocument, seq: number): Promise<void>;
+  putPixels(
+    id: string,
+    contentId: string,
+    channels: Channels,
+    entries: { key: string; id: string }[],
+    newTiles: { id: string; data: Uint8Array }[],
+  ): Promise<void>;
+  getPixels(
+    id: string,
+    contentId: string,
+  ): Promise<{
+    channels: Channels;
+    tiles: { key: string; id: string; data: Uint8Array }[];
+  } | null>;
+}
+
+interface PendingPixels {
+  contentId: string;
+  channels: Channels;
+  tiles: TileMap;
 }
 
 export interface SessionOptions {
@@ -31,6 +56,13 @@ export interface SessionOptions {
  */
 export class ProjectSession {
   readonly history: History<ProjectDocument>;
+  /** Every version of every painted surface in this session (paint layers and masks), by content id. */
+  readonly pixels = new PixelStore();
+  /** Tile files already on disk (or on their way), so each tile is written once. */
+  private readonly savedTiles = new Set<string>();
+  /** Pixel writes in flight; the journal and checkpoints wait for them so they never refer to missing pixels. */
+  private readonly barriers = new Set<Promise<void>>();
+  private readonly failedPixels = new Map<string, PendingPixels>();
   private pending: JournalRecord[] = [];
   private chain: Promise<void> = Promise.resolve();
   private journalTimer: ReturnType<typeof setTimeout> | undefined;
@@ -90,6 +122,78 @@ export class ProjectSession {
     this.idleTimer = setTimeout(() => void this.checkpoint(), this.checkpointIdleMs);
   }
 
+  /**
+   * Make a new version of a painted surface from `base` with some tiles replaced. The pixels are available at once;
+   * the disk write is queued and everything that records the change waits for it.
+   */
+  createPixelVersion(
+    base: string | null,
+    channels: Channels,
+    changes: ReadonlyMap<string, Tile | null>,
+  ): string {
+    const contentId = crypto.randomUUID();
+    const tiles = this.pixels.commit(contentId, base, changes);
+    this.track(this.writePixels({ contentId, channels, tiles }));
+    return contentId;
+  }
+
+  private track(write: Promise<void>): void {
+    const tracked = write.finally(() => this.barriers.delete(tracked));
+    this.barriers.add(tracked);
+    tracked.catch((error: unknown) => {
+      this.setStatus('error');
+      this.options.onError?.(toAppError(error));
+    });
+  }
+
+  private async writePixels(pending: PendingPixels): Promise<void> {
+    const fresh = [...pending.tiles.values()].filter((tile) => !this.savedTiles.has(tile.id));
+    for (const tile of fresh) this.savedTiles.add(tile.id);
+    try {
+      await this.storage.putPixels(
+        this.id,
+        pending.contentId,
+        pending.channels,
+        [...pending.tiles].map(([key, tile]) => ({ key, id: tile.id })),
+        fresh.map((tile) => ({ id: tile.id, data: tile.data })),
+      );
+      this.failedPixels.delete(pending.contentId);
+    } catch (error) {
+      for (const tile of fresh) this.savedTiles.delete(tile.id);
+      this.failedPixels.set(pending.contentId, pending);
+      throw error;
+    }
+  }
+
+  /** Wait for pixel writes, retrying any that failed earlier. Throws when pixels still cannot be saved. */
+  private async settlePixels(): Promise<void> {
+    await Promise.allSettled([...this.barriers]);
+    for (const pending of [...this.failedPixels.values()]) await this.writePixels(pending);
+  }
+
+  /** Load the saved pixels for these content ids into memory (used when a project is opened). */
+  async loadPixels(contentIds: Iterable<string>): Promise<void> {
+    for (const contentId of new Set(contentIds)) {
+      if (this.pixels.has(contentId)) continue;
+      const saved = await this.storage.getPixels(this.id, contentId);
+      if (!saved) {
+        throw new AppError({
+          code: 'invalid-project',
+          message: 'Some painted pixels are missing from this project.',
+          hint: 'Restore the project from a backup or an exported .msproj file.',
+        });
+      }
+      const tiles = new Map<string, Tile>();
+      for (const entry of saved.tiles) {
+        const tile = createTile(entry.id, saved.channels, 0);
+        tile.data.set(entry.data);
+        tiles.set(entry.key, tile);
+        this.savedTiles.add(entry.id);
+      }
+      this.pixels.set(contentId, tiles);
+    }
+  }
+
   /** Write pending changes to the journal now. */
   flush(): Promise<void> {
     clearTimeout(this.journalTimer);
@@ -99,6 +203,7 @@ export class ProjectSession {
     if (batch.length === 0) return this.chain;
     this.chain = this.chain.then(async () => {
       try {
+        await this.settlePixels();
         await this.storage.appendJournal(this.id, batch);
         if (this.pending.length === 0) this.setStatus('saved');
         if (this.sinceCheckpoint >= this.checkpointEvery) await this.writeCheckpoint();
@@ -113,6 +218,7 @@ export class ProjectSession {
   }
 
   private async writeCheckpoint(): Promise<void> {
+    await this.settlePixels();
     const seq = this.history.lastSeq;
     const state = this.history.state;
     await this.storage.checkpoint(this.id, state, seq);

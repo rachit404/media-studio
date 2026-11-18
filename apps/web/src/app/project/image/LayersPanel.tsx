@@ -2,6 +2,7 @@ import {
   SHAPES,
   addAdjustmentLayer,
   addAdjustmentLayers,
+  addRasterLayer,
   addShapeLayer,
   addTextLayer,
   moveLayer,
@@ -104,7 +105,12 @@ export function LayersPanel({
                 >
                   {layer.name}
                   {layer.type !== 'image' && (
-                    <span className="ml-1 text-xs text-fg-muted">({layer.type})</span>
+                    <span className="ml-1 text-xs text-fg-muted">
+                      ({layer.type === 'raster' ? 'paint' : layer.type})
+                    </span>
+                  )}
+                  {layer.type !== 'adjustment' && layer.mask && (
+                    <span className="ml-1 text-xs text-fg-muted">(mask)</span>
                   )}
                 </button>
                 <Button
@@ -160,6 +166,16 @@ export function LayersPanel({
           }}
         >
           Text
+        </Button>
+        <Button
+          variant="secondary"
+          onPress={() => {
+            const id = crypto.randomUUID();
+            session.history.execute(addRasterLayer(id));
+            onSelect(id);
+          }}
+        >
+          Paint layer
         </Button>
         {SHAPES.map((shape) => (
           <Button
