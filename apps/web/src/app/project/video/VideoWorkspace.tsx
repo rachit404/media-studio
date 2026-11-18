@@ -271,6 +271,7 @@ export function VideoWorkspace({
           content={content}
           assets={assets}
           selectedId={selectedId}
+          time={state.time}
           onProblem={setProblem}
         />
       }
