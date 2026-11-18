@@ -21,13 +21,13 @@ export interface ImportStorage {
 }
 
 /** Clean up a file name for display: no path parts, no control characters, bounded length. */
-export function displayName(fileName: string): string {
+export function displayName(fileName: string, fallback = 'Image'): string {
   const base = fileName.split(/[\\/]/).pop() ?? '';
   const printable = [...base].filter((character) => {
     const code = character.charCodeAt(0);
     return code > 0x1f && code !== 0x7f;
   });
-  return (printable.join('').trim() || 'Image').slice(0, 255);
+  return (printable.join('').trim() || fallback).slice(0, 255);
 }
 
 /**

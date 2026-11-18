@@ -11,6 +11,8 @@ import {
   parseProjectFile,
   pixelContentIds,
   pixelManifestSchema,
+  assetFilePaths,
+  assetThumb,
   rawTileBytes,
   replayRecords,
   sortedItems,
@@ -116,6 +118,9 @@ function pixelEntries(
   return out;
 }
 
+/** Largest total size of media files in an exported archive (the archive is built in memory). */
+export const MAX_ARCHIVE_MEDIA_BYTES = 1024 * 1024 * 1024;
+
 function safeAssetPath(path: string): string {
   if (!isAssetPath(path))
     throw new AppError({ code: 'invalid-project', message: 'Invalid file path.' });
@@ -172,7 +177,7 @@ export class ProjectStore {
           type: file.project.type,
           modifiedAt: file.modifiedAt,
           assetCount: Object.keys(file.project.assets.byId).length,
-          thumbPath: first?.thumb ?? null,
+          thumbPath: first ? assetThumb(first) : null,
         });
       } catch (error) {
         broken.push({
@@ -249,6 +254,16 @@ export class ProjectStore {
 
   putFile(id: string, path: string, data: Uint8Array): Promise<void> {
     return this.lock(id, () => this.fs.write(`${this.dir(id)}/${safeAssetPath(path)}`, data));
+  }
+
+  /** Store a large file (video, audio) by copying it in chunks. */
+  putBlob(id: string, path: string, blob: Blob): Promise<void> {
+    return this.lock(id, () => this.fs.writeBlob(`${this.dir(id)}/${safeAssetPath(path)}`, blob));
+  }
+
+  /** A stored file as a Blob that reads from disk on demand. */
+  getBlob(id: string, path: string): Promise<Blob | null> {
+    return this.lock(id, () => this.fs.readBlob(`${this.dir(id)}/${safeAssetPath(path)}`));
   }
 
   getFile(id: string, path: string): Promise<Uint8Array | null> {
@@ -363,11 +378,23 @@ export class ProjectStore {
   exportArchive(id: string): Promise<Uint8Array> {
     return this.lock(id, async () => {
       const { file } = await this.load(id);
+      // The archive is built in memory, so refuse early (and clearly) instead of running out of memory half way.
+      const mediaBytes = Object.values(file.project.assets.byId).reduce(
+        (sum, asset) => sum + asset.size,
+        0,
+      );
+      if (mediaBytes > MAX_ARCHIVE_MEDIA_BYTES) {
+        throw new AppError({
+          code: 'out-of-memory',
+          message: 'This project is too large to export as a single file.',
+          hint: 'Its media is over 1 GB. Remove clips and files you no longer need, or keep working in the browser.',
+        });
+      }
       const entries: Record<string, Uint8Array> = {
         'project.json': encodeText(JSON.stringify(file)),
       };
       for (const asset of Object.values(file.project.assets.byId)) {
-        for (const path of [asset.file, asset.thumb]) {
+        for (const path of assetFilePaths(asset)) {
           const data = await this.fs.read(`${this.dir(id)}/${safeAssetPath(path)}`);
           if (!data) {
             throw new AppError({
@@ -402,7 +429,7 @@ export class ProjectStore {
     }
     const project = parseProject({ ...parsed.project, id: safeId(newId) });
     for (const asset of Object.values(project.assets.byId)) {
-      if (!files[asset.file] || !files[asset.thumb]) {
+      if (assetFilePaths(asset).some((path) => !files[path])) {
         throw new AppError({
           code: 'invalid-project',
           message: `The archive is missing files for "${asset.name}".`,
@@ -419,7 +446,7 @@ export class ProjectStore {
       }
       try {
         for (const asset of Object.values(project.assets.byId)) {
-          for (const path of [asset.file, asset.thumb]) {
+          for (const path of assetFilePaths(asset)) {
             await this.fs.write(`${this.dir(newId)}/${path}`, files[path] as Uint8Array);
           }
         }

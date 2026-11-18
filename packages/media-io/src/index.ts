@@ -10,3 +10,13 @@ export {
   validateImageBytes,
 } from './image';
 export type { ImageInfo, ImageType } from './image';
+export { computePeaks, createVideoThumbnail } from './media-analysis';
+export { MAX_MEDIA_BYTES, extensionForMime, probeMedia } from './media-probe';
+export type { MediaInfo } from './media-probe';
+export { AudioPlayer } from './audio-player';
+export type { AudioSlice } from './audio-player';
+export { VideoSource } from './video-source';
+export type { DecodedFrame } from './video-source';
+export { AudioFileReader } from './audio-file-reader';
+export { Mp4Writer, defaultVideoBitrate } from './mp4-writer';
+export type { Mp4WriterOptions } from './mp4-writer';

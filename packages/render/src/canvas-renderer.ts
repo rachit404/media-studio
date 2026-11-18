@@ -58,6 +58,12 @@ export class CanvasRenderer {
     this.requestRender();
   }
 
+  /** The next picture of a video clip (see Compositor.uploadFrame). */
+  uploadFrame(id: string, bitmap: ImageBitmap): void {
+    this.compositor.uploadFrame(id, bitmap);
+    this.requestRender();
+  }
+
   deleteTexture(id: string): void {
     this.compositor.deleteTexture(id);
   }

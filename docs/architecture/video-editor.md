@@ -44,7 +44,7 @@ flowchart TB
 
 ## 5. Playback specifics
 - **Decode ahead:** target 0.5-1 s lookahead per active source; adapt to measured decode speed; software-decoded or long-GOP sources must use proxies.
-- **Decoder concurrency:** each overlapping video clip at time t needs a decoder; hardware decoder instance limits are unknown (not spiked). Initial cap N = 4 concurrent decoders; additional clips fall back to proxies or lower-frequency decode. M5 includes a spike to measure the real limit on Iris Xe.
+- **Decoder concurrency:** each overlapping video clip at time t needs a decoder; hardware decoder instance limits are unknown (not spiked). The preview caps concurrent decoders at 4 (memory); additional clips show nothing. Spike S8 measured the real limit on Iris Xe: 16 concurrent 1080p30 decoders all ran (850 to 1,000 fps in total), so the cap is a memory choice, not a hardware limit.
 - **Late frames:** drop video, never stall audio. Dropped-frame counter feeds diagnostics (PERF-2: under 2% on the reference project).
 - **Scrubbing:** latest-wins request queue (superseded seeks cancelled); S7 measured scrub p95 96 ms at one request per 100 ms.
 - **Memory:** frame cache stores copies; hold `VideoFrame`s only transiently (hard limit 6 per decoder). Budgets include GPU/process memory because S7 saw ~1 GB GPU growth in 90 s with balanced counters; a 30-minute soak test gates M5.

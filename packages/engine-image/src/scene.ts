@@ -112,7 +112,7 @@ export function buildScene(
       continue;
     }
     const asset = assets[layer.assetId];
-    if (!asset) {
+    if (asset?.kind !== 'image') {
       missing.add(layer.assetId);
       continue;
     }

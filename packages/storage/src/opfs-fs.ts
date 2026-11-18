@@ -95,6 +95,47 @@ export class OpfsFileSystem implements FileSystemPort {
     });
   }
 
+  readBlob(path: string): Promise<Blob | null> {
+    return this.serialized(path, async () => {
+      const { parents, name } = split(path);
+      try {
+        const dir = await this.directory(parents, false);
+        // A File backed by the file on disk: it is read in slices when asked for, not up front.
+        return await (await dir.getFileHandle(name)).getFile();
+      } catch (error) {
+        if (isNotFound(error)) return null;
+        throw error;
+      }
+    });
+  }
+
+  writeBlob(path: string, blob: Blob): Promise<void> {
+    return this.serialized(path, async () => {
+      const { parents, name } = split(path);
+      const dir = await this.directory(parents, true);
+      const handle = await dir.getFileHandle(name, { create: true });
+      const access = await (handle as unknown as SyncCapableFileHandle).createSyncAccessHandle();
+      try {
+        access.truncate(0);
+        let at = 0;
+        const reader = blob.stream().getReader();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          access.write(value, { at });
+          at += value.length;
+        }
+        access.flush();
+      } catch (error) {
+        // Never leave a half-copied file behind.
+        access.close();
+        await dir.removeEntry(name).catch(() => undefined);
+        throw error;
+      }
+      access.close();
+    });
+  }
+
   append(path: string, data: Uint8Array): Promise<void> {
     return this.serialized(path, async () => {
       const { parents, name } = split(path);

@@ -1,15 +1,21 @@
 import { renameProject } from '@media-studio/core';
 import { Button, Dialog } from '@media-studio/ui';
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { displayCombo } from '@media-studio/core';
 import { shortcutRegistry } from '../commands';
 import { isMacPlatform } from '../platform';
-import { WorkspaceScreen } from '../screens/WorkspaceScreen';
 import { useGlobalShortcuts } from '../use-shortcuts';
-import { AssetLibrary } from './AssetLibrary';
-import { ImageWorkspace } from './image/ImageWorkspace';
+
 import type { ProjectSession } from './project-session';
 import { useProjectSession, useSessionVersion } from './use-project-session';
+
+// Each editor is loaded when a project of its kind is opened, so the app shell stays small.
+const ImageWorkspace = lazy(() =>
+  import('./image/ImageWorkspace').then((module) => ({ default: module.ImageWorkspace })),
+);
+const VideoWorkspace = lazy(() =>
+  import('./video/VideoWorkspace').then((module) => ({ default: module.VideoWorkspace })),
+);
 
 const SAVE_LABEL = {
   saved: 'All changes saved',
@@ -90,18 +96,20 @@ function OpenProject({ session }: { session: ProjectSession }) {
     </>
   );
 
-  if (project.type === 'image') {
-    return (
-      <ImageWorkspace session={session} project={project} heading={heading} toolbar={toolbar} />
-    );
-  }
   return (
-    <WorkspaceScreen
-      kind={project.type}
-      heading={heading}
-      toolbar={toolbar}
-      leftContent={<AssetLibrary session={session} project={project} />}
-    />
+    <Suspense
+      fallback={
+        <p role="status" className="p-6 text-fg-muted">
+          Loading the editor…
+        </p>
+      }
+    >
+      {project.type === 'image' ? (
+        <ImageWorkspace session={session} project={project} heading={heading} toolbar={toolbar} />
+      ) : (
+        <VideoWorkspace session={session} project={project} heading={heading} toolbar={toolbar} />
+      )}
+    </Suspense>
   );
 }
 

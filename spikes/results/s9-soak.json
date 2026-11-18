@@ -1,0 +1,2594 @@
+{
+  "env": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+    "cores": 16,
+    "deviceMemoryGB": 16,
+    "webgl2": true,
+    "glRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "webgpu": true,
+    "crossOriginIsolated": false,
+    "secureContext": true
+  },
+  "minutes": 30,
+  "samples": [
+    {
+      "tSec": 0,
+      "phase": "start",
+      "heapMB": 11,
+      "procMB": {
+        "total": 1160,
+        "crashpad-handler": 10,
+        "browser": 256,
+        "utility": 79,
+        "gpu": 431,
+        "renderer": 385
+      },
+      "clock": "00:00:00:00"
+    },
+    {
+      "tSec": 6,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1249,
+        "crashpad-handler": 10,
+        "browser": 270,
+        "utility": 79,
+        "gpu": 454,
+        "renderer": 436
+      },
+      "clock": "00:01:50:06"
+    },
+    {
+      "tSec": 13,
+      "phase": "play",
+      "heapMB": 38,
+      "procMB": {
+        "total": 1189,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 398,
+        "renderer": 435
+      },
+      "clock": "00:01:56:15"
+    },
+    {
+      "tSec": 24,
+      "phase": "play",
+      "heapMB": 32,
+      "procMB": {
+        "total": 1032,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 329,
+        "renderer": 350
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 60,
+      "phase": "scrub",
+      "heapMB": 30,
+      "procMB": {
+        "total": 1078,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 452,
+        "renderer": 275
+      },
+      "clock": "00:01:02:25"
+    },
+    {
+      "tSec": 61,
+      "phase": "scrub",
+      "heapMB": 32,
+      "procMB": {
+        "total": 1076,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 454,
+        "renderer": 270
+      },
+      "clock": "00:00:14:01"
+    },
+    {
+      "tSec": 62,
+      "phase": "scrub",
+      "heapMB": 32,
+      "procMB": {
+        "total": 1099,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 477,
+        "renderer": 272
+      },
+      "clock": "00:00:47:01"
+    },
+    {
+      "tSec": 63,
+      "phase": "scrub",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1108,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 478,
+        "renderer": 279
+      },
+      "clock": "00:01:37:03"
+    },
+    {
+      "tSec": 70,
+      "phase": "scrub",
+      "heapMB": 61,
+      "procMB": {
+        "total": 1180,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 511,
+        "renderer": 317
+      },
+      "clock": "00:00:53:16"
+    },
+    {
+      "tSec": 83,
+      "phase": "play",
+      "heapMB": 48,
+      "procMB": {
+        "total": 1118,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 447,
+        "renderer": 316
+      },
+      "clock": "00:00:37:08"
+    },
+    {
+      "tSec": 95,
+      "phase": "play",
+      "heapMB": 38,
+      "procMB": {
+        "total": 1101,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 447,
+        "renderer": 298
+      },
+      "clock": "00:00:48:14"
+    },
+    {
+      "tSec": 101,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 1112,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 464,
+        "renderer": 293
+      },
+      "clock": "00:00:54:28"
+    },
+    {
+      "tSec": 116,
+      "phase": "play",
+      "heapMB": 32,
+      "procMB": {
+        "total": 1201,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 547,
+        "renderer": 298
+      },
+      "clock": "00:00:18:27"
+    },
+    {
+      "tSec": 122,
+      "phase": "play",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1130,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 478,
+        "renderer": 297
+      },
+      "clock": "00:00:24:29"
+    },
+    {
+      "tSec": 133,
+      "phase": "play",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1117,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 470,
+        "renderer": 293
+      },
+      "clock": "00:00:36:15"
+    },
+    {
+      "tSec": 140,
+      "phase": "scrub",
+      "heapMB": 38,
+      "procMB": {
+        "total": 1156,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 517,
+        "renderer": 286
+      },
+      "clock": "00:01:46:16"
+    },
+    {
+      "tSec": 155,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1246,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 590,
+        "renderer": 305
+      },
+      "clock": "00:00:50:05"
+    },
+    {
+      "tSec": 161,
+      "phase": "play",
+      "heapMB": 54,
+      "procMB": {
+        "total": 1183,
+        "crashpad-handler": 10,
+        "browser": 261,
+        "utility": 79,
+        "gpu": 533,
+        "renderer": 301
+      },
+      "clock": "00:00:56:23"
+    },
+    {
+      "tSec": 173,
+      "phase": "play",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1177,
+        "crashpad-handler": 10,
+        "browser": 261,
+        "utility": 79,
+        "gpu": 528,
+        "renderer": 300
+      },
+      "clock": "00:01:08:09"
+    },
+    {
+      "tSec": 180,
+      "phase": "scrub",
+      "heapMB": 45,
+      "procMB": {
+        "total": 1278,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 634,
+        "renderer": 293
+      },
+      "clock": "00:00:25:29"
+    },
+    {
+      "tSec": 194,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 1261,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 604,
+        "renderer": 306
+      },
+      "clock": "00:00:55:26"
+    },
+    {
+      "tSec": 200,
+      "phase": "play",
+      "heapMB": 53,
+      "procMB": {
+        "total": 1258,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 580,
+        "renderer": 327
+      },
+      "clock": "00:01:01:26"
+    },
+    {
+      "tSec": 211,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1213,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 569,
+        "renderer": 293
+      },
+      "clock": "00:01:13:20"
+    },
+    {
+      "tSec": 220,
+      "phase": "scrub",
+      "heapMB": 51,
+      "procMB": {
+        "total": 1308,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 663,
+        "renderer": 295
+      },
+      "clock": "00:01:15:05"
+    },
+    {
+      "tSec": 233,
+      "phase": "play",
+      "heapMB": 31,
+      "procMB": {
+        "total": 1316,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 663,
+        "renderer": 302
+      },
+      "clock": "00:00:10:24"
+    },
+    {
+      "tSec": 244,
+      "phase": "play",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1258,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 596,
+        "renderer": 311
+      },
+      "clock": "00:00:22:13"
+    },
+    {
+      "tSec": 251,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 1242,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 596,
+        "renderer": 295
+      },
+      "clock": "00:00:28:28"
+    },
+    {
+      "tSec": 260,
+      "phase": "scrub",
+      "heapMB": 54,
+      "procMB": {
+        "total": 1334,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 687,
+        "renderer": 295
+      },
+      "clock": "00:00:42:17"
+    },
+    {
+      "tSec": 272,
+      "phase": "play",
+      "heapMB": 43,
+      "procMB": {
+        "total": 1320,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 645,
+        "renderer": 322
+      },
+      "clock": "00:00:41:27"
+    },
+    {
+      "tSec": 284,
+      "phase": "play",
+      "heapMB": 33,
+      "procMB": {
+        "total": 1279,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 611,
+        "renderer": 314
+      },
+      "clock": "00:00:53:13"
+    },
+    {
+      "tSec": 290,
+      "phase": "play",
+      "heapMB": 38,
+      "procMB": {
+        "total": 1275,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 611,
+        "renderer": 310
+      },
+      "clock": "00:00:59:27"
+    },
+    {
+      "tSec": 300,
+      "phase": "scrub",
+      "heapMB": 51,
+      "procMB": {
+        "total": 1383,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 705,
+        "renderer": 324
+      },
+      "clock": "00:01:27:22"
+    },
+    {
+      "tSec": 312,
+      "phase": "play",
+      "heapMB": 59,
+      "procMB": {
+        "total": 1403,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 709,
+        "renderer": 337
+      },
+      "clock": "00:00:38:25"
+    },
+    {
+      "tSec": 323,
+      "phase": "play",
+      "heapMB": 38,
+      "procMB": {
+        "total": 1321,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 665,
+        "renderer": 299
+      },
+      "clock": "00:00:50:15"
+    },
+    {
+      "tSec": 335,
+      "phase": "play",
+      "heapMB": 43,
+      "procMB": {
+        "total": 1336,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 665,
+        "renderer": 314
+      },
+      "clock": "00:01:01:29"
+    },
+    {
+      "tSec": 340,
+      "phase": "scrub",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1423,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 765,
+        "renderer": 303
+      },
+      "clock": "00:00:28:16"
+    },
+    {
+      "tSec": 351,
+      "phase": "play",
+      "heapMB": 43,
+      "procMB": {
+        "total": 1392,
+        "crashpad-handler": 10,
+        "browser": 270,
+        "utility": 79,
+        "gpu": 709,
+        "renderer": 324
+      },
+      "clock": "00:00:57:03"
+    },
+    {
+      "tSec": 363,
+      "phase": "play",
+      "heapMB": 33,
+      "procMB": {
+        "total": 1348,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 706,
+        "renderer": 287
+      },
+      "clock": "00:01:08:25"
+    },
+    {
+      "tSec": 374,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1350,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 710,
+        "renderer": 287
+      },
+      "clock": "00:01:20:13"
+    },
+    {
+      "tSec": 380,
+      "phase": "scrub",
+      "heapMB": 56,
+      "procMB": {
+        "total": 1515,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 844,
+        "renderer": 317
+      },
+      "clock": "00:01:49:08"
+    },
+    {
+      "tSec": 391,
+      "phase": "play",
+      "heapMB": 33,
+      "procMB": {
+        "total": 1486,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 835,
+        "renderer": 296
+      },
+      "clock": "00:01:19:28"
+    },
+    {
+      "tSec": 402,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 1426,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 780,
+        "renderer": 291
+      },
+      "clock": "00:01:31:07"
+    },
+    {
+      "tSec": 414,
+      "phase": "play",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1429,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 780,
+        "renderer": 294
+      },
+      "clock": "00:01:42:13"
+    },
+    {
+      "tSec": 420,
+      "phase": "scrub",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1594,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 948,
+        "renderer": 294
+      },
+      "clock": "00:00:58:07"
+    },
+    {
+      "tSec": 435,
+      "phase": "play",
+      "heapMB": 48,
+      "procMB": {
+        "total": 1508,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 829,
+        "renderer": 324
+      },
+      "clock": "00:00:22:23"
+    },
+    {
+      "tSec": 441,
+      "phase": "play",
+      "heapMB": 40,
+      "procMB": {
+        "total": 1487,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 829,
+        "renderer": 303
+      },
+      "clock": "00:00:29:08"
+    },
+    {
+      "tSec": 453,
+      "phase": "play",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1482,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 829,
+        "renderer": 299
+      },
+      "clock": "00:00:40:21"
+    },
+    {
+      "tSec": 460,
+      "phase": "scrub",
+      "heapMB": 54,
+      "procMB": {
+        "total": 1677,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 994,
+        "renderer": 327
+      },
+      "clock": "00:00:09:10"
+    },
+    {
+      "tSec": 475,
+      "phase": "play",
+      "heapMB": 54,
+      "procMB": {
+        "total": 1587,
+        "crashpad-handler": 10,
+        "browser": 270,
+        "utility": 79,
+        "gpu": 887,
+        "renderer": 341
+      },
+      "clock": "00:01:21:26"
+    },
+    {
+      "tSec": 481,
+      "phase": "play",
+      "heapMB": 33,
+      "procMB": {
+        "total": 1555,
+        "crashpad-handler": 10,
+        "browser": 270,
+        "utility": 79,
+        "gpu": 882,
+        "renderer": 314
+      },
+      "clock": "00:01:28:09"
+    },
+    {
+      "tSec": 492,
+      "phase": "play",
+      "heapMB": 42,
+      "procMB": {
+        "total": 1551,
+        "crashpad-handler": 10,
+        "browser": 270,
+        "utility": 79,
+        "gpu": 882,
+        "renderer": 310
+      },
+      "clock": "00:01:39:28"
+    },
+    {
+      "tSec": 500,
+      "phase": "scrub",
+      "heapMB": 64,
+      "procMB": {
+        "total": 1642,
+        "crashpad-handler": 10,
+        "browser": 269,
+        "utility": 79,
+        "gpu": 979,
+        "renderer": 305
+      },
+      "clock": "00:01:47:14"
+    },
+    {
+      "tSec": 514,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 1438,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 810,
+        "renderer": 276
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 520,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 1438,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 810,
+        "renderer": 276
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 531,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 1438,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 810,
+        "renderer": 276
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 562,
+      "phase": "scrub",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1583,
+        "crashpad-handler": 10,
+        "browser": 261,
+        "utility": 79,
+        "gpu": 953,
+        "renderer": 281
+      },
+      "clock": "00:01:25:00"
+    },
+    {
+      "tSec": 563,
+      "phase": "scrub",
+      "heapMB": 31,
+      "procMB": {
+        "total": 1597,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 960,
+        "renderer": 284
+      },
+      "clock": "00:01:44:11"
+    },
+    {
+      "tSec": 565,
+      "phase": "scrub",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1604,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 961,
+        "renderer": 287
+      },
+      "clock": "00:01:11:05"
+    },
+    {
+      "tSec": 570,
+      "phase": "scrub",
+      "heapMB": 51,
+      "procMB": {
+        "total": 1660,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 993,
+        "renderer": 311
+      },
+      "clock": "00:00:58:06"
+    },
+    {
+      "tSec": 580,
+      "phase": "play",
+      "heapMB": 62,
+      "procMB": {
+        "total": 1626,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 970,
+        "renderer": 299
+      },
+      "clock": "00:01:28:17"
+    },
+    {
+      "tSec": 592,
+      "phase": "play",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1569,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 920,
+        "renderer": 292
+      },
+      "clock": "00:01:40:02"
+    },
+    {
+      "tSec": 603,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1560,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 915,
+        "renderer": 294
+      },
+      "clock": "00:01:51:16"
+    },
+    {
+      "tSec": 610,
+      "phase": "scrub",
+      "heapMB": 54,
+      "procMB": {
+        "total": 1703,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1034,
+        "renderer": 315
+      },
+      "clock": "00:01:40:11"
+    },
+    {
+      "tSec": 624,
+      "phase": "play",
+      "heapMB": 47,
+      "procMB": {
+        "total": 1614,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 947,
+        "renderer": 309
+      },
+      "clock": "00:00:51:20"
+    },
+    {
+      "tSec": 631,
+      "phase": "play",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1612,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 947,
+        "renderer": 307
+      },
+      "clock": "00:00:58:12"
+    },
+    {
+      "tSec": 642,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1601,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 947,
+        "renderer": 297
+      },
+      "clock": "00:01:10:03"
+    },
+    {
+      "tSec": 650,
+      "phase": "scrub",
+      "heapMB": 52,
+      "procMB": {
+        "total": 1775,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1097,
+        "renderer": 322
+      },
+      "clock": "00:00:55:09"
+    },
+    {
+      "tSec": 664,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 1546,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 911,
+        "renderer": 282
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 671,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 1510,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 874,
+        "renderer": 282
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 682,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 1508,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 874,
+        "renderer": 280
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 713,
+      "phase": "scrub",
+      "heapMB": 33,
+      "procMB": {
+        "total": 1640,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1001,
+        "renderer": 285
+      },
+      "clock": "00:00:16:14"
+    },
+    {
+      "tSec": 714,
+      "phase": "scrub",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1660,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1018,
+        "renderer": 285
+      },
+      "clock": "00:00:28:16"
+    },
+    {
+      "tSec": 715,
+      "phase": "scrub",
+      "heapMB": 32,
+      "procMB": {
+        "total": 1662,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1019,
+        "renderer": 287
+      },
+      "clock": "00:00:28:19"
+    },
+    {
+      "tSec": 720,
+      "phase": "scrub",
+      "heapMB": 31,
+      "procMB": {
+        "total": 1780,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1132,
+        "renderer": 293
+      },
+      "clock": "00:01:02:00"
+    },
+    {
+      "tSec": 735,
+      "phase": "play",
+      "heapMB": 45,
+      "procMB": {
+        "total": 1754,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1071,
+        "renderer": 327
+      },
+      "clock": "00:00:13:10"
+    },
+    {
+      "tSec": 741,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1723,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1073,
+        "renderer": 293
+      },
+      "clock": "00:00:19:19"
+    },
+    {
+      "tSec": 752,
+      "phase": "play",
+      "heapMB": 40,
+      "procMB": {
+        "total": 1727,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1072,
+        "renderer": 298
+      },
+      "clock": "00:00:31:02"
+    },
+    {
+      "tSec": 760,
+      "phase": "scrub",
+      "heapMB": 72,
+      "procMB": {
+        "total": 1898,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1201,
+        "renderer": 342
+      },
+      "clock": "00:00:04:29"
+    },
+    {
+      "tSec": 773,
+      "phase": "play",
+      "heapMB": 44,
+      "procMB": {
+        "total": 1783,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 1107,
+        "renderer": 321
+      },
+      "clock": "00:00:51:22"
+    },
+    {
+      "tSec": 785,
+      "phase": "play",
+      "heapMB": 38,
+      "procMB": {
+        "total": 1731,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1091,
+        "renderer": 287
+      },
+      "clock": "00:01:03:01"
+    },
+    {
+      "tSec": 791,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1734,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1090,
+        "renderer": 291
+      },
+      "clock": "00:01:09:12"
+    },
+    {
+      "tSec": 806,
+      "phase": "play",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1948,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1300,
+        "renderer": 296
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 812,
+      "phase": "play",
+      "heapMB": 30,
+      "procMB": {
+        "total": 1667,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1036,
+        "renderer": 279
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 823,
+      "phase": "play",
+      "heapMB": 30,
+      "procMB": {
+        "total": 1666,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1036,
+        "renderer": 278
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 859,
+      "phase": "scrub",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1820,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1187,
+        "renderer": 281
+      },
+      "clock": "00:01:04:06"
+    },
+    {
+      "tSec": 860,
+      "phase": "scrub",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1898,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1257,
+        "renderer": 286
+      },
+      "clock": "00:01:30:29"
+    },
+    {
+      "tSec": 861,
+      "phase": "scrub",
+      "heapMB": 38,
+      "procMB": {
+        "total": 1906,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1264,
+        "renderer": 286
+      },
+      "clock": "00:01:39:21"
+    },
+    {
+      "tSec": 862,
+      "phase": "scrub",
+      "heapMB": 38,
+      "procMB": {
+        "total": 1915,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1264,
+        "renderer": 295
+      },
+      "clock": "00:00:45:27"
+    },
+    {
+      "tSec": 876,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 1978,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1316,
+        "renderer": 305
+      },
+      "clock": "00:01:44:09"
+    },
+    {
+      "tSec": 882,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1855,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1204,
+        "renderer": 294
+      },
+      "clock": "00:01:50:15"
+    },
+    {
+      "tSec": 893,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 1842,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1198,
+        "renderer": 290
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 930,
+      "phase": "scrub",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1899,
+        "crashpad-handler": 10,
+        "browser": 261,
+        "utility": 79,
+        "gpu": 1265,
+        "renderer": 284
+      },
+      "clock": "00:01:17:08"
+    },
+    {
+      "tSec": 931,
+      "phase": "scrub",
+      "heapMB": 30,
+      "procMB": {
+        "total": 1935,
+        "crashpad-handler": 10,
+        "browser": 261,
+        "utility": 79,
+        "gpu": 1299,
+        "renderer": 285
+      },
+      "clock": "00:01:57:18"
+    },
+    {
+      "tSec": 932,
+      "phase": "scrub",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1937,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1299,
+        "renderer": 285
+      },
+      "clock": "00:00:23:05"
+    },
+    {
+      "tSec": 933,
+      "phase": "scrub",
+      "heapMB": 32,
+      "procMB": {
+        "total": 1938,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1300,
+        "renderer": 286
+      },
+      "clock": "00:00:25:09"
+    },
+    {
+      "tSec": 947,
+      "phase": "play",
+      "heapMB": 50,
+      "procMB": {
+        "total": 1978,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 1305,
+        "renderer": 318
+      },
+      "clock": "00:01:12:26"
+    },
+    {
+      "tSec": 953,
+      "phase": "play",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1818,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 1173,
+        "renderer": 289
+      },
+      "clock": "00:01:19:08"
+    },
+    {
+      "tSec": 964,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1816,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 1173,
+        "renderer": 287
+      },
+      "clock": "00:01:30:23"
+    },
+    {
+      "tSec": 971,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 1819,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 1173,
+        "renderer": 290
+      },
+      "clock": "00:01:37:00"
+    },
+    {
+      "tSec": 985,
+      "phase": "play",
+      "heapMB": 64,
+      "procMB": {
+        "total": 1997,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1344,
+        "renderer": 296
+      },
+      "clock": "00:01:50:08"
+    },
+    {
+      "tSec": 992,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1951,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1304,
+        "renderer": 293
+      },
+      "clock": "00:01:56:15"
+    },
+    {
+      "tSec": 1003,
+      "phase": "play",
+      "heapMB": 31,
+      "procMB": {
+        "total": 1785,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1152,
+        "renderer": 281
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1039,
+      "phase": "scrub",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1994,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1355,
+        "renderer": 287
+      },
+      "clock": "00:01:15:26"
+    },
+    {
+      "tSec": 1040,
+      "phase": "scrub",
+      "heapMB": 34,
+      "procMB": {
+        "total": 1991,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1356,
+        "renderer": 282
+      },
+      "clock": "00:00:26:17"
+    },
+    {
+      "tSec": 1041,
+      "phase": "scrub",
+      "heapMB": 35,
+      "procMB": {
+        "total": 2035,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1397,
+        "renderer": 284
+      },
+      "clock": "00:00:30:29"
+    },
+    {
+      "tSec": 1043,
+      "phase": "scrub",
+      "heapMB": 40,
+      "procMB": {
+        "total": 2045,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1397,
+        "renderer": 294
+      },
+      "clock": "00:01:33:12"
+    },
+    {
+      "tSec": 1057,
+      "phase": "play",
+      "heapMB": 44,
+      "procMB": {
+        "total": 2080,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1412,
+        "renderer": 310
+      },
+      "clock": "00:00:34:22"
+    },
+    {
+      "tSec": 1063,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1962,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1318,
+        "renderer": 291
+      },
+      "clock": "00:00:40:28"
+    },
+    {
+      "tSec": 1074,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1950,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1310,
+        "renderer": 287
+      },
+      "clock": "00:00:52:08"
+    },
+    {
+      "tSec": 1080,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1951,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1309,
+        "renderer": 288
+      },
+      "clock": "00:00:58:18"
+    },
+    {
+      "tSec": 1095,
+      "phase": "play",
+      "heapMB": 56,
+      "procMB": {
+        "total": 2065,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1384,
+        "renderer": 324
+      },
+      "clock": "00:00:14:20"
+    },
+    {
+      "tSec": 1101,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1967,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1318,
+        "renderer": 292
+      },
+      "clock": "00:00:20:28"
+    },
+    {
+      "tSec": 1113,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 1926,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1289,
+        "renderer": 281
+      },
+      "clock": "00:00:32:10"
+    },
+    {
+      "tSec": 1120,
+      "phase": "scrub",
+      "heapMB": 38,
+      "procMB": {
+        "total": 2055,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1420,
+        "renderer": 280
+      },
+      "clock": "00:00:45:03"
+    },
+    {
+      "tSec": 1133,
+      "phase": "play",
+      "heapMB": 66,
+      "procMB": {
+        "total": 2083,
+        "crashpad-handler": 10,
+        "browser": 269,
+        "utility": 79,
+        "gpu": 1398,
+        "renderer": 328
+      },
+      "clock": "00:01:20:18"
+    },
+    {
+      "tSec": 1145,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 1977,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1337,
+        "renderer": 285
+      },
+      "clock": "00:01:32:01"
+    },
+    {
+      "tSec": 1151,
+      "phase": "play",
+      "heapMB": 39,
+      "procMB": {
+        "total": 1972,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1337,
+        "renderer": 282
+      },
+      "clock": "00:01:38:05"
+    },
+    {
+      "tSec": 1160,
+      "phase": "scrub",
+      "heapMB": 41,
+      "procMB": {
+        "total": 2144,
+        "crashpad-handler": 10,
+        "browser": 268,
+        "utility": 79,
+        "gpu": 1494,
+        "renderer": 293
+      },
+      "clock": "00:00:17:16"
+    },
+    {
+      "tSec": 1172,
+      "phase": "play",
+      "heapMB": 47,
+      "procMB": {
+        "total": 2210,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1544,
+        "renderer": 311
+      },
+      "clock": "00:00:27:05"
+    },
+    {
+      "tSec": 1183,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 2088,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1448,
+        "renderer": 285
+      },
+      "clock": "00:00:38:17"
+    },
+    {
+      "tSec": 1195,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 2083,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1448,
+        "renderer": 282
+      },
+      "clock": "00:00:49:25"
+    },
+    {
+      "tSec": 1200,
+      "phase": "scrub",
+      "heapMB": 52,
+      "procMB": {
+        "total": 2182,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 1524,
+        "renderer": 304
+      },
+      "clock": "00:00:46:20"
+    },
+    {
+      "tSec": 1210,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 2201,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1545,
+        "renderer": 301
+      },
+      "clock": "00:01:45:27"
+    },
+    {
+      "tSec": 1222,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 2045,
+        "crashpad-handler": 10,
+        "browser": 259,
+        "utility": 79,
+        "gpu": 1416,
+        "renderer": 282
+      },
+      "clock": "00:01:57:08"
+    },
+    {
+      "tSec": 1233,
+      "phase": "play",
+      "heapMB": 31,
+      "procMB": {
+        "total": 1912,
+        "crashpad-handler": 10,
+        "browser": 258,
+        "utility": 79,
+        "gpu": 1295,
+        "renderer": 271
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1264,
+      "phase": "scrub",
+      "heapMB": 36,
+      "procMB": {
+        "total": 2131,
+        "crashpad-handler": 10,
+        "browser": 260,
+        "utility": 79,
+        "gpu": 1503,
+        "renderer": 280
+      },
+      "clock": "00:01:33:03"
+    },
+    {
+      "tSec": 1265,
+      "phase": "scrub",
+      "heapMB": 33,
+      "procMB": {
+        "total": 2130,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1504,
+        "renderer": 275
+      },
+      "clock": "00:01:06:07"
+    },
+    {
+      "tSec": 1266,
+      "phase": "scrub",
+      "heapMB": 38,
+      "procMB": {
+        "total": 2144,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1506,
+        "renderer": 286
+      },
+      "clock": "00:01:11:27"
+    },
+    {
+      "tSec": 1270,
+      "phase": "scrub",
+      "heapMB": 52,
+      "procMB": {
+        "total": 2175,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1541,
+        "renderer": 281
+      },
+      "clock": "00:01:22:03"
+    },
+    {
+      "tSec": 1281,
+      "phase": "play",
+      "heapMB": 45,
+      "procMB": {
+        "total": 2212,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1549,
+        "renderer": 307
+      },
+      "clock": "00:01:42:22"
+    },
+    {
+      "tSec": 1293,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 2061,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1418,
+        "renderer": 287
+      },
+      "clock": "00:01:54:01"
+    },
+    {
+      "tSec": 1304,
+      "phase": "play",
+      "heapMB": 31,
+      "procMB": {
+        "total": 2043,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1416,
+        "renderer": 277
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1335,
+      "phase": "scrub",
+      "heapMB": 36,
+      "procMB": {
+        "total": 2158,
+        "crashpad-handler": 10,
+        "browser": 260,
+        "utility": 79,
+        "gpu": 1533,
+        "renderer": 277
+      },
+      "clock": "00:01:33:10"
+    },
+    {
+      "tSec": 1336,
+      "phase": "scrub",
+      "heapMB": 36,
+      "procMB": {
+        "total": 2174,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1541,
+        "renderer": 282
+      },
+      "clock": "00:00:18:25"
+    },
+    {
+      "tSec": 1337,
+      "phase": "scrub",
+      "heapMB": 32,
+      "procMB": {
+        "total": 2173,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1541,
+        "renderer": 280
+      },
+      "clock": "00:01:18:00"
+    },
+    {
+      "tSec": 1340,
+      "phase": "scrub",
+      "heapMB": 39,
+      "procMB": {
+        "total": 2213,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1568,
+        "renderer": 293
+      },
+      "clock": "00:01:33:05"
+    },
+    {
+      "tSec": 1352,
+      "phase": "play",
+      "heapMB": 38,
+      "procMB": {
+        "total": 2203,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1542,
+        "renderer": 305
+      },
+      "clock": "00:01:29:06"
+    },
+    {
+      "tSec": 1363,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 2063,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1422,
+        "renderer": 288
+      },
+      "clock": "00:01:40:14"
+    },
+    {
+      "tSec": 1374,
+      "phase": "play",
+      "heapMB": 33,
+      "procMB": {
+        "total": 2059,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1422,
+        "renderer": 284
+      },
+      "clock": "00:01:51:19"
+    },
+    {
+      "tSec": 1380,
+      "phase": "scrub",
+      "heapMB": 41,
+      "procMB": {
+        "total": 2247,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1596,
+        "renderer": 298
+      },
+      "clock": "00:00:59:22"
+    },
+    {
+      "tSec": 1390,
+      "phase": "play",
+      "heapMB": 64,
+      "procMB": {
+        "total": 2271,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1613,
+        "renderer": 303
+      },
+      "clock": "00:01:09:21"
+    },
+    {
+      "tSec": 1401,
+      "phase": "play",
+      "heapMB": 36,
+      "procMB": {
+        "total": 2157,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1508,
+        "renderer": 294
+      },
+      "clock": "00:01:20:29"
+    },
+    {
+      "tSec": 1413,
+      "phase": "play",
+      "heapMB": 34,
+      "procMB": {
+        "total": 2155,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1508,
+        "renderer": 291
+      },
+      "clock": "00:01:32:06"
+    },
+    {
+      "tSec": 1420,
+      "phase": "scrub",
+      "heapMB": 40,
+      "procMB": {
+        "total": 2286,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 1621,
+        "renderer": 310
+      },
+      "clock": "00:00:07:23"
+    },
+    {
+      "tSec": 1433,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 2115,
+        "crashpad-handler": 10,
+        "browser": 261,
+        "utility": 79,
+        "gpu": 1476,
+        "renderer": 290
+      },
+      "clock": "00:01:55:01"
+    },
+    {
+      "tSec": 1445,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 2046,
+        "crashpad-handler": 10,
+        "browser": 260,
+        "utility": 79,
+        "gpu": 1419,
+        "renderer": 279
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1450,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 1982,
+        "crashpad-handler": 10,
+        "browser": 260,
+        "utility": 79,
+        "gpu": 1355,
+        "renderer": 279
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1482,
+      "phase": "scrub",
+      "heapMB": 39,
+      "procMB": {
+        "total": 2190,
+        "crashpad-handler": 10,
+        "browser": 258,
+        "utility": 79,
+        "gpu": 1565,
+        "renderer": 279
+      },
+      "clock": "00:01:03:03"
+    },
+    {
+      "tSec": 1483,
+      "phase": "scrub",
+      "heapMB": 38,
+      "procMB": {
+        "total": 2233,
+        "crashpad-handler": 10,
+        "browser": 260,
+        "utility": 79,
+        "gpu": 1598,
+        "renderer": 287
+      },
+      "clock": "00:00:54:26"
+    },
+    {
+      "tSec": 1484,
+      "phase": "scrub",
+      "heapMB": 43,
+      "procMB": {
+        "total": 2226,
+        "crashpad-handler": 10,
+        "browser": 260,
+        "utility": 79,
+        "gpu": 1598,
+        "renderer": 280
+      },
+      "clock": "00:01:56:23"
+    },
+    {
+      "tSec": 1490,
+      "phase": "scrub",
+      "heapMB": 57,
+      "procMB": {
+        "total": 2269,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1603,
+        "renderer": 315
+      },
+      "clock": "00:00:47:28"
+    },
+    {
+      "tSec": 1503,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 2004,
+        "crashpad-handler": 10,
+        "browser": 258,
+        "utility": 79,
+        "gpu": 1386,
+        "renderer": 272
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1514,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 1972,
+        "crashpad-handler": 10,
+        "browser": 258,
+        "utility": 79,
+        "gpu": 1354,
+        "renderer": 272
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1520,
+      "phase": "play",
+      "heapMB": 29,
+      "procMB": {
+        "total": 1972,
+        "crashpad-handler": 10,
+        "browser": 258,
+        "utility": 79,
+        "gpu": 1354,
+        "renderer": 272
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1551,
+      "phase": "scrub",
+      "heapMB": 33,
+      "procMB": {
+        "total": 2137,
+        "crashpad-handler": 10,
+        "browser": 260,
+        "utility": 79,
+        "gpu": 1513,
+        "renderer": 275
+      },
+      "clock": "00:00:46:04"
+    },
+    {
+      "tSec": 1552,
+      "phase": "scrub",
+      "heapMB": 34,
+      "procMB": {
+        "total": 2191,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1563,
+        "renderer": 277
+      },
+      "clock": "00:00:26:15"
+    },
+    {
+      "tSec": 1553,
+      "phase": "scrub",
+      "heapMB": 39,
+      "procMB": {
+        "total": 2236,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1597,
+        "renderer": 289
+      },
+      "clock": "00:00:11:12"
+    },
+    {
+      "tSec": 1560,
+      "phase": "scrub",
+      "heapMB": 65,
+      "procMB": {
+        "total": 2325,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1650,
+        "renderer": 325
+      },
+      "clock": "00:01:45:23"
+    },
+    {
+      "tSec": 1573,
+      "phase": "play",
+      "heapMB": 33,
+      "procMB": {
+        "total": 2176,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1539,
+        "renderer": 286
+      },
+      "clock": "00:01:16:14"
+    },
+    {
+      "tSec": 1584,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 2161,
+        "crashpad-handler": 10,
+        "browser": 261,
+        "utility": 79,
+        "gpu": 1530,
+        "renderer": 281
+      },
+      "clock": "00:01:27:21"
+    },
+    {
+      "tSec": 1590,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 2155,
+        "crashpad-handler": 10,
+        "browser": 259,
+        "utility": 79,
+        "gpu": 1530,
+        "renderer": 277
+      },
+      "clock": "00:01:33:26"
+    },
+    {
+      "tSec": 1605,
+      "phase": "play",
+      "heapMB": 55,
+      "procMB": {
+        "total": 2359,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1686,
+        "renderer": 320
+      },
+      "clock": "00:00:42:29"
+    },
+    {
+      "tSec": 1611,
+      "phase": "play",
+      "heapMB": 38,
+      "procMB": {
+        "total": 2224,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1579,
+        "renderer": 292
+      },
+      "clock": "00:00:49:08"
+    },
+    {
+      "tSec": 1623,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 2198,
+        "crashpad-handler": 10,
+        "browser": 261,
+        "utility": 79,
+        "gpu": 1563,
+        "renderer": 285
+      },
+      "clock": "00:01:00:22"
+    },
+    {
+      "tSec": 1630,
+      "phase": "scrub",
+      "heapMB": 45,
+      "procMB": {
+        "total": 2317,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1674,
+        "renderer": 289
+      },
+      "clock": "00:01:53:02"
+    },
+    {
+      "tSec": 1644,
+      "phase": "play",
+      "heapMB": 32,
+      "procMB": {
+        "total": 2297,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1644,
+        "renderer": 298
+      },
+      "clock": "00:01:50:13"
+    },
+    {
+      "tSec": 1655,
+      "phase": "play",
+      "heapMB": 32,
+      "procMB": {
+        "total": 2180,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1543,
+        "renderer": 285
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1661,
+      "phase": "play",
+      "heapMB": 32,
+      "procMB": {
+        "total": 2107,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1481,
+        "renderer": 276
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1697,
+      "phase": "scrub",
+      "heapMB": 30,
+      "procMB": {
+        "total": 2240,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1612,
+        "renderer": 277
+      },
+      "clock": "00:00:58:05"
+    },
+    {
+      "tSec": 1698,
+      "phase": "scrub",
+      "heapMB": 34,
+      "procMB": {
+        "total": 2268,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1635,
+        "renderer": 281
+      },
+      "clock": "00:01:06:09"
+    },
+    {
+      "tSec": 1699,
+      "phase": "scrub",
+      "heapMB": 41,
+      "procMB": {
+        "total": 2311,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1677,
+        "renderer": 282
+      },
+      "clock": "00:01:23:26"
+    },
+    {
+      "tSec": 1700,
+      "phase": "scrub",
+      "heapMB": 33,
+      "procMB": {
+        "total": 2308,
+        "crashpad-handler": 10,
+        "browser": 260,
+        "utility": 79,
+        "gpu": 1676,
+        "renderer": 283
+      },
+      "clock": "00:01:58:18"
+    },
+    {
+      "tSec": 1714,
+      "phase": "play",
+      "heapMB": 53,
+      "procMB": {
+        "total": 2368,
+        "crashpad-handler": 10,
+        "browser": 265,
+        "utility": 79,
+        "gpu": 1696,
+        "renderer": 319
+      },
+      "clock": "00:00:31:17"
+    },
+    {
+      "tSec": 1725,
+      "phase": "play",
+      "heapMB": 38,
+      "procMB": {
+        "total": 2231,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1592,
+        "renderer": 288
+      },
+      "clock": "00:00:42:27"
+    },
+    {
+      "tSec": 1731,
+      "phase": "play",
+      "heapMB": 37,
+      "procMB": {
+        "total": 2232,
+        "crashpad-handler": 10,
+        "browser": 263,
+        "utility": 79,
+        "gpu": 1592,
+        "renderer": 288
+      },
+      "clock": "00:00:49:04"
+    },
+    {
+      "tSec": 1740,
+      "phase": "scrub",
+      "heapMB": 45,
+      "procMB": {
+        "total": 2365,
+        "crashpad-handler": 10,
+        "browser": 266,
+        "utility": 79,
+        "gpu": 1707,
+        "renderer": 303
+      },
+      "clock": "00:01:27:15"
+    },
+    {
+      "tSec": 1752,
+      "phase": "play",
+      "heapMB": 62,
+      "procMB": {
+        "total": 2411,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1722,
+        "renderer": 333
+      },
+      "clock": "00:01:40:01"
+    },
+    {
+      "tSec": 1763,
+      "phase": "play",
+      "heapMB": 35,
+      "procMB": {
+        "total": 2249,
+        "crashpad-handler": 10,
+        "browser": 267,
+        "utility": 79,
+        "gpu": 1606,
+        "renderer": 288
+      },
+      "clock": "00:01:51:11"
+    },
+    {
+      "tSec": 1774,
+      "phase": "play",
+      "heapMB": 34,
+      "procMB": {
+        "total": 2251,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1616,
+        "renderer": 284
+      },
+      "clock": "00:02:00:01"
+    },
+    {
+      "tSec": 1805,
+      "phase": "scrub",
+      "heapMB": 38,
+      "procMB": {
+        "total": 2292,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1663,
+        "renderer": 278
+      },
+      "clock": "00:00:46:15"
+    },
+    {
+      "tSec": 1806,
+      "phase": "scrub",
+      "heapMB": 34,
+      "procMB": {
+        "total": 2334,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1705,
+        "renderer": 278
+      },
+      "clock": "00:01:09:09"
+    },
+    {
+      "tSec": 1807,
+      "phase": "scrub",
+      "heapMB": 37,
+      "procMB": {
+        "total": 2358,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1722,
+        "renderer": 285
+      },
+      "clock": "00:01:55:15"
+    },
+    {
+      "tSec": 1810,
+      "phase": "scrub",
+      "heapMB": 44,
+      "procMB": {
+        "total": 2402,
+        "crashpad-handler": 10,
+        "browser": 262,
+        "utility": 79,
+        "gpu": 1752,
+        "renderer": 299
+      },
+      "clock": "00:00:11:26"
+    },
+    {
+      "tSec": 1817,
+      "phase": "end",
+      "heapMB": 69,
+      "procMB": {
+        "total": 2447,
+        "crashpad-handler": 10,
+        "browser": 264,
+        "utility": 79,
+        "gpu": 1766,
+        "renderer": 328
+      },
+      "clock": "00:00:10:15"
+    }
+  ],
+  "cycles": 37,
+  "seeks": 1480,
+  "errors": []
+}

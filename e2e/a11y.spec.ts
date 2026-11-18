@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { addLayers, createImageProject } from './helpers';
+import { addLayers, createImageProject, createVideoProject } from './helpers';
+import { mediaFixtures } from './media-fixtures';
 import { solidPng } from './png';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
@@ -87,6 +88,25 @@ for (const colorScheme of ['dark', 'light'] as const) {
 
       await page.getByRole('button', { name: 'Add layer mask' }).click();
       await expect(page.getByRole('button', { name: 'Edit mask' })).toBeVisible();
+      await expectNoViolations(page);
+    });
+
+    test('video workspace with clips on the timeline has no violations', async ({ page }) => {
+      const media = mediaFixtures();
+      test.skip(media === null, 'ffmpeg is not installed, so the test videos cannot be made');
+      if (!media) return;
+      await createVideoProject(page, 'A11yVideo');
+      await page.getByTestId('import-media-input').setInputFiles([media.red, media.tone]);
+      const list = page.getByRole('list', { name: 'Project media' });
+      await expect(list.getByText('tone.wav', { exact: true })).toBeVisible({ timeout: 30_000 });
+      await expect(list.getByText('red.mp4', { exact: true })).toBeVisible({ timeout: 30_000 });
+      await page.getByRole('button', { name: 'Add to timeline: red.mp4' }).click();
+      await page.getByRole('button', { name: 'Add to timeline: tone.wav' }).click();
+      const clip = page
+        .getByRole('group', { name: 'Video 1' })
+        .getByRole('button', { name: /^red.mp4/ });
+      await clip.click();
+      await expect(page.getByRole('textbox', { name: 'Length' })).toBeVisible();
       await expectNoViolations(page);
     });
   });

@@ -123,3 +123,14 @@ export async function exportAs(page: Page, choices: ExportChoices = {}): Promise
   await expect(dialog).toHaveCount(0);
   return bytes;
 }
+
+export async function createVideoProject(page: Page, name: string): Promise<void> {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Start a project' })).toBeVisible();
+  const create = page.getByRole('button', { name: 'New video project' });
+  await expect(create).toBeEnabled();
+  await create.click();
+  await page.getByLabel('Project name').fill(name);
+  await page.getByRole('button', { name: 'Create project' }).click();
+  await expect(page.getByRole('textbox', { name: 'Project name' })).toHaveValue(name);
+}

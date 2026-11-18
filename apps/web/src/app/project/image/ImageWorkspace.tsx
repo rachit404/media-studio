@@ -152,7 +152,7 @@ export function ImageWorkspace({ session, project, heading, toolbar }: ImageWork
     'layer.copy': copyLayer,
     'layer.paste': pasteLayerFromClipboard,
     'layer.duplicate': duplicateSelected,
-    'layer.delete': deleteSelected,
+    'edit.delete': deleteSelected,
   });
 
   return (
@@ -205,7 +205,7 @@ export function ImageWorkspace({ session, project, heading, toolbar }: ImageWork
             onSelectionChange={setSelection}
             onDropAsset={(assetId, at) => {
               const asset = project.assets.byId[assetId];
-              if (!asset) return;
+              if (asset?.kind !== 'image') return;
               const id = crypto.randomUUID();
               history.execute(addImageLayer(id, asset, at));
               setSelectedId(id);

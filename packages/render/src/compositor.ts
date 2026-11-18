@@ -82,6 +82,8 @@ function glError(message: string, cause?: unknown): AppError {
 export class Compositor {
   readonly maxTextureSize: number;
   private readonly textures = new Map<string, WebGLTexture>();
+  /** Size of textures made by `uploadFrame`, so a same-size frame can be copied over the old one. */
+  private readonly frameSizes = new Map<string, { width: number; height: number }>();
   private readonly programs = new Map<string, Program>();
   private readonly fullscreen: WebGLVertexArrayObject;
   private readonly quad: WebGLVertexArrayObject;
@@ -133,10 +135,44 @@ export class Compositor {
     this.textures.set(id, texture);
   }
 
+  /**
+   * Replace the picture of a video clip with its next frame. Cheaper than `uploadTexture`: no mipmaps, and when
+   * the size has not changed the pixels are copied into the existing texture. Frames are opaque.
+   */
+  uploadFrame(id: string, source: ImageBitmap | OffscreenCanvas): void {
+    const { gl } = this;
+    if (source.width > this.maxTextureSize || source.height > this.maxTextureSize) {
+      throw new AppError({
+        code: 'out-of-memory',
+        message: `This video is larger than this device can display (${String(this.maxTextureSize)} pixels).`,
+        hint: 'Use a smaller version of the video.',
+      });
+    }
+    const known = this.frameSizes.get(id);
+    const existing = this.textures.get(id);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    if (existing && known && known.width === source.width && known.height === source.height) {
+      gl.bindTexture(gl.TEXTURE_2D, existing);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, source);
+      return;
+    }
+    this.deleteTexture(id);
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, source);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    this.textures.set(id, texture);
+    this.frameSizes.set(id, { width: source.width, height: source.height });
+  }
+
   deleteTexture(id: string): void {
     const texture = this.textures.get(id);
     if (texture) this.gl.deleteTexture(texture);
     this.textures.delete(id);
+    this.frameSizes.delete(id);
   }
 
   render(scene: RenderScene, options: RenderOptions): void {

@@ -61,6 +61,12 @@ export class StorageApi {
   putFile(id: string, path: string, data: Uint8Array): Promise<void> {
     return this.store.putFile(id, path, data);
   }
+  putBlob(id: string, path: string, blob: Blob): Promise<void> {
+    return this.store.putBlob(id, path, blob);
+  }
+  getBlob(id: string, path: string): Promise<Blob | null> {
+    return this.store.getBlob(id, path);
+  }
   getFile(id: string, path: string): Promise<Uint8Array | null> {
     return this.store.getFile(id, path);
   }

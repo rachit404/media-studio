@@ -314,3 +314,30 @@ describe('archives', () => {
     void renameProject;
   });
 });
+
+describe('large files as blobs', () => {
+  it('stores and returns a blob, validates the path, and an archive can carry video and peaks', async () => {
+    await store.create(project('v1', 'Video'));
+    await store.putBlob('v1', 'media/a.mp4', new Blob([new Uint8Array([9, 8, 7])]));
+    const back = await store.getBlob('v1', 'media/a.mp4');
+    expect([...new Uint8Array((await back?.arrayBuffer()) ?? new ArrayBuffer(0))]).toEqual([
+      9, 8, 7,
+    ]);
+    expect(await store.getBlob('v1', 'media/none.mp4')).toBeNull();
+    await expect(store.putBlob('v1', '../evil', new Blob([]))).rejects.toBeInstanceOf(AppError);
+    await expect(
+      store.putBlob('v1', 'peaks/a.bin', new Blob([new Uint8Array([1])])),
+    ).resolves.toBeUndefined();
+  });
+});
+
+describe('archive size guard', () => {
+  it('refuses to export a project whose media is over 1 GB, with a clear error', async () => {
+    const history = new History(project('big', 'Big'));
+    history.execute(addAssets([{ ...asset('huge'), size: 2 * 1024 * 1024 * 1024 }]));
+    await store.create(history.state);
+    await store.putFile('big', 'media/huge.png', new Uint8Array([1]));
+    await store.putFile('big', 'thumbs/huge.webp', new Uint8Array([1]));
+    await expect(store.exportArchive('big')).rejects.toMatchObject({ code: 'out-of-memory' });
+  });
+});

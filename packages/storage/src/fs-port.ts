@@ -14,6 +14,13 @@ export interface FileSystemPort {
   read(path: string): Promise<Uint8Array | null>;
   /** Create or replace a file, creating parent folders. */
   write(path: string, data: Uint8Array): Promise<void>;
+  /**
+   * A file as a Blob that reads from disk on demand (nothing is loaded into memory), or null when it does not
+   * exist. For large media files.
+   */
+  readBlob(path: string): Promise<Blob | null>;
+  /** Create or replace a file from a Blob, copying it in chunks so large files never sit in memory whole. */
+  writeBlob(path: string, blob: Blob): Promise<void>;
   /** Append to a file, creating it (and parent folders) when missing. */
   append(path: string, data: Uint8Array): Promise<void>;
   /** Remove a file or a folder with everything in it. Missing paths are not an error. */

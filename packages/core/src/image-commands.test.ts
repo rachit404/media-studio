@@ -337,9 +337,9 @@ describe('format migration v1 -> v2', () => {
     });
   });
 
-  it('leaves video projects unchanged', () => {
+  it('gives video projects an empty sequence', () => {
     const { file } = parseProjectFile(v1('video'));
-    expect(file.project.content).toEqual({ kind: 'video' });
+    expect(file.project.content).toMatchObject({ kind: 'video', clips: {} });
   });
 });
 

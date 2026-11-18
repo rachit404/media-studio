@@ -1,0 +1,295 @@
+{
+  "env": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "cores": 16,
+    "deviceMemoryGB": 16,
+    "webgl2": true,
+    "glRenderer": "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x0000A7A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "webgpu": true,
+    "crossOriginIsolated": false,
+    "secureContext": true
+  },
+  "file": "h264_1080p30_gop2s_60s.mp4",
+  "runs": [
+    {
+      "n": 1,
+      "hw": "prefer-hardware",
+      "seconds": 2.1,
+      "working": 1,
+      "failed": [],
+      "totalFps": 857.1428571428571,
+      "perDecoderFps": [
+        857.1
+      ],
+      "slowestFirstFrameMs": 49
+    },
+    {
+      "n": 2,
+      "hw": "prefer-hardware",
+      "seconds": 3.0008999999985098,
+      "working": 2,
+      "failed": [],
+      "totalFps": 897.7306807962071,
+      "perDecoderFps": [
+        449.5,
+        448.2
+      ],
+      "slowestFirstFrameMs": 40.899999998509884
+    },
+    {
+      "n": 3,
+      "hw": "prefer-hardware",
+      "seconds": 3.00579999999702,
+      "working": 3,
+      "failed": [],
+      "totalFps": 950.8283984306453,
+      "perDecoderFps": [
+        316.7,
+        317.1,
+        317.1
+      ],
+      "slowestFirstFrameMs": 49
+    },
+    {
+      "n": 4,
+      "hw": "prefer-hardware",
+      "seconds": 3.13439999999851,
+      "working": 4,
+      "failed": [],
+      "totalFps": 913.4124553347885,
+      "perDecoderFps": [
+        228.8,
+        228.8,
+        228.4,
+        227.5
+      ],
+      "slowestFirstFrameMs": 59.599999994039536
+    },
+    {
+      "n": 6,
+      "hw": "prefer-hardware",
+      "seconds": 3.12539999999851,
+      "working": 6,
+      "failed": [],
+      "totalFps": 877.6476610997977,
+      "perDecoderFps": [
+        146.5,
+        146.5,
+        146.2,
+        146.2,
+        146.2,
+        145.9
+      ],
+      "slowestFirstFrameMs": 186.79999999701977
+    },
+    {
+      "n": 8,
+      "hw": "prefer-hardware",
+      "seconds": 3.218,
+      "working": 8,
+      "failed": [],
+      "totalFps": 896.519577377253,
+      "perDecoderFps": [
+        112.5,
+        112.2,
+        112.2,
+        112.2,
+        112.2,
+        112.2,
+        111.9,
+        111.2
+      ],
+      "slowestFirstFrameMs": 100.19999999552965
+    },
+    {
+      "n": 12,
+      "hw": "prefer-hardware",
+      "seconds": 3.311,
+      "working": 12,
+      "failed": [],
+      "totalFps": 839.927514346119,
+      "perDecoderFps": [
+        70.7,
+        70.4,
+        70.4,
+        70.4,
+        70.4,
+        70.4,
+        70.4,
+        69.5,
+        70.1,
+        69.2,
+        69.2,
+        69.2
+      ],
+      "slowestFirstFrameMs": 239.60000000149012
+    },
+    {
+      "n": 16,
+      "hw": "prefer-hardware",
+      "seconds": 3.364,
+      "working": 16,
+      "failed": [],
+      "totalFps": 1026.1593341260404,
+      "perDecoderFps": [
+        64.5,
+        64.5,
+        64.5,
+        64.5,
+        64.5,
+        64.5,
+        64.5,
+        64.5,
+        64.5,
+        64.5,
+        64.5,
+        63.3,
+        63.3,
+        63.3,
+        63.3,
+        63.3
+      ],
+      "slowestFirstFrameMs": 314.20000000298023
+    },
+    {
+      "n": 1,
+      "hw": "prefer-software",
+      "seconds": 3.0035,
+      "working": 1,
+      "failed": [],
+      "totalFps": 441.1519893457633,
+      "perDecoderFps": [
+        441.2
+      ],
+      "slowestFirstFrameMs": 144.79999999701977
+    },
+    {
+      "n": 2,
+      "hw": "prefer-software",
+      "seconds": 3.0035,
+      "working": 2,
+      "failed": [],
+      "totalFps": 732.4787747627768,
+      "perDecoderFps": [
+        366.2,
+        366.2
+      ],
+      "slowestFirstFrameMs": 107.5
+    },
+    {
+      "n": 3,
+      "hw": "prefer-software",
+      "seconds": 3.0018000000044704,
+      "working": 3,
+      "failed": [],
+      "totalFps": 922.4465320793778,
+      "perDecoderFps": [
+        307.5,
+        307.5,
+        307.5
+      ],
+      "slowestFirstFrameMs": 73.40000000596046
+    },
+    {
+      "n": 4,
+      "hw": "prefer-software",
+      "seconds": 3.0047000000029804,
+      "working": 4,
+      "failed": [],
+      "totalFps": 1040.3700868628812,
+      "perDecoderFps": [
+        260.3,
+        260.3,
+        259.9,
+        259.9
+      ],
+      "slowestFirstFrameMs": 92.10000000149012
+    },
+    {
+      "n": 6,
+      "hw": "prefer-software",
+      "seconds": 3.0111999999955295,
+      "working": 6,
+      "failed": [],
+      "totalFps": 1088.2704569622958,
+      "perDecoderFps": [
+        181.7,
+        181.3,
+        181.3,
+        181.3,
+        181.3,
+        181.3
+      ],
+      "slowestFirstFrameMs": 104.29999999701977
+    },
+    {
+      "n": 8,
+      "hw": "prefer-software",
+      "seconds": 3.0251999999955297,
+      "working": 8,
+      "failed": [],
+      "totalFps": 878.2890387425381,
+      "perDecoderFps": [
+        110.1,
+        110.1,
+        110.1,
+        109.7,
+        109.7,
+        109.7,
+        109.4,
+        109.4
+      ],
+      "slowestFirstFrameMs": 142.5
+    },
+    {
+      "n": 12,
+      "hw": "prefer-software",
+      "seconds": 3.01629999999702,
+      "working": 12,
+      "failed": [],
+      "totalFps": 828.1669595207599,
+      "perDecoderFps": [
+        69.6,
+        69.3,
+        69.3,
+        69.3,
+        69.3,
+        69.3,
+        69,
+        68.6,
+        68.6,
+        68.6,
+        68.6,
+        68.6
+      ],
+      "slowestFirstFrameMs": 166.29999999701977
+    },
+    {
+      "n": 16,
+      "hw": "prefer-software",
+      "seconds": 3.028,
+      "working": 16,
+      "failed": [],
+      "totalFps": 798.216644649934,
+      "perDecoderFps": [
+        50.5,
+        50.2,
+        50.2,
+        50.2,
+        50.2,
+        50.2,
+        50.2,
+        49.9,
+        49.9,
+        49.5,
+        49.5,
+        49.5,
+        49.5,
+        49.5,
+        49.5,
+        49.5
+      ],
+      "slowestFirstFrameMs": 205.30000000447035
+    }
+  ]
+}

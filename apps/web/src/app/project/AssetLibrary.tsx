@@ -41,7 +41,7 @@ export function AssetLibrary({
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const assets = sortedItems(project.assets);
+  const assets = sortedItems(project.assets).filter((asset) => asset.kind === 'image');
   // Assets still used by a layer cannot be removed (removing the layer first keeps the document consistent).
   const usedAssetIds = new Set(
     project.content.kind === 'image'
