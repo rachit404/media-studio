@@ -158,8 +158,10 @@ describe('audio segments', () => {
         end: 4 * S,
         clipEnd: 12 * S,
         sourceStart: 1 * S,
+        gainAt: expect.any(Function) as unknown,
       },
     ]);
+    expect(segments[0]?.gainAt(3 * S)).toBe(1);
     expect(audioSegments(content(history), history.state.assets.byId, 0, 1 * S)).toEqual([]);
     expect(audioSegments(content(history), history.state.assets.byId, 13 * S, 14 * S)).toEqual([]);
   });

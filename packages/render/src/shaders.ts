@@ -38,10 +38,25 @@ uniform int uHasMask;
 uniform vec2 uMaskScale;     // layer size / mask size
 uniform int uHasClip;
 uniform vec2 uOut;           // output size in pixels
+uniform vec4 uCrop;          // fraction removed at left, top, right, bottom of the picture
+uniform vec4 uColour;        // brightness, contrast, saturation, temperature (all 0 = untouched)
 in vec2 vUv;
 out vec4 outColor;
 void main() {
   vec4 c = texture(uTex, vUv);
+  if (vUv.x < uCrop.x || vUv.y < uCrop.y || vUv.x > 1.0 - uCrop.z || vUv.y > 1.0 - uCrop.w) {
+    outColor = vec4(0.0);
+    return;
+  }
+  if (uColour != vec4(0.0) && c.a > 0.0) {
+    // Same maths as the brightness/contrast and saturation adjustments, plus a warm/cool shift of red against blue.
+    vec3 s = c.rgb / c.a;
+    s = clamp((s - 0.5) * (1.0 + uColour.y) + 0.5 + uColour.x, 0.0, 1.0);
+    float luma = dot(s, vec3(0.2126, 0.7152, 0.0722));
+    s = clamp(vec3(luma) + (s - luma) * (1.0 + uColour.z), 0.0, 1.0);
+    s = clamp(s + vec3(uColour.w * 0.1, 0.0, -uColour.w * 0.1), 0.0, 1.0);
+    c = vec4(s * c.a, c.a);
+  }
   if (uHasMask == 1) {
     vec2 mu = vUv * uMaskScale;
     float m = (mu.x <= 1.0 && mu.y <= 1.0) ? texture(uMask, mu).r : 1.0;

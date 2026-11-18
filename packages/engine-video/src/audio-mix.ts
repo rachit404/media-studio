@@ -1,11 +1,11 @@
 import {
   clipEnd,
   samplesToTime,
-  sortedTracks,
   timeToSamples,
   type Asset,
   type VideoContent,
 } from '@media-studio/core';
+import { audibleTracks, clipGainOnTimeline, hasFades } from './audio-gain';
 
 /** Decodes the sound of one file as stereo at a given rate (the adapter does decoding, mixing down and resampling). */
 export interface AudioReader {
@@ -18,7 +18,7 @@ export interface AudioReader {
 
 /**
  * The mixed sound of the sequence for `frames` samples starting at sample `startFrame`: every unmuted audio track,
- * clips placed by their timeline position, summed and limited to -1..1 (a hard clip; there is no limiter in v1).
+ * clips placed by their timeline position, scaled by track and clip volume and fades, summed and limited to -1..1 (a hard clip; there is no limiter in v1).
  * This is the offline mix used by export; it follows the same placement rules as the preview.
  */
 export async function mixAudioBlock(
@@ -34,8 +34,7 @@ export async function mixAudioBlock(
   const blockStart = samplesToTime(startFrame, sampleRate);
   const blockEnd = samplesToTime(startFrame + frames, sampleRate);
 
-  for (const track of sortedTracks(content)) {
-    if (track.kind !== 'audio' || track.muted) continue;
+  for (const track of audibleTracks(content)) {
     for (const id of track.clipIds) {
       const clip = content.clips[id];
       if (!clip || clipEnd(clip) <= blockStart) continue;
@@ -55,9 +54,13 @@ export async function mixAudioBlock(
         count,
         sampleRate,
       );
+      const gainAt = clipGainOnTimeline(track, clip);
+      // Without fades the gain is one number for the whole clip; with fades it follows the straight-line ramps.
+      const flat = hasFades(clip) ? null : gainAt(clip.start);
       for (let i = 0; i < count; i += 1) {
-        left[offset + i] = (left[offset + i] ?? 0) + (sourceLeft[i] ?? 0);
-        right[offset + i] = (right[offset + i] ?? 0) + (sourceRight[i] ?? 0);
+        const gain = flat ?? gainAt(overlapStart + samplesToTime(i, sampleRate));
+        left[offset + i] = (left[offset + i] ?? 0) + (sourceLeft[i] ?? 0) * gain;
+        right[offset + i] = (right[offset + i] ?? 0) + (sourceRight[i] ?? 0) * gain;
       }
     }
   }

@@ -428,3 +428,91 @@ test.describe('drag and drop from the library', () => {
     await expect(clip(page, 'blue.mp4', 'Video 1')).toHaveCount(1);
   });
 });
+
+test.describe('clip look (picture and sound properties)', () => {
+  test('cropping and opacity change the preview, and undo restores it', async ({ page }) => {
+    await createVideoProject(page, 'Look test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 20_000 }).toBe(true);
+
+    await clip(page, 'red.mp4', 'Video 1').click();
+    // Cropping away the left 60% takes the middle of the picture out of view: black shows through.
+    await page.getByRole('spinbutton', { name: /^Crop left/ }).fill('60');
+    await expect
+      .poll(async () => (await previewColour(page)).every((value) => value < 30), {
+        timeout: 10_000,
+      })
+      .toBe(true);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 10_000 }).toBe(true);
+
+    // Half opacity over black halves the red.
+    await page.getByRole('slider', { name: 'Opacity' }).fill('50');
+    await expect
+      .poll(
+        async () => {
+          const [r, g, b] = await previewColour(page);
+          return r > 90 && r < 170 && g < 40 && b < 40;
+        },
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+    await page.getByRole('button', { name: 'Reset position, opacity and colour' }).click();
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 10_000 }).toBe(true);
+  });
+
+  test('the look survives a reload', async ({ page }) => {
+    await createVideoProject(page, 'Look reload');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await page.getByRole('spinbutton', { name: /^Rotation/ }).fill('15');
+    await expect(page.getByRole('spinbutton', { name: /^Rotation/ })).toHaveValue('15');
+    await expect(page.getByRole('status').filter({ hasText: 'All changes saved' })).toBeVisible();
+    await page.reload(); // no checkpoint was written: the same as a crash
+    await page
+      .getByRole('alertdialog', { name: 'Restore unsaved changes?' })
+      .getByRole('button', { name: 'Restore changes' })
+      .click();
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await expect(page.getByRole('spinbutton', { name: /^Rotation/ })).toHaveValue('15');
+  });
+
+  test('solo on a track is shown as pressed and can be undone', async ({ page }) => {
+    await createVideoProject(page, 'Solo test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    const solo = page.getByRole('button', { name: 'Solo Audio 1' });
+    await expect(solo).toHaveAttribute('aria-pressed', 'false');
+    await solo.click();
+    await expect(solo).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(solo).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('a clip volume of 0 makes the exported sound silent', async ({ page }, testInfo) => {
+      test.setTimeout(120_000);
+      await createVideoProject(page, 'Look export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4'); // 2 s with a tone
+      await clip(page, 'red.mp4', 'Audio 1').click();
+      await page.getByRole('slider', { name: 'Volume', exact: true }).fill('0');
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('silent.mp4');
+      await (await downloading).saveAs(file);
+
+      expect(meanVolume(file, 0.2, 1.5)).toBeLessThan(-60);
+    });
+  });
+});

@@ -539,6 +539,22 @@ export function Timeline({
               >
                 {track.kind === 'video' ? 'Hide' : 'Mute'}
               </Button>
+              {track.kind === 'audio' && (
+                <Button
+                  variant="ghost"
+                  aria-pressed={track.solo === true}
+                  aria-label={`Solo ${track.name}`}
+                  onPress={() =>
+                    run(() =>
+                      session.history.execute(
+                        setTrackState(track.id, { solo: track.solo !== true }),
+                      ),
+                    )
+                  }
+                >
+                  Solo
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 aria-pressed={track.locked}

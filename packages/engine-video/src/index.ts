@@ -1,11 +1,13 @@
 // @media-studio/engine-video
 // Video editor logic: timeline views and snapping, preview planning, transport, caches. No browser APIs here.
+export { audibleTracks, clipGainOnTimeline, isAudible } from './audio-gain';
 export { audioSegments } from './audio-plan';
 export type { AudioSegment } from './audio-plan';
 export { FrameCache } from './frame-cache';
 export type { Closable, FrameCacheOptions } from './frame-cache';
 export {
   buildPreviewScene,
+  clipMatrix,
   containMatrix,
   frameTextureId,
   previewPlan,

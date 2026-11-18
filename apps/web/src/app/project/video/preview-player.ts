@@ -263,6 +263,7 @@ export class PreviewPlayer {
                 end: segment.end,
                 clipEnd: segment.clipEnd,
                 sourceStart: segment.sourceStart,
+                gainAt: segment.gainAt,
               },
             ]
           : [];

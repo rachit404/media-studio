@@ -7,7 +7,9 @@ import {
   formatTimecode,
   moveClips,
   parseTimecode,
+  setClipLook,
   setSequence,
+  setTrackState,
   toAppError,
   trimClip,
   type Asset,
@@ -17,6 +19,7 @@ import {
 import { useId, useState } from 'react';
 import type { ProjectSession } from '../project-session';
 import { NumberField } from '../image/fields';
+import { ClipLookEditor } from './ClipLookEditor';
 
 const RATES: readonly { label: string; fps: FrameRate }[] = [
   { label: '23.976', fps: { num: 24000, den: 1001 } },
@@ -200,6 +203,22 @@ export function VideoInspector({
               <dd className="tabular-nums">{formatTimecode(clip.sourceIn, sequence.fps)}</dd>
             </dl>
             {track.locked && <p className="text-xs text-fg-muted">This track is locked.</p>}
+            <div className="space-y-3 border-t border-line pt-3">
+              <h3 className="text-sm font-semibold">
+                {track.kind === 'video' ? 'Picture' : 'Sound'}
+              </h3>
+              <ClipLookEditor
+                key={clip.id}
+                clip={clip}
+                track={track}
+                change={(patch) =>
+                  run(() => session.history.execute(setClipLook([clip.id], patch)))
+                }
+                changeTrack={(patch) =>
+                  run(() => session.history.execute(setTrackState(track.id, patch)))
+                }
+              />
+            </div>
           </>
         )}
       </section>

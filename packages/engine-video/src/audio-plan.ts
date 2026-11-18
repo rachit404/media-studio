@@ -1,4 +1,5 @@
-import { clipEnd, sortedTracks, type Asset, type VideoContent } from '@media-studio/core';
+import { clipEnd, type Asset, type VideoContent } from '@media-studio/core';
+import { audibleTracks, clipGainOnTimeline } from './audio-gain';
 
 /** A stretch of one clip's sound that falls inside a window of the timeline. */
 export interface AudioSegment {
@@ -11,11 +12,13 @@ export interface AudioSegment {
   clipEnd: number;
   /** Where in the source file it starts. */
   sourceStart: number;
+  /** Linear gain at a timeline time: track volume, clip volume and fades. */
+  gainAt: (timelineUs: number) => number;
 }
 
 /**
- * The sound to schedule for timeline window `[from, to)`: every clip on an audio track that is not muted, cut to
- * the window. The player turns these into scheduled audio buffers.
+ * The sound to schedule for timeline window `[from, to)`: every clip on an audible audio track (not muted; only
+ * soloed tracks when any is soloed), cut to the window, each with its gain envelope. The player turns these into scheduled audio buffers.
  */
 export function audioSegments(
   content: VideoContent,
@@ -24,8 +27,7 @@ export function audioSegments(
   to: number,
 ): AudioSegment[] {
   const segments: AudioSegment[] = [];
-  for (const track of sortedTracks(content)) {
-    if (track.kind !== 'audio' || track.muted) continue;
+  for (const track of audibleTracks(content)) {
     for (const id of track.clipIds) {
       const clip = content.clips[id];
       if (!clip || clipEnd(clip) <= from) continue;
@@ -41,6 +43,7 @@ export function audioSegments(
         end,
         clipEnd: clipEnd(clip),
         sourceStart: clip.sourceIn + (start - clip.start),
+        gainAt: clipGainOnTimeline(track, clip),
       });
     }
   }

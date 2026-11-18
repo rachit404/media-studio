@@ -212,18 +212,36 @@ export {
 export type { FrameRate } from './time';
 export {
   DEFAULT_SEQUENCE,
+  IDENTITY_TRANSFORM,
   MAX_CLIPS,
   MAX_SEQUENCE_SIZE,
   MAX_TRACKS,
+  MAX_VOLUME,
+  NEUTRAL_COLOUR,
   SAMPLE_RATES,
+  clipColour,
+  clipColourSchema,
   clipEnd,
+  clipGainAt,
+  clipOpacity,
   clipSchema,
+  clipTransform,
   emptyVideoContent,
   sequenceSchema,
+  clipTransformSchema,
   trackSchema,
   videoContentSchema,
 } from './video-document';
-export type { Clip, Sequence, Track, TrackKind, VideoContent } from './video-document';
+export type {
+  Clip,
+  ClipColour,
+  ClipLook,
+  ClipTransform,
+  Sequence,
+  Track,
+  TrackKind,
+  VideoContent,
+} from './video-document';
 export {
   clampMoveDelta,
   clipAt,
@@ -246,6 +264,7 @@ export {
   joinClips,
   moveClips,
   removeTrack,
+  setClipLook,
   setSequence,
   setTrackState,
   splitClip,
@@ -253,7 +272,7 @@ export {
   trimClip,
   unlinkClips,
 } from './video-commands';
-export type { AddMediaParams, TrimEdge } from './video-commands';
+export type { AddMediaParams, ClipLookPatch, TrackPatch, TrimEdge } from './video-commands';
 export {
   MAX_PEAKS,
   PEAKS_PER_SECOND,

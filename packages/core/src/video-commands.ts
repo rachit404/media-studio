@@ -1,4 +1,5 @@
 import { current, type Draft } from 'immer';
+import { z } from 'zod';
 import { AppError } from './errors';
 import type { Command } from './history';
 import { insertAt, removeItem, sortedItems } from './ordered';
@@ -17,8 +18,12 @@ import {
   MAX_CLIPS,
   MAX_SEQUENCE_SIZE,
   MAX_TRACKS,
+  MAX_VOLUME,
+  clipColourSchema,
   clipEnd,
+  clipTransformSchema,
   type Clip,
+  type ClipLook,
   type Sequence,
   type Track,
   type TrackKind,
@@ -133,18 +138,39 @@ export function removeTrack(id: string): Command<ProjectDocument> {
   };
 }
 
-export function setTrackState(
-  id: string,
-  patch: { muted?: boolean; locked?: boolean; name?: string },
-): Command<ProjectDocument> {
+export interface TrackPatch {
+  muted?: boolean;
+  locked?: boolean;
+  name?: string;
+  solo?: boolean;
+  volume?: number;
+}
+
+export function setTrackState(id: string, patch: TrackPatch): Command<ProjectDocument> {
   return {
     label: 'Change track',
-    coalesceKey: patch.name === undefined ? undefined : `track-name:${id}`,
+    coalesceKey:
+      patch.name !== undefined
+        ? `track-name:${id}`
+        : patch.volume !== undefined
+          ? `track-volume:${id}`
+          : undefined,
     apply(draft) {
       const track = videoDraft(draft).tracks.byId[id];
       if (!track) throw new RangeError(`Track ${id} does not exist`);
       if (patch.muted !== undefined) track.muted = patch.muted;
       if (patch.locked !== undefined) track.locked = patch.locked;
+      if (patch.solo !== undefined) {
+        if (patch.solo) track.solo = true;
+        else delete track.solo;
+      }
+      if (patch.volume !== undefined) {
+        if (!(patch.volume >= 0 && patch.volume <= MAX_VOLUME)) {
+          throw invalid(`Track volume must be between 0 and ${String(MAX_VOLUME)}.`);
+        }
+        if (patch.volume === 1) delete track.volume;
+        else track.volume = patch.volume;
+      }
       if (patch.name !== undefined) {
         const name = patch.name.trim();
         if (name.length === 0 || name.length > 60) {
@@ -425,7 +451,10 @@ export function splitClips(
           duration: clipEnd(clip) - time,
           sourceIn: clip.sourceIn + (time - clip.start),
           linkId: clip.linkId === null ? null : (rightLinks.get(clip.linkId) ?? null),
+          ...splitLook(clip),
         };
+        // The fade in stays with the left half and the fade out moves to the right half.
+        delete left.fadeOut;
         const track = target.tracks.byId[clip.trackId];
         if (track) {
           track.clipIds.splice(track.clipIds.indexOf(clip.id) + 1, 0, rightId);
@@ -443,6 +472,69 @@ export function splitClip(
   makeId: () => string,
 ): Command<ProjectDocument> {
   return splitClips(content, [clipId], time, makeId);
+}
+
+/** What the right half of a split inherits: every look property except the fade in. */
+function splitLook(clip: Clip): Omit<ClipLook, 'fadeIn'> {
+  const { transform, opacity, colour, volume, fadeOut } = clip;
+  return {
+    ...(transform === undefined ? {} : { transform }),
+    ...(opacity === undefined ? {} : { opacity }),
+    ...(colour === undefined ? {} : { colour }),
+    ...(volume === undefined ? {} : { volume }),
+    ...(fadeOut === undefined ? {} : { fadeOut }),
+  };
+}
+
+/** A change to the look of clips: a value sets the property, `null` puts it back to its default. */
+export type ClipLookPatch = { [K in keyof ClipLook]?: NonNullable<ClipLook[K]> | null };
+
+const lookValidators: { [K in keyof ClipLook]-?: z.ZodType } = {
+  transform: clipTransformSchema,
+  opacity: z.number().min(0).max(1),
+  colour: clipColourSchema,
+  volume: z.number().min(0).max(MAX_VOLUME),
+  fadeIn: z.number().int().min(0).max(MAX_TIME_US),
+  fadeOut: z.number().int().min(0).max(MAX_TIME_US),
+};
+const LOOK_KEYS = Object.keys(lookValidators) as (keyof ClipLook)[];
+
+/**
+ * Change position, opacity, colour, volume or fades of clips (only the clips named; linked clips are separate
+ * because picture and sound have different properties). Repeated edits of the same properties merge into one undo.
+ */
+export function setClipLook(
+  clipIds: readonly string[],
+  patch: ClipLookPatch,
+): Command<ProjectDocument> {
+  const keys = LOOK_KEYS.filter((key) => patch[key] !== undefined);
+  return {
+    label: 'Change clip',
+    coalesceKey: `clip-look:${[...clipIds].sort().join(',')}:${keys.join(',')}`,
+    apply(draft) {
+      const content = videoDraft(draft);
+      const snapshot = before(content);
+      const clips = clipIds
+        .map((id) => snapshot.clips[id])
+        .filter((c): c is Clip => c !== undefined);
+      if (clips.length !== clipIds.length) throw new RangeError('A clip to change does not exist');
+      assertEditable(snapshot, clips);
+      for (const key of keys) {
+        const value = patch[key];
+        if (value !== null && !lookValidators[key].safeParse(value).success) {
+          throw invalid(`That value is not allowed for ${key}.`);
+        }
+      }
+      for (const clip of clips) {
+        const target = clipDraft(content, clip.id) as Record<string, unknown>;
+        for (const key of keys) {
+          const value = patch[key];
+          if (value === null || value === undefined) delete target[key];
+          else target[key] = value;
+        }
+      }
+    },
+  };
 }
 
 /** Delete clips and the clips linked to them. `ripple` closes the gaps they leave on their tracks. */

@@ -8,6 +8,8 @@ export const MAX_SEQUENCE_SIZE = 8192;
 /** Most clips on one track and in the whole sequence; keeps validation and rendering bounded. */
 export const MAX_CLIPS = 20_000;
 export const MAX_TRACKS = 32;
+/** Louder than this (+12 dB) is almost always a mistake and only clips the mix. */
+export const MAX_VOLUME = 4;
 
 export const SAMPLE_RATES = [44_100, 48_000] as const;
 
@@ -34,10 +36,57 @@ export const trackSchema = z.strictObject({
   locked: z.boolean(),
   /** Clips on this track, in time order. */
   clipIds: z.array(idSchema).max(MAX_CLIPS),
+  /** Audio tracks: linear gain applied to every clip on the track (absent = 1). */
+  volume: z.number().min(0).max(MAX_VOLUME).optional(),
+  /** Audio tracks: when any track is soloed, only soloed tracks are heard (absent = false). */
+  solo: z.boolean().optional(),
 });
 export type Track = z.infer<typeof trackSchema>;
 
 const timeSchema = z.number().int().min(0).max(MAX_TIME_US);
+
+/**
+ * Where a picture sits in the sequence frame. `x` and `y` move its centre as a fraction of the frame width and
+ * height; `scale` multiplies the "fit inside the frame" size; `rotation` is degrees clockwise about the centre;
+ * `crop` removes a fraction of the picture from each side (before scale and rotation).
+ */
+export const clipTransformSchema = z.strictObject({
+  x: z.number().min(-4).max(4),
+  y: z.number().min(-4).max(4),
+  scale: z.number().min(0.01).max(16),
+  rotation: z.number().min(-360).max(360),
+  crop: z.strictObject({
+    left: z.number().min(0).max(0.95),
+    top: z.number().min(0).max(0.95),
+    right: z.number().min(0).max(0.95),
+    bottom: z.number().min(0).max(0.95),
+  }),
+});
+export type ClipTransform = z.infer<typeof clipTransformSchema>;
+
+export const IDENTITY_TRANSFORM: ClipTransform = {
+  x: 0,
+  y: 0,
+  scale: 1,
+  rotation: 0,
+  crop: { left: 0, top: 0, right: 0, bottom: 0 },
+};
+
+/** Basic colour correction, each -1..1 where 0 changes nothing. */
+export const clipColourSchema = z.strictObject({
+  brightness: z.number().min(-1).max(1),
+  contrast: z.number().min(-1).max(1),
+  saturation: z.number().min(-1).max(1),
+  temperature: z.number().min(-1).max(1),
+});
+export type ClipColour = z.infer<typeof clipColourSchema>;
+
+export const NEUTRAL_COLOUR: ClipColour = {
+  brightness: 0,
+  contrast: 0,
+  saturation: 0,
+  temperature: 0,
+};
 
 export const clipSchema = z.strictObject({
   id: idSchema,
@@ -51,8 +100,53 @@ export const clipSchema = z.strictObject({
   sourceIn: timeSchema,
   /** Clips that share a link (the picture and sound of one file) are edited together. */
   linkId: idSchema.nullable(),
+  /** Picture clips: position, scale, rotation and crop (absent = identity). */
+  transform: clipTransformSchema.optional(),
+  /** Picture clips: 0..1 (absent = 1). */
+  opacity: z.number().min(0).max(1).optional(),
+  /** Picture clips: colour correction (absent = none). */
+  colour: clipColourSchema.optional(),
+  /** Sound: linear gain for this clip (absent = 1). */
+  volume: z.number().min(0).max(MAX_VOLUME).optional(),
+  /** Sound: ramp up from silence over this long at the clip start, and down to silence at its end (absent = 0). */
+  fadeIn: timeSchema.optional(),
+  fadeOut: timeSchema.optional(),
 });
 export type Clip = z.infer<typeof clipSchema>;
+
+/** The properties a user can change on a clip without moving or cutting it. */
+export type ClipLook = Pick<
+  Clip,
+  'transform' | 'opacity' | 'colour' | 'volume' | 'fadeIn' | 'fadeOut'
+>;
+
+export function clipTransform(clip: Pick<Clip, 'transform'>): ClipTransform {
+  return clip.transform ?? IDENTITY_TRANSFORM;
+}
+export function clipOpacity(clip: Pick<Clip, 'opacity'>): number {
+  return clip.opacity ?? 1;
+}
+export function clipColour(clip: Pick<Clip, 'colour'>): ClipColour {
+  return clip.colour ?? NEUTRAL_COLOUR;
+}
+
+/**
+ * Linear gain of a clip at `offset` microseconds from its start: clip volume times the fade ramps (straight lines;
+ * the fades never overlap because they are limited to the clip length when set and again here).
+ */
+export function clipGainAt(
+  clip: Pick<Clip, 'duration' | 'volume' | 'fadeIn' | 'fadeOut'>,
+  offset: number,
+): number {
+  const base = clip.volume ?? 1;
+  const fadeIn = Math.min(clip.fadeIn ?? 0, clip.duration);
+  const fadeOut = Math.min(clip.fadeOut ?? 0, clip.duration);
+  let gain = base;
+  if (fadeIn > 0 && offset < fadeIn) gain *= Math.max(0, offset) / fadeIn;
+  const untilEnd = clip.duration - offset;
+  if (fadeOut > 0 && untilEnd < fadeOut) gain *= Math.max(0, untilEnd) / fadeOut;
+  return gain;
+}
 
 export function clipEnd(clip: Pick<Clip, 'start' | 'duration'>): number {
   return clip.start + clip.duration;

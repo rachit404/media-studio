@@ -1,11 +1,17 @@
 import {
+  clipColour,
+  clipOpacity,
+  clipTransform,
   clipsAt,
+  multiplyAffine,
   sortedTracks,
   type Affine,
   type Asset,
+  type ClipTransform,
   type VideoContent,
 } from '@media-studio/core';
 import type { ImageNode, RenderScene } from '@media-studio/render';
+import { isAudible } from './audio-gain';
 
 /** One picture that has to be on screen at a given time. */
 export interface VideoLayerPlan {
@@ -48,6 +54,7 @@ export function previewPlan(
   const audio: AudioClipPlan[] = [];
   for (const { track, clip } of clipsAt(content, time)) {
     if (track.muted) continue;
+    if (track.kind === 'audio' && !isAudible(content, track)) continue;
     const asset = assets[clip.assetId];
     if (!asset) continue;
     const entry = {
@@ -82,6 +89,38 @@ export function containMatrix(
   ];
 }
 
+/**
+ * Where a clip's picture lands in the sequence frame: fitted inside the frame, then scaled and rotated about the
+ * frame centre and moved by (x, y) as fractions of the frame size.
+ */
+export function clipMatrix(
+  transform: ClipTransform,
+  sourceWidth: number,
+  sourceHeight: number,
+  frameWidth: number,
+  frameHeight: number,
+): Affine {
+  const fit = containMatrix(sourceWidth, sourceHeight, frameWidth, frameHeight);
+  if (transform.x === 0 && transform.y === 0 && transform.scale === 1 && transform.rotation === 0) {
+    return fit;
+  }
+  const radians = (transform.rotation * Math.PI) / 180;
+  const cos = Math.cos(radians) * transform.scale;
+  const sin = Math.sin(radians) * transform.scale;
+  const cx = frameWidth / 2;
+  const cy = frameHeight / 2;
+  // Rotate and scale about the frame centre, then move.
+  const about: Affine = [
+    cos,
+    sin,
+    -sin,
+    cos,
+    cx - cos * cx + sin * cy + transform.x * frameWidth,
+    cy - sin * cx - cos * cy + transform.y * frameHeight,
+  ];
+  return multiplyAffine(about, fit);
+}
+
 export function frameTextureId(clipId: string): string {
   return `clip:${clipId}`;
 }
@@ -104,16 +143,23 @@ export function buildPreviewScene(
   );
   for (const layer of layers) {
     const size = sizes.get(layer.clipId);
-    if (!size) continue;
+    const clip = content.clips[layer.clipId];
+    if (!size || !clip) continue;
+    const transform = clipTransform(clip);
+    const colour = clipColour(clip);
+    const cropped = Object.values(transform.crop).some((amount) => amount > 0);
+    const corrected = Object.values(colour).some((amount) => amount !== 0);
     nodes.push({
       type: 'image',
       id: layer.clipId,
       textureId: frameTextureId(layer.clipId),
       width: size.width,
       height: size.height,
-      matrix: containMatrix(size.width, size.height, width, height),
-      opacity: 1,
+      matrix: clipMatrix(transform, size.width, size.height, width, height),
+      opacity: clipOpacity(clip),
       blendMode: 'normal',
+      ...(cropped ? { crop: transform.crop } : {}),
+      ...(corrected ? { colour } : {}),
     });
   }
   return { width, height, background: { r: 0, g: 0, b: 0 }, nodes };

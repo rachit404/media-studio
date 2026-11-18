@@ -12,6 +12,34 @@ export interface AudioSlice {
   clipEnd: number;
   /** Where in the file it starts (microseconds). */
   sourceStart: number;
+  /** Linear gain at a timeline time (track volume, clip volume, fades). Absent = 1. */
+  gainAt?: (timelineUs: number) => number;
+}
+
+/** Curve points per second of sound; 200 keeps a fade smooth (5 ms steps). */
+const GAIN_POINTS_PER_SECOND = 200;
+
+/**
+ * Set the gain of one scheduled buffer so it follows `gainAt` over the stretch that will be heard: starting at
+ * timeline time `fromUs`, `seconds` long, beginning at audio-clock time `when`.
+ */
+export function applyGain(
+  node: GainNode,
+  gainAt: ((timelineUs: number) => number) | undefined,
+  fromUs: number,
+  seconds: number,
+  when: number,
+): void {
+  if (!gainAt || seconds <= 0) return;
+  const points = Math.max(2, Math.ceil(seconds * GAIN_POINTS_PER_SECOND) + 1);
+  const curve = new Float32Array(points);
+  let flat = true;
+  for (let i = 0; i < points; i += 1) {
+    curve[i] = gainAt(fromUs + (seconds * 1_000_000 * i) / (points - 1));
+    if (curve[i] !== curve[0]) flat = false;
+  }
+  if (flat) node.gain.value = curve[0] ?? 1;
+  else node.gain.setValueCurveAtTime(curve, when, seconds);
 }
 
 interface OpenFile {
@@ -128,8 +156,13 @@ export class AudioPlayer {
       }
       const node = this.context.createBufferSource();
       node.buffer = buffer;
-      node.connect(this.context.destination);
-      node.addEventListener('ended', () => this.nodes.delete(node));
+      const gain = this.context.createGain();
+      applyGain(gain, slice.gainAt, timeline + offset * 1_000_000, buffer.duration - offset, when);
+      node.connect(gain).connect(this.context.destination);
+      node.addEventListener('ended', () => {
+        this.nodes.delete(node);
+        gain.disconnect();
+      });
       this.nodes.add(node);
       node.start(when, offset);
     }

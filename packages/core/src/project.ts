@@ -104,7 +104,7 @@ export const projectSchema = z
 export type ProjectDocument = z.infer<typeof projectSchema>;
 export type ProjectType = ProjectDocument['type'];
 
-export const CURRENT_FORMAT_VERSION = 5;
+export const CURRENT_FORMAT_VERSION = 6;
 export const PROJECT_FORMAT = 'media-studio-project';
 
 export const projectFileSchema = z.strictObject({
@@ -149,11 +149,15 @@ const migrateV4ToV5: Migration = (raw) => {
   return raw;
 };
 
+/** v6 only adds optional clip and track fields (transform, opacity, colour, volume, fades, solo), so v5 stays valid. */
+const migrateV5ToV6: Migration = (raw) => raw;
+
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   1: migrateV1ToV2,
   2: migrateV2ToV3,
   3: migrateV3ToV4,
   4: migrateV4ToV5,
+  5: migrateV5ToV6,
 };
 
 function invalidProject(cause?: unknown): AppError {
