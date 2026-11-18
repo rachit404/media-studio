@@ -4,11 +4,18 @@ import {
   PROJECT_FORMAT,
   decodeJournal,
   encodeRecord,
+  createPixelManifest,
   idSchema,
+  manifestPath,
   parseProject,
   parseProjectFile,
+  pixelContentIds,
+  pixelManifestSchema,
+  rawTileBytes,
   replayRecords,
   sortedItems,
+  tilePath,
+  type Channels,
   type JournalRecord,
   type ProjectDocument,
   type ProjectFile,
@@ -16,6 +23,7 @@ import {
 } from '@media-studio/core';
 import { buildArchive, isAssetPath, readArchive } from './archive';
 import { decodeText, encodeText, folderSize, type FileSystemPort } from './fs-port';
+import { decodeTile, encodeTile } from './tile-codec';
 
 export interface ProjectSummary {
   id: string;
@@ -72,6 +80,40 @@ function safeId(id: string): string {
   if (!idSchema.safeParse(id).success)
     throw new AppError({ code: 'invalid-project', message: 'Invalid project id.' });
   return id;
+}
+
+/** The pixel files an imported project needs, checked against its document. Throws when any is missing or invalid. */
+function pixelEntries(
+  project: ProjectDocument,
+  files: Readonly<Record<string, Uint8Array>>,
+): Record<string, Uint8Array> {
+  const out: Record<string, Uint8Array> = {};
+  if (project.content.kind !== 'image') return out;
+  const missing = (): AppError =>
+    new AppError({
+      code: 'invalid-project',
+      message: 'The archive is missing painted pixels.',
+    });
+  for (const contentId of new Set(pixelContentIds(project.content))) {
+    const path = manifestPath(contentId);
+    const bytes = files[path];
+    if (!bytes) throw missing();
+    out[path] = bytes;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(decodeText(bytes));
+    } catch {
+      throw missing();
+    }
+    const manifest = pixelManifestSchema.safeParse(parsed);
+    if (!manifest.success) throw missing();
+    for (const tileId of Object.values(manifest.data.tiles)) {
+      const tile = files[tilePath(tileId)];
+      if (!tile) throw missing();
+      out[tilePath(tileId)] = tile;
+    }
+  }
+  return out;
 }
 
 function safeAssetPath(path: string): string {
@@ -213,6 +255,87 @@ export class ProjectStore {
     return this.lock(id, () => this.fs.read(`${this.dir(id)}/${safeAssetPath(path)}`));
   }
 
+  /**
+   * Save one version of a painted surface: the tiles that are new (raw bytes, compressed here) and then the
+   * manifest listing every tile of this version. The manifest goes last, so a version either exists completely or
+   * not at all.
+   */
+  putPixels(
+    id: string,
+    contentId: string,
+    channels: Channels,
+    entries: readonly { key: string; id: string }[],
+    newTiles: readonly { id: string; data: Uint8Array }[],
+  ): Promise<void> {
+    return this.lock(id, async () => {
+      const dir = this.dir(id);
+      const expected = rawTileBytes(channels);
+      for (const tile of newTiles) {
+        if (tile.data.length !== expected) {
+          throw new AppError({
+            code: 'write-failed',
+            message: 'A painted tile has the wrong size.',
+          });
+        }
+        await this.fs.write(`${dir}/${safeAssetPath(tilePath(tile.id))}`, encodeTile(tile.data));
+      }
+      const manifest = createPixelManifest(
+        channels,
+        new Map(entries.map((entry) => [entry.key, entry.id])),
+      );
+      const checked = pixelManifestSchema.parse(manifest);
+      await this.fs.write(
+        `${dir}/${safeAssetPath(manifestPath(contentId))}`,
+        encodeText(JSON.stringify(checked)),
+      );
+    });
+  }
+
+  /** Load one version of a painted surface, or null when it was never saved. */
+  getPixels(
+    id: string,
+    contentId: string,
+  ): Promise<{
+    channels: Channels;
+    tiles: { key: string; id: string; data: Uint8Array }[];
+  } | null> {
+    return this.lock(id, () => this.readPixels(id, contentId));
+  }
+
+  private async readPixels(
+    id: string,
+    contentId: string,
+  ): Promise<{
+    channels: Channels;
+    tiles: { key: string; id: string; data: Uint8Array }[];
+  } | null> {
+    const dir = this.dir(id);
+    const bytes = await this.fs.read(`${dir}/${safeAssetPath(manifestPath(contentId))}`);
+    if (!bytes) return null;
+    const parsed = pixelManifestSchema.safeParse(JSON.parse(decodeText(bytes)));
+    if (!parsed.success) {
+      throw new AppError({
+        code: 'invalid-project',
+        message: 'Some painted pixels in this project are damaged.',
+        hint: 'Restore the project from a backup or an exported .msproj file.',
+      });
+    }
+    const channels: Channels = parsed.data.channels;
+    const tiles: { key: string; id: string; data: Uint8Array }[] = [];
+    for (const [key, tileId] of Object.entries(parsed.data.tiles)) {
+      const file = await this.fs.read(`${dir}/${safeAssetPath(tilePath(tileId))}`);
+      if (!file) {
+        throw new AppError({
+          code: 'invalid-project',
+          message: 'Some painted pixels are missing from this project.',
+          hint: 'Restore the project from a backup or an exported .msproj file.',
+        });
+      }
+      tiles.push({ key, id: tileId, data: decodeTile(file, rawTileBytes(channels)) });
+    }
+    return { channels, tiles };
+  }
+
   deleteProject(id: string): Promise<void> {
     return this.lock(id, () => this.fs.remove(this.dir(id)));
   }
@@ -255,6 +378,7 @@ export class ProjectStore {
           entries[path] = data;
         }
       }
+      await this.collectPixelFiles(id, file.project, entries);
       return buildArchive(entries);
     });
   }
@@ -285,6 +409,7 @@ export class ProjectStore {
         });
       }
     }
+    const pixelFiles = pixelEntries(project, files);
     return this.lock(newId, async () => {
       if ((await this.fs.list(this.dir(newId))).length > 0) {
         throw new AppError({
@@ -298,6 +423,9 @@ export class ProjectStore {
             await this.fs.write(`${this.dir(newId)}/${path}`, files[path] as Uint8Array);
           }
         }
+        for (const [path, data] of Object.entries(pixelFiles)) {
+          await this.fs.write(`${this.dir(newId)}/${path}`, data);
+        }
         await this.writeCheckpoint(newId, project, 0);
       } catch (error) {
         await this.fs.remove(this.dir(newId));
@@ -305,6 +433,40 @@ export class ProjectStore {
       }
       return newId;
     });
+  }
+
+  /** Add the manifests and tile files the document's current painted surfaces need to an archive. */
+  private async collectPixelFiles(
+    id: string,
+    project: ProjectDocument,
+    entries: Record<string, Uint8Array>,
+  ): Promise<void> {
+    if (project.content.kind !== 'image') return;
+    const dir = this.dir(id);
+    for (const contentId of new Set(pixelContentIds(project.content))) {
+      const manifestFile = manifestPath(contentId);
+      const bytes = await this.fs.read(`${dir}/${manifestFile}`);
+      if (!bytes) {
+        throw new AppError({
+          code: 'invalid-project',
+          message: 'Some painted pixels are missing, so the project cannot be exported.',
+        });
+      }
+      entries[manifestFile] = bytes;
+      const manifest = pixelManifestSchema.parse(JSON.parse(decodeText(bytes)));
+      for (const tileId of Object.values(manifest.tiles)) {
+        const path = tilePath(tileId);
+        if (entries[path]) continue;
+        const data = await this.fs.read(`${dir}/${path}`);
+        if (!data) {
+          throw new AppError({
+            code: 'invalid-project',
+            message: 'Some painted pixels are missing, so the project cannot be exported.',
+          });
+        }
+        entries[path] = data;
+      }
+    }
   }
 
   // Internals -------------------------------------------------------------------------------------------

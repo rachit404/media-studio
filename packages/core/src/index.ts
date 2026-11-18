@@ -171,3 +171,11 @@ export {
   tilesAcross,
 } from './tiles';
 export type { Channels, PixelGrid, Tile, TileMap } from './tiles';
+export {
+  createPixelManifest,
+  manifestPath,
+  pixelManifestSchema,
+  rawTileBytes,
+  tilePath,
+} from './pixel-manifest';
+export type { PixelManifest } from './pixel-manifest';

@@ -10,6 +10,8 @@ export const ARCHIVE_LIMITS = {
 } as const;
 
 const MEDIA_ENTRY = /^(?:media|thumbs)\/[A-Za-z0-9][A-Za-z0-9._-]{0,150}$/;
+/** Painted pixels: a manifest per version and one file per tile (see core/pixel-manifest.ts). */
+const PIXEL_ENTRY = /^(?:pixels\/[A-Za-z0-9-]{1,64}\.json|tiles\/[A-Za-z0-9-]{1,64}\.bin)$/;
 
 function invalid(message: string, cause?: unknown): AppError {
   return new AppError({
@@ -22,7 +24,7 @@ function invalid(message: string, cause?: unknown): AppError {
 
 /** A path of an asset file inside a project: one file directly under media/ or thumbs/. */
 export function isAssetPath(path: string): boolean {
-  return MEDIA_ENTRY.test(path);
+  return MEDIA_ENTRY.test(path) || PIXEL_ENTRY.test(path);
 }
 
 /** Whether an archive entry name is allowed: project.json, or an asset path. */
@@ -35,7 +37,10 @@ export function buildArchive(entries: Readonly<Record<string, Uint8Array>>): Uin
   const zippable: Zippable = {};
   for (const [name, data] of Object.entries(entries)) {
     if (!isAllowedEntryName(name)) throw new RangeError(`Illegal archive entry: ${name}`);
-    zippable[name] = [data, { level: name === 'project.json' ? 6 : 0 }];
+    zippable[name] = [
+      data,
+      { level: name === 'project.json' || name.startsWith('pixels/') ? 6 : 0 },
+    ];
   }
   return zipSync(zippable);
 }
