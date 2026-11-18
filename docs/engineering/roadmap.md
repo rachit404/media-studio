@@ -112,18 +112,31 @@
 **Tests:** selection algebra properties, brush determinism and memory growth, tile store, manifest and archive round trips, durable-before-journal ordering, blend and adjustment references, end-to-end painting/selection/mask/clip tests, accessibility checks on the new panels in both themes.
 
 ## M5: Video engine and timeline core (XL)
-**Scope:** import, play, scrub, cut and export a basic video project on one or two tracks.
-**Files/modules:** `media-io`, `engine-video` (time model, timeline ops, playback, decode scheduler, frame cache, proxy manager), `render` (video texture path), timeline UI, analysis worker.
-**Implementation plan:**
-1. Video probe and import; thumbnails; waveform peaks; proxy rules and generation.
-2. Decode scheduler with GOP-aware seek, frame cache of copies, audio-clock playback engine.
-3. Timeline model and operations (split, trim, move, ripple, snap) with property tests; virtualised timeline UI ([ADR-0014](../adr/0014-timeline-ui-rendering.md)).
-4. Basic compositor (clip + one overlay), preview quality levels.
-5. **Thin export tracer:** timeline → MP4 (H.264/AAC) via the export worker.
-6. **Risk spikes (gate to proceed):** (a) concurrent hardware decoder limit on Iris Xe; (b) 30-minute playback/scrub soak with process-wide memory sampling to resolve the GPU-memory-growth concern from S7; (c) real (non-synthetic) footage set.
-**Acceptance:** VID-1, VID-2, VID-3 (two tracks), VID-4, VID-5, ASSET-3/4/5, PERF-2/3/7/8; soak shows plateau or documented limits; thin export produces a verified MP4.
-**Tests:** time-conversion and timeline-op properties; decode/seek accuracy fixtures; frame-leak counters; A/V sync test; export round-trip.
-**Known limitations:** limited effects; decoder concurrency cap may reduce overlay count; HEVC/AV1 depend on browser.
+**Status: done** (branch `feat/m5-video-engine`). Document format is now v5. Proxy generation and the long soak have documented outcomes below instead of full features.
+**Delivered:**
+- Time model in integer microseconds with frame, sample and timecode conversions (29.97 and 23.976 do not drift; round trip proven for every frame in tests).
+- Video document: a sequence (size, frame rate, sample rate) with video and audio tracks and clips; the picture and sound of one file are linked clips. Commands: add to timeline, move (also between tracks), trim either edge (optionally rippling), split, join, delete and ripple delete, unlink, track mute/lock/add/remove. A property test with random edits proves the timeline never overlaps and that undo/redo is exact.
+- Import: probe (container, codecs, size, frame rate, keyframe interval, audio facts), preview picture, waveform peaks, original copied into project storage in chunks (nothing is loaded whole). Clear errors for damaged files and for codecs the browser cannot decode.
+- Preview: pictures decoded by WebCodecs through Mediabunny, read ahead per clip, uploaded to the same WebGL compositor as the image editor, letterboxed in the sequence frame; sound scheduled on the Web Audio clock, which is also the master clock for the picture (the picture never slows the sound, late frames are skipped and counted). Latest-wins seeking, frame stepping, play/pause, Home/End.
+- Timeline: virtualised lanes, ruler, imperatively moved playhead, snapping (clip edges, playhead, start), drag to move and trim, waveform and thumbnail on clips, keyboard use (S split, Delete, Shift+Delete ripple, Alt+arrows nudge, [ and ] trim to playhead), numeric start and length fields, zoom and fit.
+- Thin export: the whole timeline to MP4 (H.264 and AAC) in a worker, frame by frame and deterministic, with an offline audio mix, progress, cancel, and a download link. Checked in an end-to-end test with ffprobe: codec, size, exact frame count (125), duration, picture colour per clip, sound present then silent.
+- The two editors are loaded on demand: the app shell is 200 KB gzip (budget 300); the editors and workers load when needed and are warmed while idle so they work offline.
+**Measurements (this machine: Intel Iris Xe, Chrome):**
+- Concurrent decoders (spike S8, 1080p30 H.264, 3 s runs): 1 to 16 decoders all worked, hardware and software. Aggregate about 850 to 1,000 fps; each of 8 decoders ran at 112 fps and each of 16 at 64 fps, still above real time. The preview keeps a cap of 4 decoders (memory, not the decoder limit, is the reason).
+- Soak (spike S9): see [spikes/results/s9-soak.md](../../spikes/results/s9-soak.md).
+- Export of a 5 s, 320 x 240 sequence takes a few seconds including start-up; the frame count matched exactly.
+**Deviations and known limitations:**
+- **No proxies yet.** Long-GOP and above-1080p sources decode directly; seeking in a 10 s-GOP file is slow (S1: p95 315 ms). Proxy generation and automatic switching move to M8 (performance). The probe already records the keyframe interval for that decision.
+- No real-footage spike: only generated clips were used. A real clip set from the owner is still needed to confirm.
+- Decoding for the preview runs on the main thread (WebCodecs decodes off-thread, but demuxing and bitmap copies do not). Moving it to a worker is part of M8.
+- Export builds the file in memory (no stream-to-disk, no resume, H.264/AAC only, linear resampling). Large exports warn above about 1 GB; stream-to-disk, VP9/WebM and verification are M7.
+- Importing copies the file into project storage; File System Access in-place referencing and relink are still not built (storage is OPFS only). Exporting a project archive is refused when its media is over 1 GB.
+- Media files are not deleted when assets are removed (they go when the project is deleted).
+- Audio: no volume, fades, meters or solo yet (M6). Speed, transitions, text, keyframes and effects are M6.
+- The sequence frame rate and size come from the first video; changing them does not resample existing clips.
+- Overlays: several video tracks composite with normal blending, but there are no transform, opacity or crop controls yet (M6).
+**Acceptance:** VID-1, VID-2, VID-3 (two video tracks work; UI tested with two), VID-4, VID-5 (frame stepping and scrubbing; J/K/L shuttle is M6), ASSET-3 and ASSET-4 are met; ASSET-5 (proxies) is not; PERF-2/3/7/8 are measured in M8.
+**Tests:** time conversion properties, timeline operation properties (24 random seeds) with undo/redo, frame pump and frame cache leak counters, audio mix placement, export with fakes (counts, ordering, cancel, failure, clean-up), end-to-end import/preview/playback/editing/persistence and ffprobe-verified export, accessibility check of the video workspace in both themes.
 
 ## M6: Video editor, tier 2 (L)
 **Scope:** the v1 video feature set.

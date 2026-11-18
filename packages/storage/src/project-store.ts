@@ -118,6 +118,9 @@ function pixelEntries(
   return out;
 }
 
+/** Largest total size of media files in an exported archive (the archive is built in memory). */
+export const MAX_ARCHIVE_MEDIA_BYTES = 1024 * 1024 * 1024;
+
 function safeAssetPath(path: string): string {
   if (!isAssetPath(path))
     throw new AppError({ code: 'invalid-project', message: 'Invalid file path.' });
@@ -375,6 +378,18 @@ export class ProjectStore {
   exportArchive(id: string): Promise<Uint8Array> {
     return this.lock(id, async () => {
       const { file } = await this.load(id);
+      // The archive is built in memory, so refuse early (and clearly) instead of running out of memory half way.
+      const mediaBytes = Object.values(file.project.assets.byId).reduce(
+        (sum, asset) => sum + asset.size,
+        0,
+      );
+      if (mediaBytes > MAX_ARCHIVE_MEDIA_BYTES) {
+        throw new AppError({
+          code: 'out-of-memory',
+          message: 'This project is too large to export as a single file.',
+          hint: 'Its media is over 1 GB. Remove clips and files you no longer need, or keep working in the browser.',
+        });
+      }
       const entries: Record<string, Uint8Array> = {
         'project.json': encodeText(JSON.stringify(file)),
       };

@@ -13,7 +13,8 @@ MyProject.msproj/
   journal/              # write-ahead command log segments (recovery)
   pixels/               # one manifest per saved version of a painted surface: tile key -> tile id (JSON)
   tiles/                # painted tiles, one deflated 256x256 file each (immutable, shared between versions)
-  cache/                # thumbnails, waveform peaks, proxies (rebuildable; excluded from archives by default)
+  cache/                # (planned) proxies and other rebuildable files; excluded from archives by default
+  peaks/                # waveform peaks of audio assets, one small file each (see core/waveform.ts)
   media/                # optional: collected copies of media (when "Collect media" is used or on non-FSA browsers)
 ```
 - `cache/` is always safe to delete and is rebuilt on demand.
@@ -73,3 +74,9 @@ Stored (uncompressed) ZIP for media, deflated for JSON; contains `project.json`,
 
 ## 9. Compatibility policy
 Backward: the app opens every older format version via migrations. Forward: refuses with an explanation and never writes into a newer-version project. Format changes require an ADR note, a migration, fixtures and tests.
+
+## 10. Video projects (format v5)
+- `project.content` for a video project is `{ kind: "video", sequence, tracks, clips }`. `sequence` has the picture size, the frame rate as a fraction and the sample rate. `tracks` is an ordered collection (fractional-index key) of `{ kind: "video" | "audio", name, muted, locked, clipIds }`, where `clipIds` is in time order. `clips` maps id to `{ trackId, assetId, start, duration, sourceIn, linkId }` with every time in integer microseconds. Clips on a track never overlap; the schema refuses a document where they do, or where a track and its clips disagree.
+- Assets are `image`, `video` or `audio`. A video asset records duration, frame rate, codec, average keyframe interval (for the later proxy decision), audio facts, its thumbnail (`thumbs/<id>.webp`) and its waveform (`peaks/<id>.bin`). The original lives in `media/<id>.<ext>` and is copied in chunks, never loaded whole.
+- v4 to v5 only gives a video project that has no sequence an empty one (one video and one audio track); everything else is unchanged.
+- Archives carry `peaks/` files too. A project whose media is over 1 GB cannot be exported as an archive yet (the archive is built in memory).

@@ -13,6 +13,9 @@ import {
   clampMoveDelta,
   clipAt,
   clipsAt,
+  expandLinked,
+  firstFreeStart,
+  isFree,
   linkedGroup,
   sequenceDuration,
   trackClips,
@@ -27,6 +30,7 @@ import {
   setSequence,
   setTrackState,
   splitClip,
+  splitClips,
   trimClip,
   unlinkClips,
 } from './video-commands';
@@ -477,4 +481,59 @@ describe('properties: random editing keeps the timeline valid and undo exact', (
       expect(history.state).toEqual(baseline);
     });
   }
+});
+
+describe('splitClips (several clips at once)', () => {
+  it('splits every clip under the playhead in one undo step, keeping each pair linked', () => {
+    const history = setup();
+    history.execute(addTrack('video', 'V2'));
+    const a = add(history, 'vid', 0);
+    const b = add(history, 'mute', 0, { videoTrackId: 'V2' });
+    history.execute(splitClips(content(history), [a, b], 4 * S, id));
+    expect(trackClips(content(history), 'V1')).toHaveLength(2);
+    expect(trackClips(content(history), 'V2')).toHaveLength(2);
+    expect(trackClips(content(history), 'A1')).toHaveLength(2);
+    const [, secondHalf] = trackClips(content(history), 'V1');
+    expect(linkedGroup(content(history), secondHalf?.id ?? '')).toHaveLength(2);
+    history.undo();
+    expect(trackClips(content(history), 'V1')).toHaveLength(1);
+    expect(trackClips(content(history), 'V2')).toHaveLength(1);
+  });
+
+  it('refuses when any clip is not under the time, without changing anything', () => {
+    const history = setup();
+    history.execute(addTrack('video', 'V2'));
+    const a = add(history, 'vid', 0);
+    const b = add(history, 'mute', 5 * S, { videoTrackId: 'V2' });
+    const before = history.state;
+    expect(() => history.execute(splitClips(content(history), [a, b], 3 * S, id))).toThrow(
+      AppError,
+    );
+    expect(history.state).toBe(before);
+  });
+});
+
+describe('timeline queries', () => {
+  it('finds free space and the first place a file fits', () => {
+    const history = setup();
+    add(history, 'mute', 2 * S); // 2 s .. 12 s on V1
+    const c = content(history);
+    expect(isFree(c, 'V1', 0, 2 * S)).toBe(true);
+    expect(isFree(c, 'V1', 0, 2 * S + 1)).toBe(false);
+    expect(isFree(c, 'V1', 12 * S, 5 * S)).toBe(true);
+    expect(isFree(c, 'V1', -1, 5)).toBe(false);
+    expect(firstFreeStart(c, 'V1', 0, 1 * S)).toBe(0);
+    expect(firstFreeStart(c, 'V1', 0, 3 * S)).toBe(12 * S);
+    expect(firstFreeStart(c, 'V1', 5 * S, 1 * S)).toBe(12 * S);
+    expect(firstFreeStart(c, 'A1', 0, 99 * S)).toBe(0);
+  });
+
+  it('expands a selection to include linked clips once', () => {
+    const history = setup();
+    const a = add(history, 'vid', 0);
+    const c = content(history);
+    const expanded = expandLinked(c, [a, a]);
+    expect(expanded.map((clip) => clip.trackId).sort()).toEqual(['A1', 'V1']);
+    expect(expandLinked(c, ['missing'])).toEqual([]);
+  });
 });

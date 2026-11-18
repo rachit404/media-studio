@@ -36,3 +36,8 @@ lazy-loaded module** after a licence review, never as a hard dependency.
 - Seek-to-frame meets the target only on hardware decode with a 2 s GOP (p95 83 ms raw, 130 ms via Mediabunny). Software decode (p95 244-325 ms) and 10 s GOPs (p95 315 ms) fail, so **proxy media is mandatory for long-GOP or software-decoded sources**.
 - HEVC decoded on hardware only here; software HEVC is unsupported. Availability stays a runtime probe.
 - Caveat: synthetic footage and a Baseline-profile 4K fixture; re-test with real clips.
+
+## M5 implementation notes (2026-11-18)
+- Mediabunny (1.66) is used for demuxing, decoding, muxing and encoding behind our own adapters in `media-io` (`probeMedia`, `VideoSource`, `AudioFileReader`, `Mp4Writer`); nothing outside `media-io` imports it.
+- Spike S8: 16 concurrent 1080p30 H.264 decoders ran on Iris Xe in Chrome, hardware and software, at 850 to 1,000 frames per second in total; the decoder count is not the limiting factor for 1080p. See [spikes/results/s8-concurrency.md](../../spikes/results/s8-concurrency.md).
+- Export uses H.264 and AAC only for now, written to memory; WebM/VP9, hardware and software selection, stream-to-disk and verification are M7.

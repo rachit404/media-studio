@@ -4,7 +4,9 @@ import { ALL_FORMATS, AudioSampleSink, BlobSource, Input, type AudioSample } fro
 type Stereo = [Float32Array, Float32Array];
 
 /** Mix any channel layout down to stereo: mono is copied to both sides, more channels alternate left and right. */
-function toStereo(sample: AudioSample): Stereo {
+export function toStereo(
+  sample: Pick<AudioSample, 'numberOfFrames' | 'numberOfChannels' | 'copyTo'>,
+): Stereo {
   const frames = sample.numberOfFrames;
   const channels = sample.numberOfChannels;
   const plane = new Float32Array(frames);
@@ -23,7 +25,7 @@ function toStereo(sample: AudioSample): Stereo {
 }
 
 /** Linear-interpolation resampling (a no-op when the rates match). Good enough for export; see the M7 notes. */
-function resample(input: Stereo, from: number, to: number): Stereo {
+export function resample(input: Stereo, from: number, to: number): Stereo {
   if (from === to) return input;
   const frames = Math.max(1, Math.round((input[0].length * to) / from));
   const out: Stereo = [new Float32Array(frames), new Float32Array(frames)];

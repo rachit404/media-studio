@@ -330,3 +330,14 @@ describe('large files as blobs', () => {
     ).resolves.toBeUndefined();
   });
 });
+
+describe('archive size guard', () => {
+  it('refuses to export a project whose media is over 1 GB, with a clear error', async () => {
+    const history = new History(project('big', 'Big'));
+    history.execute(addAssets([{ ...asset('huge'), size: 2 * 1024 * 1024 * 1024 }]));
+    await store.create(history.state);
+    await store.putFile('big', 'media/huge.png', new Uint8Array([1]));
+    await store.putFile('big', 'thumbs/huge.webp', new Uint8Array([1]));
+    await expect(store.exportArchive('big')).rejects.toMatchObject({ code: 'out-of-memory' });
+  });
+});
