@@ -480,6 +480,9 @@ export class Compositor {
       colour?.saturation ?? 0,
       colour?.temperature ?? 0,
     );
+    const dip = node.dip;
+    const dipLevel = dip?.colour === 'white' ? 1 : 0;
+    gl.uniform4f(this.uniform(program, 'uDip'), dipLevel, dipLevel, dipLevel, dip?.amount ?? 0);
     gl.bindVertexArray(this.quad);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     return true;

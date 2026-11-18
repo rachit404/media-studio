@@ -6,10 +6,12 @@ import {
   clipEnd,
   formatTimecode,
   moveClips,
+  outgoingClip,
   parseTimecode,
   setClipLook,
   setSequence,
   setTrackState,
+  setTransition,
   toAppError,
   trimClip,
   type Asset,
@@ -20,6 +22,7 @@ import { useId, useState } from 'react';
 import type { ProjectSession } from '../project-session';
 import { NumberField } from '../image/fields';
 import { ClipLookEditor } from './ClipLookEditor';
+import { TransitionEditor } from './TransitionEditor';
 
 const RATES: readonly { label: string; fps: FrameRate }[] = [
   { label: '23.976', fps: { num: 24000, den: 1001 } },
@@ -207,6 +210,17 @@ export function VideoInspector({
               <h3 className="text-sm font-semibold">
                 {track.kind === 'video' ? 'Picture' : 'Sound'}
               </h3>
+              {track.kind === 'video' && (
+                <TransitionEditor
+                  key={`transition:${clip.id}`}
+                  clip={clip}
+                  hasPrevious={outgoingClip(content, clip) !== undefined}
+                  locked={track.locked}
+                  change={(transition) =>
+                    run(() => session.history.execute(setTransition(clip.id, transition)))
+                  }
+                />
+              )}
               <ClipLookEditor
                 key={clip.id}
                 clip={clip}

@@ -10,6 +10,7 @@ import {
   firstFreeStart,
   isFree,
   linkedGroup,
+  outgoingClip,
   trackClips,
   tracksOfKind,
 } from './timeline';
@@ -22,8 +23,10 @@ import {
   clipColourSchema,
   clipEnd,
   clipTransformSchema,
+  clipTransitionSchema,
   type Clip,
   type ClipLook,
+  type ClipTransition,
   type Sequence,
   type Track,
   type TrackKind,
@@ -534,6 +537,49 @@ export function setClipLook(
         }
       }
     },
+  };
+}
+
+/**
+ * Set (or with `null` remove) the transition into a picture clip from the clip right before it on the track.
+ * Dragging the duration merges into one undo step.
+ */
+export function setTransition(
+  clipId: string,
+  transition: ClipTransition | null,
+): Command<ProjectDocument> {
+  return {
+    label: transition ? 'Set transition' : 'Remove transition',
+    apply(draft) {
+      const content = videoDraft(draft);
+      const snapshot = before(content);
+      const clip = snapshot.clips[clipId];
+      if (!clip) throw new RangeError(`Clip ${clipId} does not exist`);
+      assertEditable(snapshot, [clip]);
+      const target = clipDraft(content, clipId);
+      if (transition === null) {
+        delete target.transitionIn;
+        return;
+      }
+      if (snapshot.tracks.byId[clip.trackId]?.kind !== 'video') {
+        throw invalid('Only picture clips can have a transition.');
+      }
+      if (!outgoingClip(snapshot, clip)) {
+        throw invalid(
+          'There is no clip right before this one.',
+          'Place the clip directly after another clip on the same track.',
+        );
+      }
+      const parsed = clipTransitionSchema.safeParse(transition);
+      if (!parsed.success) throw invalid('That transition is not valid.');
+      if (parsed.data.duration > clip.duration) {
+        throw invalid('The transition cannot be longer than the clip.');
+      }
+      const { kind, duration, direction } = parsed.data;
+      const wipes = kind === 'wipe' || kind === 'slide';
+      target.transitionIn = { kind, duration, ...(wipes && direction ? { direction } : {}) };
+    },
+    ...(transition ? { coalesceKey: `transition:${clipId}` } : {}),
   };
 }
 

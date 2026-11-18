@@ -323,15 +323,23 @@ export class PreviewPlayer {
 
   /** Decode again from the current time for every clip that is showing or about to. */
   private restartStreams(): void {
-    const { content } = this.getDocument();
+    const { content, assets } = this.getDocument();
     const time = this.transport.time;
+    // A clip going out of a transition shows past its own end, so ask the plan what is on screen.
+    const showing = new Map(
+      previewPlan(content, assets, time).video.map((layer) => [layer.clipId, layer.sourceTime]),
+    );
     for (const stream of [...this.streams.values()]) {
       const clip = content.clips[stream.clipId];
-      if (!clip || time < clip.start - PREROLL_US || time >= clip.start + clip.duration) {
-        this.release(stream.clipId);
-      } else {
+      const sourceTime = showing.get(stream.clipId);
+      if (clip && sourceTime !== undefined) {
         stream.uploaded = null;
-        stream.pump.start(Math.max(0, clip.sourceIn + Math.max(0, time - clip.start)));
+        stream.pump.start(Math.max(0, sourceTime));
+      } else if (clip && time < clip.start && clip.start - time <= PREROLL_US) {
+        stream.uploaded = null;
+        stream.pump.start(Math.max(0, clip.sourceIn));
+      } else {
+        this.release(stream.clipId);
       }
     }
   }

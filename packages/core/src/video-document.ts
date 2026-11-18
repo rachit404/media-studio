@@ -88,6 +88,25 @@ export const NEUTRAL_COLOUR: ClipColour = {
   temperature: 0,
 };
 
+export const TRANSITION_KINDS = ['crossfade', 'dip-black', 'dip-white', 'wipe', 'slide'] as const;
+export type TransitionKind = (typeof TRANSITION_KINDS)[number];
+/** The side the new picture comes in from (wipe and slide). */
+export const TRANSITION_DIRECTIONS = ['left', 'right', 'up', 'down'] as const;
+export type TransitionDirection = (typeof TRANSITION_DIRECTIONS)[number];
+
+/**
+ * A transition from the clip just before this one on its track (the one that ends exactly where this one starts)
+ * into this clip. It runs for `duration` from this clip's start; the earlier clip's footage carries on underneath
+ * (it holds its last picture if the file has no more).
+ */
+export const clipTransitionSchema = z.strictObject({
+  kind: z.enum(TRANSITION_KINDS),
+  duration: z.number().int().min(1).max(MAX_TIME_US),
+  /** Wipe and slide only (absent = left). */
+  direction: z.enum(TRANSITION_DIRECTIONS).optional(),
+});
+export type ClipTransition = z.infer<typeof clipTransitionSchema>;
+
 export const clipSchema = z.strictObject({
   id: idSchema,
   trackId: idSchema,
@@ -111,6 +130,8 @@ export const clipSchema = z.strictObject({
   /** Sound: ramp up from silence over this long at the clip start, and down to silence at its end (absent = 0). */
   fadeIn: timeSchema.optional(),
   fadeOut: timeSchema.optional(),
+  /** Picture clips: how this clip comes in from the clip before it (absent = a plain cut). */
+  transitionIn: clipTransitionSchema.optional(),
 });
 export type Clip = z.infer<typeof clipSchema>;
 

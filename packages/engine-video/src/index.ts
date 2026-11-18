@@ -12,8 +12,9 @@ export {
   frameTextureId,
   previewPlan,
   sourceTimeAt,
+  transitionLook,
 } from './preview';
-export type { AudioClipPlan, PreviewPlan, VideoLayerPlan } from './preview';
+export type { AudioClipPlan, LayerTransition, PreviewPlan, VideoLayerPlan } from './preview';
 export {
   MAX_PX_PER_SECOND,
   MIN_PX_PER_SECOND,

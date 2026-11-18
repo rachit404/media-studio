@@ -40,6 +40,7 @@ uniform int uHasClip;
 uniform vec2 uOut;           // output size in pixels
 uniform vec4 uCrop;          // fraction removed at left, top, right, bottom of the picture
 uniform vec4 uColour;        // brightness, contrast, saturation, temperature (all 0 = untouched)
+uniform vec4 uDip;           // rgb of the colour to dip to, and how far (0 = not at all)
 in vec2 vUv;
 out vec4 outColor;
 void main() {
@@ -56,6 +57,10 @@ void main() {
     s = clamp(vec3(luma) + (s - luma) * (1.0 + uColour.z), 0.0, 1.0);
     s = clamp(s + vec3(uColour.w * 0.1, 0.0, -uColour.w * 0.1), 0.0, 1.0);
     c = vec4(s * c.a, c.a);
+  }
+  if (uDip.w > 0.0) {
+    // Dip transitions: mix towards black or white without changing the layer's alpha.
+    c = vec4(mix(c.rgb, uDip.rgb * c.a, uDip.w), c.a);
   }
   if (uHasMask == 1) {
     vec2 mu = vUv * uMaskScale;

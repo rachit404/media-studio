@@ -1,5 +1,6 @@
 import {
   US_PER_SECOND,
+  activeTransition,
   addMediaToTimeline,
   addTrack,
   clampMoveDelta,
@@ -651,13 +652,16 @@ export function Timeline({
                       selectedId !== null &&
                       content.clips[selectedId]?.linkId != null &&
                       content.clips[selectedId]?.linkId === clip.linkId;
+                    const transition = clip.transitionIn
+                      ? activeTransition(content, clip)
+                      : undefined;
                     return (
                       <button
                         key={clip.id}
                         type="button"
                         data-clip-id={clip.id}
                         aria-pressed={selectedId === clip.id}
-                        aria-label={`${asset?.name ?? 'Missing media'}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}`}
+                        aria-label={`${asset?.name ?? 'Missing media'}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}`}
                         onPointerDown={(event) => onClipPointerDown(event, clip)}
                         onPointerMove={(event) => onClipPointerMove(event, clip)}
                         onPointerUp={(event) => onClipPointerUp(event, clip)}
@@ -690,6 +694,19 @@ export function Timeline({
                             seconds={at.duration / US_PER_SECOND}
                             width={width}
                             height={ROW_HEIGHT - 12}
+                          />
+                        )}
+                        {transition && (
+                          <span
+                            aria-hidden="true"
+                            data-testid="transition-marker"
+                            className="pointer-events-none absolute inset-y-0 left-0 border-r border-warning bg-warning opacity-40"
+                            style={{
+                              width: Math.min(
+                                width,
+                                (transition.duration / US_PER_SECOND) * pxPerSecond,
+                              ),
+                            }}
                           />
                         )}
                         <span className="relative block truncate px-1.5 pt-1.5 text-fg">

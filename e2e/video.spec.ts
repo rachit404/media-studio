@@ -429,6 +429,86 @@ test.describe('drag and drop from the library', () => {
   });
 });
 
+test.describe('transitions', () => {
+  /** red (0 to 2 s, 25 fps) then blue (2 to 5 s), with a 1 s dip to black into blue. */
+  async function dipProject(page: Page, name: string): Promise<void> {
+    await createVideoProject(page, name);
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4');
+    await addToTimeline(page, 'blue.mp4');
+    await clip(page, 'blue.mp4', 'Video 1').click();
+    await page.getByLabel('Transition in', { exact: true }).selectOption('dip-black');
+    await page.getByRole('spinbutton', { name: /^Duration/ }).fill('1');
+    await expect(page.getByRole('spinbutton', { name: /^Duration/ })).toHaveValue('1');
+  }
+
+  test('a dip to black goes dark between the two clips and undo takes it away', async ({
+    page,
+  }) => {
+    await dipProject(page, 'Dip preview');
+    await expect(clip(page, 'blue.mp4', 'Video 1')).toHaveAccessibleName(/dip-black transition in/);
+    await expect(page.getByTestId('transition-marker')).toBeVisible();
+
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+    await page.keyboard.press('Home');
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 20_000 }).toBe(true);
+    // Frame 62 at 25 fps is 2.48 s: just before the middle of the dip, so the red is nearly black.
+    for (let i = 0; i < 62; i += 1) await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('clock')).toHaveText('00:00:02:12');
+    await expect
+      .poll(async () => (await previewColour(page)).every((value) => value < 60), {
+        timeout: 20_000,
+      })
+      .toBe(true);
+    // After the dip the blue is back.
+    await page.keyboard.press('End');
+    await page.keyboard.press('ArrowLeft');
+    await expect
+      .poll(async () => isBlue(await previewColour(page)), { timeout: 20_000 })
+      .toBe(true);
+
+    await clip(page, 'blue.mp4', 'Video 1').click();
+    await page.getByLabel('Transition in', { exact: true }).selectOption('');
+    await expect(page.getByTestId('transition-marker')).toHaveCount(0);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(page.getByTestId('transition-marker')).toBeVisible();
+  });
+
+  test('the first clip on a track has no clip to come from, and says so', async ({ page }) => {
+    await createVideoProject(page, 'Transition first');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await expect(page.getByLabel('Transition in', { exact: true })).toBeDisabled();
+    await expect(page.getByText(/place this clip directly after another clip/i)).toBeVisible();
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('the exported picture dips to black between the clips and returns to blue', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(120_000);
+      await dipProject(page, 'Dip export');
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('dip.mp4');
+      await (await downloading).saveAs(file);
+
+      expect(pixelAtSecond(file, 1.5)[0]).toBeGreaterThan(200); // red before the dip
+      const dark = pixelAtSecond(file, 2.5); // the middle of the dip
+      expect(Math.max(...dark)).toBeLessThan(60);
+      expect(pixelAtSecond(file, 4)[2]).toBeGreaterThan(200); // blue after it
+    });
+  });
+});
+
 test.describe('clip look (picture and sound properties)', () => {
   test('cropping and opacity change the preview, and undo restores it', async ({ page }) => {
     await createVideoProject(page, 'Look test');
