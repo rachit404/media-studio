@@ -1,6 +1,9 @@
 import {
   AppError,
+  addRasterLayer,
+  commitPixels,
   createProject,
+  createTile,
   renameProject,
   replayRecords,
   type JournalRecord,
@@ -20,12 +23,42 @@ class FakeStorage implements SessionStorage {
       return Promise.reject(new Error('disk full'));
     }
     this.journal.push(...records);
+    this.events.push('journal');
     return Promise.resolve();
   }
   checkpoint(_id: string, project: ProjectDocument, seq: number): Promise<void> {
     this.checkpoints.push({ project, seq });
     this.journal = this.journal.filter((record) => record.seq > seq);
     return Promise.resolve();
+  }
+  events: string[] = [];
+  failPixelWrites = 0;
+  stored = new Map<
+    string,
+    { channels: 1 | 4; tiles: { key: string; id: string; data: Uint8Array }[] }
+  >();
+
+  putPixels(
+    _id: string,
+    contentId: string,
+    channels: 1 | 4,
+    entries: { key: string; id: string }[],
+    newTiles: { id: string; data: Uint8Array }[],
+  ): Promise<void> {
+    if (this.failPixelWrites > 0) {
+      this.failPixelWrites -= 1;
+      return Promise.reject(new Error('disk full'));
+    }
+    this.events.push(`pixels:${contentId}:new=${String(newTiles.length)}`);
+    const data = new Map(newTiles.map((t) => [t.id, t.data]));
+    this.stored.set(contentId, {
+      channels,
+      tiles: entries.map((e) => ({ ...e, data: data.get(e.id) ?? new Uint8Array(0) })),
+    });
+    return Promise.resolve();
+  }
+  getPixels(_id: string, contentId: string) {
+    return Promise.resolve(this.stored.get(contentId) ?? null);
   }
 }
 
@@ -123,5 +156,65 @@ describe('ProjectSession autosave', () => {
     rename(session, 'Next');
     await session.flush();
     expect(storage.journal.map((r) => r.seq)).toEqual([42]);
+  });
+});
+
+describe('ProjectSession painted pixels', () => {
+  const stroke = (session: ProjectSession, base: string | null) => {
+    const tile = createTile(`tile-${String(Math.random()).slice(2)}`, 4);
+    tile.data[0] = 7;
+    const id = session.createPixelVersion(base, 4, new Map([['0,0', tile]]));
+    session.history.execute(commitPixels('R1', 'layer', id, 'Brush stroke'));
+    return { id, tile };
+  };
+
+  it('writes the pixels before the journal record that refers to them', async () => {
+    const session = new ProjectSession('p1', base(), 0, storage);
+    session.history.execute(addRasterLayer('R1'));
+    const { id } = stroke(session, null);
+    await session.flush();
+    expect(storage.events.indexOf(`pixels:${id}:new=1`)).toBeGreaterThanOrEqual(0);
+    expect(storage.events.indexOf(`pixels:${id}:new=1`)).toBeLessThan(
+      storage.events.indexOf('journal'),
+    );
+  });
+
+  it('keeps the new version in memory at once and writes each tile only once', async () => {
+    const session = new ProjectSession('p1', base(), 0, storage);
+    session.history.execute(addRasterLayer('R1'));
+    const first = stroke(session, null);
+    expect(session.pixels.get(first.id).get('0,0')).toBe(first.tile);
+    // A second version that reuses the first version's tile writes no tile data again.
+    const reuse = session.createPixelVersion(first.id, 4, new Map());
+    await session.flush();
+    expect(storage.events).toContain(`pixels:${reuse}:new=0`);
+  });
+
+  it('does not record a change whose pixels could not be saved, and retries until they can', async () => {
+    const session = new ProjectSession('p1', base(), 0, storage, { journalDelayMs: 100 });
+    session.history.execute(addRasterLayer('R1'));
+    storage.failPixelWrites = 1;
+    const { id } = stroke(session, null);
+    await vi.advanceTimersByTimeAsync(100);
+    await Promise.resolve();
+    // The write failed once, so the journal must not have been written; the retry then saves everything in order.
+    await session.flush();
+    expect(session.status).toBe('saved');
+    expect(storage.events.indexOf(`pixels:${id}:new=1`)).toBeLessThan(
+      storage.events.indexOf('journal'),
+    );
+    expect(storage.journal.map((r) => r.seq)).toEqual([1, 2]);
+  });
+
+  it('loads saved pixels back by content id', async () => {
+    const session = new ProjectSession('p1', base(), 0, storage);
+    session.history.execute(addRasterLayer('R1'));
+    const { id } = stroke(session, null);
+    await session.flush();
+
+    const reopened = new ProjectSession('p1', base(), 0, storage);
+    await reopened.loadPixels([id]);
+    expect(reopened.pixels.get(id).get('0,0')?.data[0]).toBe(7);
+    await expect(reopened.loadPixels(['missing'])).rejects.toBeInstanceOf(AppError);
   });
 });

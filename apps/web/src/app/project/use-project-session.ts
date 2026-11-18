@@ -1,4 +1,4 @@
-import { toAppError, type AppError } from '@media-studio/core';
+import { pixelContentIds, toAppError, type AppError } from '@media-studio/core';
 import type { Recovery } from '@media-studio/storage';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { diagnostics } from '../diagnostics';
@@ -21,12 +21,29 @@ export function useProjectSession(id: string): SessionState {
     const storage = getStorage();
     setState({ phase: 'loading' });
 
-    const start = (project: ConstructorParameters<typeof ProjectSession>[1], seq: number) => {
-      session = new ProjectSession(id, project, seq, storage, {
+    /** Create the session and load the project's painted pixels before the editor is shown. */
+    const start = async (
+      project: ConstructorParameters<typeof ProjectSession>[1],
+      seq: number,
+    ): Promise<ProjectSession> => {
+      const created = new ProjectSession(id, project, seq, storage, {
         autoFreeze: import.meta.env.DEV,
         onError: (error) => diagnostics.log('error', 'autosave', error.message),
       });
-      return session;
+      if (project.content.kind === 'image') {
+        await created.loadPixels(pixelContentIds(project.content));
+      }
+      session = created;
+      return created;
+    };
+    const show = (opening: Promise<ProjectSession>) => {
+      opening
+        .then((ready) => {
+          if (active) setState({ phase: 'ready', session: ready });
+        })
+        .catch((error: unknown) => {
+          if (active) setState({ phase: 'error', error: toAppError(error) });
+        });
     };
 
     storage
@@ -37,7 +54,7 @@ export function useProjectSession(id: string): SessionState {
           diagnostics.log('warn', 'recovery', 'Part of the recovery journal could not be used');
         }
         if (!opened.recovery) {
-          setState({ phase: 'ready', session: start(opened.file.project, opened.file.journalSeq) });
+          show(start(opened.file.project, opened.file.journalSeq));
           return;
         }
         const { recovery } = opened;
@@ -47,21 +64,25 @@ export function useProjectSession(id: string): SessionState {
           choose: (restore) => {
             if (!active) return;
             if (restore) {
-              const restored = start(recovery.project, recovery.lastSeq);
-              // Persist the restored state straight away so the journal can be dropped.
-              void restored.checkpoint();
-              setState({ phase: 'ready', session: restored });
-              diagnostics.log('info', 'recovery', 'Restored unsaved changes', {
-                records: recovery.records,
-              });
+              show(
+                start(recovery.project, recovery.lastSeq).then((restored) => {
+                  // Persist the restored state straight away so the journal can be dropped.
+                  void restored.checkpoint();
+                  diagnostics.log('info', 'recovery', 'Restored unsaved changes', {
+                    records: recovery.records,
+                  });
+                  return restored;
+                }),
+              );
             } else {
-              void storage.discardJournal(id).then(() => {
-                if (!active) return;
-                setState({
-                  phase: 'ready',
-                  session: start(opened.file.project, opened.file.journalSeq),
+              void storage
+                .discardJournal(id)
+                .then(() => {
+                  if (active) show(start(opened.file.project, opened.file.journalSeq));
+                })
+                .catch((error: unknown) => {
+                  if (active) setState({ phase: 'error', error: toAppError(error) });
                 });
-              });
             }
           },
         });

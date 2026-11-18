@@ -65,5 +65,29 @@ for (const colorScheme of ['dark', 'light'] as const) {
       await expect(page.getByRole('dialog', { name: 'Crop canvas' })).toBeVisible();
       await expectNoViolations(page);
     });
+
+    test('painting tools, selection and mask controls have no violations', async ({ page }) => {
+      await createImageProject(page, 'A11yPaint');
+      await addLayers(page, [{ name: 'one.png', bytes: solidPng(16, 16, [200, 100, 50, 255]) }]);
+      await page.getByRole('button', { name: 'Paint layer', exact: true }).click();
+      await page
+        .getByRole('group', { name: 'Tools' })
+        .getByRole('button', { name: 'Brush', exact: true })
+        .click();
+      await expect(page.getByRole('slider', { name: 'Brush size' })).toBeVisible();
+      await expectNoViolations(page);
+
+      await page
+        .getByRole('group', { name: 'Tools' })
+        .getByRole('button', { name: 'Rectangle select', exact: true })
+        .click();
+      await expect(page.getByRole('group', { name: 'Selection mode' })).toBeVisible();
+      await page.getByRole('button', { name: 'Select all' }).click();
+      await expectNoViolations(page);
+
+      await page.getByRole('button', { name: 'Add layer mask' }).click();
+      await expect(page.getByRole('button', { name: 'Edit mask' })).toBeVisible();
+      await expectNoViolations(page);
+    });
   });
 }

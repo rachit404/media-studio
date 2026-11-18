@@ -1,4 +1,4 @@
-import { toAppError, type Asset, type ImageContent } from '@media-studio/core';
+import { toAppError, type Asset, type ImageContent, type PixelStore } from '@media-studio/core';
 import {
   DEFAULT_EXPORT_SETTINGS,
   EXPORT_FORMATS,
@@ -23,6 +23,8 @@ export interface ExportDialogProps {
   projectName: string;
   content: ImageContent;
   assets: Readonly<Record<string, Asset>>;
+  /** The session's painted pixels. */
+  pixels: PixelStore;
 }
 
 function download(blob: Blob, filename: string): void {
@@ -42,6 +44,7 @@ export function ExportDialog({
   projectName,
   content,
   assets,
+  pixels,
 }: ExportDialogProps) {
   const [settings, setSettings] = useState<ExportSettings>(DEFAULT_EXPORT_SETTINGS);
   const [busy, setBusy] = useState(false);
@@ -62,7 +65,12 @@ export function ExportDialog({
     setMessage(null);
     try {
       const plan = planExport(content, settings);
-      const { scene, textureIds } = buildScene(content, assets, rasterMetrics);
+      const { scene, textureIds } = buildScene(
+        content,
+        assets,
+        rasterMetrics,
+        (_layerId, _target, contentId) => pixels.get(contentId),
+      );
       if (scene.nodes.length === 0) {
         setMessage({ kind: 'error', text: 'There is nothing to export yet. Add a layer first.' });
         return;

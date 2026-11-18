@@ -1,10 +1,21 @@
-import type { Adjustment, Affine, BlendMode, RasterSpec } from '@media-studio/core';
+import type { Adjustment, Affine, BlendMode, RasterSpec, TileMap } from '@media-studio/core';
 
 /** Straight colour, each channel 0..1. */
 export interface Rgb {
   r: number;
   g: number;
   b: number;
+}
+
+/**
+ * Painted pixels as sparse tiles (see core/tiles.ts). `channels` 4 is straight-alpha RGBA, 1 is a mask.
+ * The renderer uploads only the tiles that changed since last time (by identity and `rev`).
+ */
+export interface PixelSurface {
+  width: number;
+  height: number;
+  channels: 1 | 4;
+  tiles: TileMap;
 }
 
 export interface ImageNode {
@@ -21,6 +32,12 @@ export interface ImageNode {
   blendMode: BlendMode;
   /** Text and shape layers: the parameters their texture is generated from (textureId is `rasterKey(raster)`). */
   raster?: RasterSpec;
+  /** Paint layers: the pixels to draw (textureId is not used). */
+  pixels?: PixelSurface;
+  /** Layer mask in the layer's own pixel space (1 channel). Absent or disabled masks are left out by the caller. */
+  mask?: PixelSurface;
+  /** Clip to the opaque parts of the nearest layer below that is not itself clipped. */
+  clip?: boolean;
 }
 
 export interface AdjustmentNode {

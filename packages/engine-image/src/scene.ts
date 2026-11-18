@@ -1,12 +1,15 @@
 import {
+  EMPTY_TILES,
   layerMatrix,
   rasterKey,
   sortedItems,
   type Asset,
   type ImageContent,
+  type PlacedLayer,
   type RasterSpec,
+  type TileMap,
 } from '@media-studio/core';
-import type { RasterMetrics, RenderScene, Rgb, SceneNode } from '@media-studio/render';
+import type { ImageNode, RasterMetrics, RenderScene, Rgb, SceneNode } from '@media-studio/render';
 
 /** `#RRGGBB` to 0..1 channels. */
 export function parseHexColor(hex: string): Rgb {
@@ -14,6 +17,30 @@ export function parseHexColor(hex: string): Rgb {
   if (!value) throw new RangeError(`Invalid colour: ${hex}`);
   const channel = (offset: number) => parseInt(value.slice(offset, offset + 2), 16) / 255;
   return { r: channel(0), g: channel(2), b: channel(4) };
+}
+
+/** Finds the tiles for a painted surface: a paint layer's pixels or a layer mask's, by content id. */
+export type PixelResolver = (
+  layerId: string,
+  target: 'layer' | 'mask',
+  contentId: string | null,
+) => TileMap;
+
+const noPixels: PixelResolver = () => EMPTY_TILES;
+
+/** Mask and clipping settings of a placed layer, as renderer node fields (only those that apply). */
+function maskAndClip(layer: PlacedLayer, resolve: PixelResolver): Pick<ImageNode, 'mask' | 'clip'> {
+  const extra: Pick<ImageNode, 'mask' | 'clip'> = {};
+  if (layer.mask?.enabled) {
+    extra.mask = {
+      width: layer.mask.width,
+      height: layer.mask.height,
+      channels: 1,
+      tiles: resolve(layer.id, 'mask', layer.mask.pixels),
+    };
+  }
+  if (layer.clip) extra.clip = true;
+  return extra;
 }
 
 export interface BuiltScene {
@@ -29,6 +56,7 @@ export function buildScene(
   content: ImageContent,
   assets: Readonly<Record<string, Asset>>,
   metrics: RasterMetrics,
+  resolvePixels: PixelResolver = noPixels,
 ): BuiltScene {
   const nodes: SceneNode[] = [];
   const textureIds = new Set<string>();
@@ -59,6 +87,27 @@ export function buildScene(
         opacity: layer.opacity,
         blendMode: layer.blendMode,
         raster,
+        ...maskAndClip(layer, resolvePixels),
+      });
+      continue;
+    }
+    if (layer.type === 'raster') {
+      nodes.push({
+        type: 'image',
+        id: layer.id,
+        textureId: `pixels:${layer.id}`,
+        width: layer.width,
+        height: layer.height,
+        matrix: layerMatrix(layer.transform, layer.width, layer.height),
+        opacity: layer.opacity,
+        blendMode: layer.blendMode,
+        pixels: {
+          width: layer.width,
+          height: layer.height,
+          channels: 4,
+          tiles: resolvePixels(layer.id, 'layer', layer.pixels),
+        },
+        ...maskAndClip(layer, resolvePixels),
       });
       continue;
     }
@@ -77,6 +126,7 @@ export function buildScene(
       matrix: layerMatrix(layer.transform, asset.width, asset.height),
       opacity: layer.opacity,
       blendMode: layer.blendMode,
+      ...maskAndClip(layer, resolvePixels),
     });
   }
 

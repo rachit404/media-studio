@@ -90,7 +90,9 @@ export {
   emptyImageContent,
   imageContentSchema,
   imageLayerSchema,
+  layerMaskSchema,
   layerSchema,
+  rasterLayerSchema,
   transformSchema,
 } from './image-document';
 export type {
@@ -98,7 +100,9 @@ export type {
   ImageContent,
   ImageLayer,
   Layer,
+  LayerMask,
   PlacedLayer,
+  RasterLayer,
   RasterSpec,
   ShapeKind,
   ShapeLayer,
@@ -109,7 +113,9 @@ export type {
 } from './image-document';
 export {
   IDENTITY,
+  affineScale,
   applyAffine,
+  invertAffine,
   layerMatrix,
   multiplyAffine,
   normalizeDegrees,
@@ -119,26 +125,57 @@ export {
   addAdjustmentLayer,
   addAdjustmentLayers,
   addImageLayer,
+  addRasterLayer,
   addShapeLayer,
   addTextLayer,
+  commitPixels,
   cropCanvas,
   duplicateLayer,
   flipCanvas,
   moveLayer,
   pasteLayer,
+  pixelContentIds,
   removeLayer,
+  removeLayerMask,
   renameLayer,
   resizeCanvas,
   rotateCanvas,
   setAdjustmentParams,
   setBackground,
   setLayerBlendMode,
+  setLayerClip,
+  setLayerMask,
   setLayerOpacity,
   setLayerTransform,
   setLayerVisible,
+  setMaskEnabled,
   setShapeSpec,
   setTextSpec,
   snapshotLayer,
 } from './image-commands';
 export type { LayerAssetRef, LayerSnapshot } from './image-commands';
 export type { WithoutKey } from './ordered';
+export {
+  EMPTY_TILES,
+  PixelStore,
+  TILE_SIZE,
+  cloneTile,
+  createTile,
+  defaultFill,
+  isDefaultTile,
+  parseTileKey,
+  readPixel,
+  tileBytes,
+  tileInside,
+  tileKey,
+  tilesAcross,
+} from './tiles';
+export type { Channels, PixelGrid, Tile, TileMap } from './tiles';
+export {
+  createPixelManifest,
+  manifestPath,
+  pixelManifestSchema,
+  rawTileBytes,
+  tilePath,
+} from './pixel-manifest';
+export type { PixelManifest } from './pixel-manifest';

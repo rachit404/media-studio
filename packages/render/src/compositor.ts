@@ -1,4 +1,12 @@
-import { AppError, multiplyAffine, type Affine } from '@media-studio/core';
+import {
+  AppError,
+  TILE_SIZE,
+  defaultFill,
+  multiplyAffine,
+  parseTileKey,
+  type Affine,
+  type Tile,
+} from '@media-studio/core';
 import { rasterize } from './raster';
 import {
   ADJUST_FRAGMENT,
@@ -13,6 +21,7 @@ import {
 import type {
   AdjustmentNode,
   ImageNode,
+  PixelSurface,
   RenderOptions,
   RenderScene,
   Rgb,
@@ -35,6 +44,17 @@ interface Targets {
   a: Target;
   b: Target;
   layer: Target;
+  /** The last layer drawn without clipping, kept so later layers can be clipped to its shape. */
+  base: Target;
+}
+
+/** A painted surface on the GPU, with a record of which tile versions are already uploaded. */
+interface SurfaceTexture {
+  texture: WebGLTexture;
+  width: number;
+  height: number;
+  channels: 1 | 4;
+  uploaded: Map<string, { tile: Tile; rev: number }>;
 }
 
 interface FilterPass {
@@ -69,6 +89,9 @@ export class Compositor {
   private targets: Targets | undefined;
   /** Texture ids generated from text/shape parameters, so unused ones can be released after each render. */
   private readonly generated = new Set<string>();
+  /** Painted surfaces (paint layers and masks) by key, updated tile by tile. */
+  private readonly surfaces = new Map<string, SurfaceTexture>();
+  private readonly blankTiles = new Map<number, Uint8Array>();
 
   constructor(private readonly gl: WebGL2RenderingContext) {
     this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
@@ -155,10 +178,15 @@ export class Compositor {
       gl.clearColor(bg?.r ?? 0, bg?.g ?? 0, bg?.b ?? 0, bg ? 1 : 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
 
+      let baseValid = false;
       for (const node of scene.nodes) {
         if (node.type === 'image') {
-          if (!this.drawLayer(node, targets.layer, width, height, view)) continue;
-          this.composite(node, current, targets.layer, spare);
+          const clipped = node.clip === true && baseValid;
+          const drawn = clipped ? targets.layer : targets.base;
+          if (!this.drawLayer(node, drawn, width, height, view, clipped ? targets.base : null))
+            continue;
+          if (!clipped) baseValid = true;
+          this.composite(node, current, drawn, spare);
         } else {
           this.adjust(node, current, spare, targets.layer, { width, height, view, bounds });
         }
@@ -168,6 +196,7 @@ export class Compositor {
     }
     this.present(current, options, { x0, y0, x1, y1 });
     this.releaseUnusedGenerated(scene);
+    this.releaseUnusedSurfaces(scene);
   }
 
   /** Generated textures follow the document: drop the ones no layer refers to any more. */
@@ -182,10 +211,161 @@ export class Compositor {
     }
   }
 
+  /** Painted surfaces follow the document too: drop the ones whose layer or mask is gone. */
+  private releaseUnusedSurfaces(scene: RenderScene): void {
+    const used = new Set<string>();
+    for (const node of scene.nodes) {
+      if (node.type !== 'image') continue;
+      if (node.pixels) used.add(`pixels:${node.id}`);
+      if (node.mask) used.add(`mask:${node.id}`);
+    }
+    for (const [key, surface] of this.surfaces) {
+      if (used.has(key)) continue;
+      this.gl.deleteTexture(surface.texture);
+      this.surfaces.delete(key);
+    }
+  }
+
+  /**
+   * Make the GPU copy of a painted surface match its tiles. Only tiles that are new or changed since the last call
+   * are uploaded, so painting a stroke costs about the size of the brush, not of the layer.
+   */
+  private syncSurface(key: string, surface: PixelSurface): WebGLTexture {
+    const { gl } = this;
+    let entry = this.surfaces.get(key);
+    if (
+      entry &&
+      (entry.width !== surface.width ||
+        entry.height !== surface.height ||
+        entry.channels !== surface.channels)
+    ) {
+      gl.deleteTexture(entry.texture);
+      this.surfaces.delete(key);
+      entry = undefined;
+    }
+    if (!entry) {
+      if (surface.width > this.maxTextureSize || surface.height > this.maxTextureSize) {
+        throw new AppError({
+          code: 'out-of-memory',
+          message: `This layer is larger than this device can display (${String(this.maxTextureSize)} pixels).`,
+          hint: 'Use a smaller canvas.',
+        });
+      }
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      const internal = surface.channels === 1 ? gl.R8 : gl.RGBA8;
+      const format = surface.channels === 1 ? gl.RED : gl.RGBA;
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        internal,
+        surface.width,
+        surface.height,
+        0,
+        format,
+        gl.UNSIGNED_BYTE,
+        null,
+      );
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      entry = {
+        texture,
+        width: surface.width,
+        height: surface.height,
+        channels: surface.channels,
+        uploaded: new Map(),
+      };
+      this.surfaces.set(key, entry);
+      // Masks start fully visible; paint layers start transparent (a new texture is already zero).
+      if (surface.channels === 1) this.fillTexture(entry, defaultFill(1));
+    }
+
+    for (const [tileKey, tile] of surface.tiles) {
+      const seen = entry.uploaded.get(tileKey);
+      if (seen && seen.tile === tile && seen.rev === tile.rev) continue;
+      this.uploadTile(entry, tileKey, tile.data);
+      entry.uploaded.set(tileKey, { tile, rev: tile.rev });
+    }
+    for (const tileKey of [...entry.uploaded.keys()]) {
+      if (surface.tiles.has(tileKey)) continue;
+      this.uploadTile(entry, tileKey, this.blank(entry.channels));
+      entry.uploaded.delete(tileKey);
+    }
+    return entry.texture;
+  }
+
+  private blank(channels: 1 | 4): Uint8Array {
+    let data = this.blankTiles.get(channels);
+    if (!data) {
+      data = new Uint8Array(TILE_SIZE * TILE_SIZE * channels).fill(defaultFill(channels));
+      this.blankTiles.set(channels, data);
+    }
+    return data;
+  }
+
+  /** Clear a whole surface texture to one value (used to start masks fully visible). */
+  private fillTexture(entry: SurfaceTexture, value: number): void {
+    const { gl } = this;
+    const framebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, entry.texture, 0);
+    const scissor = gl.isEnabled(gl.SCISSOR_TEST);
+    gl.disable(gl.SCISSOR_TEST);
+    const v = value / 255;
+    gl.clearColor(v, v, v, v);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteFramebuffer(framebuffer);
+    if (scissor) gl.enable(gl.SCISSOR_TEST);
+  }
+
+  private uploadTile(entry: SurfaceTexture, tileKey: string, data: Uint8Array): void {
+    const position = parseTileKey(tileKey);
+    if (!position) return;
+    const x = position.tx * TILE_SIZE;
+    const y = position.ty * TILE_SIZE;
+    const w = Math.min(TILE_SIZE, entry.width - x);
+    const h = Math.min(TILE_SIZE, entry.height - y);
+    if (w <= 0 || h <= 0) return;
+    const { gl } = this;
+    let pixels = data;
+    if (entry.channels === 4) {
+      // Stored straight; the compositor works on premultiplied colour.
+      pixels = new Uint8Array(data.length);
+      for (let i = 0; i < data.length; i += 4) {
+        const a = data[i + 3] ?? 0;
+        pixels[i] = Math.round(((data[i] ?? 0) * a) / 255);
+        pixels[i + 1] = Math.round(((data[i + 1] ?? 0) * a) / 255);
+        pixels[i + 2] = Math.round(((data[i + 2] ?? 0) * a) / 255);
+        pixels[i + 3] = a;
+      }
+    }
+    gl.bindTexture(gl.TEXTURE_2D, entry.texture);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.pixelStorei(gl.UNPACK_ROW_LENGTH, TILE_SIZE);
+    gl.texSubImage2D(
+      gl.TEXTURE_2D,
+      0,
+      x,
+      y,
+      w,
+      h,
+      entry.channels === 1 ? gl.RED : gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      pixels,
+    );
+    gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  }
+
   dispose(): void {
     const { gl } = this;
     for (const texture of this.textures.values()) gl.deleteTexture(texture);
     this.textures.clear();
+    for (const surface of this.surfaces.values()) gl.deleteTexture(surface.texture);
+    this.surfaces.clear();
     this.releaseTargets();
     for (const { program } of this.programs.values()) gl.deleteProgram(program);
     this.programs.clear();
@@ -202,14 +382,18 @@ export class Compositor {
     width: number,
     height: number,
     view: ViewTransform,
+    clipBase: Target | null,
   ): boolean {
     const { gl } = this;
     if (node.raster && !this.textures.has(node.textureId)) {
       this.uploadTexture(node.textureId, rasterize(node.raster, this.maxTextureSize));
       this.generated.add(node.textureId);
     }
-    const texture = this.textures.get(node.textureId);
+    const texture = node.pixels
+      ? this.syncSurface(`pixels:${node.id}`, node.pixels)
+      : this.textures.get(node.textureId);
     if (!texture) return false;
+    const maskTexture = node.mask ? this.syncSurface(`mask:${node.id}`, node.mask) : null;
     this.bind(layer);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -232,9 +416,18 @@ export class Compositor {
       1,
     ]);
     gl.uniform2f(this.uniform(program, 'uSize'), node.width, node.height);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.uniform1i(this.uniform(program, 'uTex'), 0);
+    this.bindTexture(program, 'uTex', 0, texture);
+    // Samplers that are not used still need a texture bound.
+    this.bindTexture(program, 'uMask', 1, maskTexture ?? texture);
+    this.bindTexture(program, 'uBase', 2, clipBase?.texture ?? texture);
+    gl.uniform1i(this.uniform(program, 'uHasMask'), maskTexture ? 1 : 0);
+    gl.uniform2f(
+      this.uniform(program, 'uMaskScale'),
+      node.mask ? node.width / node.mask.width : 1,
+      node.mask ? node.height / node.mask.height : 1,
+    );
+    gl.uniform1i(this.uniform(program, 'uHasClip'), clipBase ? 1 : 0);
+    gl.uniform2f(this.uniform(program, 'uOut'), width, height);
     gl.bindVertexArray(this.quad);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     return true;
@@ -456,7 +649,8 @@ export class Compositor {
       const a = this.createTarget(width, height, float);
       const b = this.createTarget(width, height, float);
       const layer = this.createTarget(width, height, float);
-      return a && b && layer ? { width, height, a, b, layer } : null;
+      const base = this.createTarget(width, height, float);
+      return a && b && layer && base ? { width, height, a, b, layer, base } : null;
     };
     // 16-bit float targets avoid rounding after every layer; fall back to 8-bit where they cannot be rendered to.
     const targets = (this.floatTargets ? build(true) : null) ?? build(false);
@@ -468,7 +662,7 @@ export class Compositor {
   private releaseTargets(): void {
     if (!this.targets) return;
     const { gl } = this;
-    for (const target of [this.targets.a, this.targets.b, this.targets.layer]) {
+    for (const target of [this.targets.a, this.targets.b, this.targets.layer, this.targets.base]) {
       gl.deleteFramebuffer(target.framebuffer);
       gl.deleteTexture(target.texture);
     }

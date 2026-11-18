@@ -1,4 +1,4 @@
-import type { JournalRecord, ProjectDocument } from '@media-studio/core';
+import type { Channels, JournalRecord, ProjectDocument } from '@media-studio/core';
 import {
   OpfsFileSystem,
   ProjectStore,
@@ -63,6 +63,18 @@ export class StorageApi {
   }
   getFile(id: string, path: string): Promise<Uint8Array | null> {
     return this.store.getFile(id, path);
+  }
+  putPixels(
+    id: string,
+    contentId: string,
+    channels: Channels,
+    entries: { key: string; id: string }[],
+    newTiles: { id: string; data: Uint8Array }[],
+  ): Promise<void> {
+    return this.store.putPixels(id, contentId, channels, entries, newTiles);
+  }
+  getPixels(id: string, contentId: string) {
+    return this.store.getPixels(id, contentId);
   }
   deleteProject(id: string): Promise<void> {
     return this.store.deleteProject(id);

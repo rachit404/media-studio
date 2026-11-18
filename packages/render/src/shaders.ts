@@ -25,14 +25,32 @@ void main() {
   gl_Position = vec4(p.xy, 0.0, 1.0);
 }`;
 
-/** Textures are uploaded premultiplied, so the layer pass is a plain copy. */
+/**
+ * Textures are uploaded premultiplied, so the layer pass is a copy, optionally multiplied by the layer mask and by
+ * the alpha of the layer this one is clipped to (read at the same screen position).
+ */
 export const LAYER_FRAGMENT = `#version 300 es
 precision highp float;
 uniform sampler2D uTex;
+uniform sampler2D uMask;
+uniform sampler2D uBase;
+uniform int uHasMask;
+uniform vec2 uMaskScale;     // layer size / mask size
+uniform int uHasClip;
+uniform vec2 uOut;           // output size in pixels
 in vec2 vUv;
 out vec4 outColor;
 void main() {
-  outColor = texture(uTex, vUv);
+  vec4 c = texture(uTex, vUv);
+  if (uHasMask == 1) {
+    vec2 mu = vUv * uMaskScale;
+    float m = (mu.x <= 1.0 && mu.y <= 1.0) ? texture(uMask, mu).r : 1.0;
+    c *= m;
+  }
+  if (uHasClip == 1) {
+    c *= texture(uBase, gl_FragCoord.xy / uOut).a;
+  }
+  outColor = c;
 }`;
 
 /**

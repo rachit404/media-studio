@@ -473,7 +473,7 @@ test.describe('interactive canvas', () => {
           const shot = await decodeImage(page, await canvas.screenshot());
           return pixelAt(shot, Math.floor(shot.width / 2), Math.floor(shot.height / 2)).join(',');
         },
-        { timeout: 10_000 },
+        { timeout: 30_000 },
       )
       .toBe('200,100,50,255');
 

@@ -1,11 +1,18 @@
 import { setLayerTransform, type Asset, type ProjectDocument } from '@media-studio/core';
 import {
   clampZoom,
+  combineSelections,
+  ellipseSelection,
   fitView,
   panBy,
+  polygonSelection,
+  rectSelection,
   toViewTransform,
   viewToDoc,
   zoomAt,
+  type CombineMode,
+  type Point,
+  type Selection,
   type ViewState,
 } from '@media-studio/engine-image';
 import { CanvasRenderer, type RenderScene } from '@media-studio/render';
@@ -15,8 +22,17 @@ import { diagnostics } from '../../diagnostics';
 import { ASSET_DRAG_TYPE } from '../asset-drag';
 import type { ProjectSession } from '../project-session';
 import { loadAssetBitmap } from './bitmap-loader';
+import {
+  beginStroke,
+  type ActiveStroke,
+  type LiveStroke,
+  type PaintSettings,
+  type PaintTarget,
+} from './painting';
+import { SelectionOverlay, type SelectionPreview } from './SelectionOverlay';
 
-export type Tool = 'move' | 'hand';
+export type Tool =
+  'move' | 'hand' | 'brush' | 'eraser' | 'select-rect' | 'select-ellipse' | 'select-lasso';
 
 export interface ImageCanvasProps {
   session: ProjectSession;
@@ -29,10 +45,25 @@ export interface ImageCanvasProps {
   canvasWidth: number;
   canvasHeight: number;
   onDropAsset: DropAssetHandler;
+  paint: PaintSettings;
+  /** What the brush would change right now; null when the selected layer cannot be painted. */
+  paintTarget: PaintTarget | null;
+  selection: Selection | null;
+  selectionMode: CombineMode;
+  /** A stroke is in progress (show its tiles) or finished (null). */
+  onLiveStroke: (live: LiveStroke | null) => void;
+  onSelectionChange: (selection: Selection | null) => void;
 }
 
 /** An asset from the library was dropped on the canvas at this point (document pixels). */
 export type DropAssetHandler = (assetId: string, at: { x: number; y: number }) => void;
+
+interface SelectDrag {
+  pointerId: number;
+  tool: 'select-rect' | 'select-ellipse' | 'select-lasso';
+  from: Point;
+  points: Point[];
+}
 
 interface Drag {
   pointerId: number;
@@ -56,12 +87,23 @@ export function ImageCanvas({
   canvasWidth,
   canvasHeight,
   onDropAsset,
+  paint,
+  paintTarget,
+  selection,
+  selectionMode,
+  onLiveStroke,
+  onSelectionChange,
 }: ImageCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewRef = useRef<ViewState>({ zoom: 1, panX: 0, panY: 0 });
   const dragRef = useRef<Drag | null>(null);
   const pending = useRef(new Set<string>());
+  const strokeRef = useRef<{ pointerId: number; stroke: ActiveStroke } | null>(null);
+  const selectRef = useRef<SelectDrag | null>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const [preview, setPreview] = useState<SelectionPreview | null>(null);
+  const [viewVersion, setViewVersion] = useState(0);
   const [renderer, setRenderer] = useState<CanvasRenderer | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [zoomPercent, setZoomPercent] = useState(100);
@@ -71,6 +113,7 @@ export function ImageCanvas({
     viewRef.current = view;
     renderer?.setView(toViewTransform(view));
     setZoomPercent(Math.round(view.zoom * 100));
+    setViewVersion((version) => version + 1);
   };
 
   const fit = () => {
@@ -144,6 +187,7 @@ export function ImageCanvas({
     viewRef.current = view;
     renderer.setView(toViewTransform(view));
     setZoomPercent(Math.round(view.zoom * 100));
+    setViewVersion((version) => version + 1);
   }, [renderer, canvasWidth, canvasHeight]);
 
   // Upload textures for the assets the scene needs (and again after a lost context).
@@ -198,11 +242,39 @@ export function ImageCanvas({
   const selected = (() => {
     if (!selectedLayerId || session.history.state.content.kind !== 'image') return null;
     const layer = session.history.state.content.layers.byId[selectedLayerId];
-    return layer?.type === 'image' ? layer : null;
+    return layer && layer.type !== 'adjustment' ? layer : null;
   })();
+  const painting = tool === 'brush' || tool === 'eraser';
+  const selecting = tool === 'select-rect' || tool === 'select-ellipse' || tool === 'select-lasso';
+
+  const docPoint = (clientX: number, clientY: number): Point => {
+    const box = containerRef.current?.getBoundingClientRect();
+    const { x, y } = viewToDoc(
+      viewRef.current,
+      clientX - (box?.left ?? 0),
+      clientY - (box?.top ?? 0),
+    );
+    return [x, y];
+  };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
+    if (event.button === 0 && painting && paintTarget) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const stroke = beginStroke(session, paintTarget, paint, tool, selection);
+      strokeRef.current = { pointerId: event.pointerId, stroke };
+      onLiveStroke(stroke.live);
+      const [x, y] = docPoint(event.clientX, event.clientY);
+      stroke.addPoint(x, y, event.pointerType === 'pen' ? event.pressure : 1);
+      renderer?.requestRender();
+      return;
+    }
+    if (event.button === 0 && selecting) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const from = docPoint(event.clientX, event.clientY);
+      selectRef.current = { pointerId: event.pointerId, tool, from, points: [from] };
+      return;
+    }
     const wantsMove = tool === 'move' && event.button === 0 && selected !== null;
     const wantsPan =
       event.button === 1 ||
@@ -223,6 +295,43 @@ export function ImageCanvas({
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const ring = cursorRef.current;
+    if (ring) {
+      if (painting) {
+        const box = containerRef.current?.getBoundingClientRect();
+        const diameter = paint.size * viewRef.current.zoom;
+        ring.style.display = 'block';
+        ring.style.width = `${String(diameter)}px`;
+        ring.style.height = `${String(diameter)}px`;
+        ring.style.left = `${String(event.clientX - (box?.left ?? 0) - diameter / 2)}px`;
+        ring.style.top = `${String(event.clientY - (box?.top ?? 0) - diameter / 2)}px`;
+      } else {
+        ring.style.display = 'none';
+      }
+    }
+    const active = strokeRef.current;
+    if (active?.pointerId === event.pointerId) {
+      const events = event.nativeEvent.getCoalescedEvents?.() ?? [];
+      for (const point of events.length > 0 ? events : [event.nativeEvent]) {
+        const [x, y] = docPoint(point.clientX, point.clientY);
+        active.stroke.addPoint(x, y, point.pointerType === 'pen' ? point.pressure : 1);
+      }
+      renderer?.requestRender();
+      return;
+    }
+    const selectDrag = selectRef.current;
+    if (selectDrag?.pointerId === event.pointerId) {
+      const to = docPoint(event.clientX, event.clientY);
+      if (selectDrag.tool === 'select-lasso') {
+        selectDrag.points.push(to);
+        setPreview({ kind: 'lasso', points: [...selectDrag.points] });
+      } else if (selectDrag.tool === 'select-rect') {
+        setPreview({ kind: 'rect', from: selectDrag.from, to });
+      } else {
+        setPreview({ kind: 'ellipse', from: selectDrag.from, to });
+      }
+      return;
+    }
     const drag = dragRef.current;
     if (drag?.pointerId !== event.pointerId) return;
     const dx = event.clientX - drag.startX;
@@ -240,7 +349,51 @@ export function ImageCanvas({
     }
   };
 
-  const endDrag = () => {
+  const finishSelection = (drag: SelectDrag, event: PointerEvent<HTMLDivElement>) => {
+    const to = docPoint(event.clientX, event.clientY);
+    let shape: Selection | null = null;
+    if (drag.tool === 'select-lasso') {
+      if (drag.points.length >= 3) shape = polygonSelection(canvasWidth, canvasHeight, drag.points);
+    } else if (Math.abs(to[0] - drag.from[0]) >= 2 && Math.abs(to[1] - drag.from[1]) >= 2) {
+      shape = (drag.tool === 'select-rect' ? rectSelection : ellipseSelection)(
+        canvasWidth,
+        canvasHeight,
+        drag.from[0],
+        drag.from[1],
+        to[0],
+        to[1],
+      );
+    }
+    if (!shape) {
+      // A click without dragging clears the selection.
+      onSelectionChange(null);
+      return;
+    }
+    // Shift adds, Alt subtracts, both intersect; otherwise the mode chosen in the tool options.
+    const mode: CombineMode =
+      event.shiftKey && event.altKey
+        ? 'intersect'
+        : event.shiftKey
+          ? 'add'
+          : event.altKey
+            ? 'subtract'
+            : selectionMode;
+    onSelectionChange(combineSelections(selection, shape, mode));
+  };
+
+  const endDrag = (event?: PointerEvent<HTMLDivElement>) => {
+    const active = strokeRef.current;
+    if (active) {
+      strokeRef.current = null;
+      active.stroke.commit();
+      onLiveStroke(null);
+    }
+    const selectDrag = selectRef.current;
+    if (selectDrag) {
+      selectRef.current = null;
+      setPreview(null);
+      if (event?.type === 'pointerup') finishSelection(selectDrag, event);
+    }
     dragRef.current = null;
   };
 
@@ -338,6 +491,9 @@ export function ImageCanvas({
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
+        onPointerLeave={() => {
+          if (cursorRef.current) cursorRef.current.style.display = 'none';
+        }}
         onKeyDown={onKeyDown}
         onDragOver={(event) => {
           if (event.dataTransfer.types.includes(ASSET_DRAG_TYPE)) {
@@ -358,6 +514,27 @@ export function ImageCanvas({
         className={`relative min-h-0 flex-1 overflow-hidden bg-canvas ${tool === 'hand' ? 'cursor-grab' : 'cursor-default'}`}
       >
         <canvas ref={canvasRef} data-testid="image-canvas" className="absolute inset-0 size-full" />
+        <SelectionOverlay
+          selection={selection}
+          preview={preview}
+          view={viewRef.current}
+          viewVersion={viewVersion}
+        />
+        <div
+          ref={cursorRef}
+          aria-hidden="true"
+          data-testid="brush-cursor"
+          className="pointer-events-none absolute hidden rounded-full border border-fg"
+          style={{ display: 'none', boxShadow: '0 0 0 1px var(--color-surface)' }}
+        />
+        {painting && !paintTarget && (
+          <p
+            role="status"
+            className="pointer-events-none absolute inset-x-0 top-4 text-center text-sm text-fg-muted"
+          >
+            Select a paint layer to paint on it, or switch on mask editing.
+          </p>
+        )}
         {empty && !problem && (
           <p className="pointer-events-none absolute inset-x-0 top-4 text-center text-sm text-fg-muted">
             Add an image as a layer from the Assets panel to start.

@@ -448,6 +448,136 @@ export function setBackground(color: string | null): Command<ProjectDocument> {
   };
 }
 
+// Paint layers, masks and clipping ------------------------------------------------------------------------
+
+function rasterLayerFor(content: Draft<ImageContent>, id: string) {
+  const layer = layerFor(content, id);
+  if (layer.type !== 'raster') throw invalid('This only works on paint layers.');
+  return layer;
+}
+
+/** Add an empty paint layer the size of the canvas, centred on it. */
+export function addRasterLayer(layerId: string, name = 'Paint layer'): Command<ProjectDocument> {
+  return {
+    label: 'Add paint layer',
+    apply(draft) {
+      const content = imageContent(draft);
+      appendItems(content.layers, [
+        {
+          id: layerId,
+          type: 'raster',
+          name,
+          visible: true,
+          opacity: 1,
+          blendMode: 'normal',
+          width: content.width,
+          height: content.height,
+          pixels: null,
+          transform: {
+            x: content.width / 2,
+            y: content.height / 2,
+            scaleX: 1,
+            scaleY: 1,
+            rotation: 0,
+          },
+        },
+      ]);
+    },
+  };
+}
+
+/**
+ * Point a paint layer or a layer mask at new pixels. The pixels themselves live in the PixelStore; the document only
+ * holds the content id, so undo and redo simply switch ids.
+ */
+export function commitPixels(
+  layerId: string,
+  target: 'layer' | 'mask',
+  contentId: string,
+  label: string,
+): Command<ProjectDocument> {
+  return {
+    label,
+    apply(draft) {
+      const content = imageContent(draft);
+      if (target === 'layer') {
+        rasterLayerFor(content, layerId).pixels = contentId;
+      } else {
+        const layer = placedLayerFor(content, layerId);
+        if (!layer.mask) throw invalid('This layer has no mask.');
+        layer.mask.pixels = contentId;
+      }
+    },
+  };
+}
+
+/** Give a layer a mask (or replace its mask). `pixels` null means everything shows. */
+export function setLayerMask(
+  layerId: string,
+  mask: { width: number; height: number; pixels: string | null },
+): Command<ProjectDocument> {
+  return {
+    label: 'Set layer mask',
+    apply(draft) {
+      const layer = placedLayerFor(imageContent(draft), layerId);
+      if (
+        !Number.isInteger(mask.width) ||
+        !Number.isInteger(mask.height) ||
+        mask.width < 1 ||
+        mask.height < 1
+      ) {
+        throw invalid('A mask needs a whole-pixel size.');
+      }
+      layer.mask = { pixels: mask.pixels, width: mask.width, height: mask.height, enabled: true };
+    },
+  };
+}
+
+export function removeLayerMask(layerId: string): Command<ProjectDocument> {
+  return {
+    label: 'Delete layer mask',
+    apply(draft) {
+      const layer = placedLayerFor(imageContent(draft), layerId);
+      if (!layer.mask) throw invalid('This layer has no mask.');
+      delete layer.mask;
+    },
+  };
+}
+
+export function setMaskEnabled(layerId: string, enabled: boolean): Command<ProjectDocument> {
+  return {
+    label: enabled ? 'Enable layer mask' : 'Disable layer mask',
+    apply(draft) {
+      const layer = placedLayerFor(imageContent(draft), layerId);
+      if (!layer.mask) throw invalid('This layer has no mask.');
+      layer.mask.enabled = enabled;
+    },
+  };
+}
+
+/** Clip a layer to the opaque parts of the layer directly below it. */
+export function setLayerClip(layerId: string, clip: boolean): Command<ProjectDocument> {
+  return {
+    label: clip ? 'Clip to layer below' : 'Release clipping',
+    apply(draft) {
+      const layer = placedLayerFor(imageContent(draft), layerId);
+      if (clip) layer.clip = true;
+      else delete layer.clip;
+    },
+  };
+}
+
+/** Content ids of every painted surface the document currently uses (paint layers and masks). */
+export function pixelContentIds(content: ImageContent): string[] {
+  const ids: string[] = [];
+  for (const layer of Object.values(content.layers.byId)) {
+    if (layer.type === 'adjustment') continue;
+    if (layer.type === 'raster' && layer.pixels !== null) ids.push(layer.pixels);
+    if (layer.mask?.pixels) ids.push(layer.mask.pixels);
+  }
+  return ids;
+}
+
 // Canvas operations (crop, resize, rotate, flip) ---------------------------------------------------------
 
 function eachPlacedLayer(

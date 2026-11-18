@@ -1,10 +1,14 @@
 import {
   BLEND_MODES,
+  removeLayerMask,
   renameLayer,
   setAdjustmentParams,
   setLayerBlendMode,
+  setLayerClip,
+  setLayerMask,
   setLayerOpacity,
   setLayerTransform,
+  setMaskEnabled,
   type Adjustment,
   type BlendMode,
   type Layer,
@@ -36,9 +40,16 @@ const BLEND_LABELS: Record<BlendMode, string> = {
 export function LayerInspector({
   session,
   layer,
+  localSize,
+  editingMask,
+  onEditMask,
 }: {
   session: ProjectSession;
   layer: Layer | null;
+  /** Size of the layer's own pixels, which a new mask matches. */
+  localSize: { width: number; height: number } | null;
+  editingMask: boolean;
+  onEditMask: (editing: boolean) => void;
 }) {
   if (!layer) {
     return (
@@ -159,6 +170,64 @@ export function LayerInspector({
             </Button>
           </div>
         </>
+      )}
+
+      {layer.type !== 'adjustment' && (
+        <fieldset className="space-y-2">
+          <legend className="mb-1 text-xs text-fg-muted">Mask and clipping</legend>
+          {layer.mask ? (
+            <div className="flex flex-wrap gap-1">
+              <Button
+                variant={editingMask ? 'primary' : 'secondary'}
+                aria-pressed={editingMask}
+                isDisabled={!layer.mask.enabled}
+                onPress={() => onEditMask(!editingMask)}
+              >
+                Edit mask
+              </Button>
+              <Button
+                variant="secondary"
+                aria-pressed={layer.mask.enabled}
+                onPress={() => {
+                  history.execute(setMaskEnabled(layer.id, !layer.mask?.enabled));
+                  onEditMask(false);
+                }}
+              >
+                {layer.mask.enabled ? 'Disable mask' : 'Enable mask'}
+              </Button>
+              <Button
+                variant="secondary"
+                onPress={() => {
+                  history.execute(removeLayerMask(layer.id));
+                  onEditMask(false);
+                }}
+              >
+                Delete mask
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="secondary"
+              isDisabled={!localSize}
+              onPress={() => {
+                if (!localSize) return;
+                history.execute(setLayerMask(layer.id, { ...localSize, pixels: null }));
+                onEditMask(true);
+              }}
+            >
+              Add layer mask
+            </Button>
+          )}
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={layer.clip === true}
+              onChange={(event) => history.execute(setLayerClip(layer.id, event.target.checked))}
+              className="accent-accent"
+            />
+            Clip to layer below
+          </label>
+        </fieldset>
       )}
 
       {layer.type === 'text' && <TextControls session={session} layer={layer} />}

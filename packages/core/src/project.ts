@@ -44,7 +44,7 @@ export const projectSchema = z
 export type ProjectDocument = z.infer<typeof projectSchema>;
 export type ProjectType = ProjectDocument['type'];
 
-export const CURRENT_FORMAT_VERSION = 3;
+export const CURRENT_FORMAT_VERSION = 4;
 export const PROJECT_FORMAT = 'media-studio-project';
 
 export const projectFileSchema = z.strictObject({
@@ -74,10 +74,13 @@ function migrateV1ToV2(raw: Record<string, unknown>): Record<string, unknown> {
 
 /** v2 -> v3: text and shape layers (and later layer kinds) became valid; existing data is unchanged. */
 const migrateV2ToV3: Migration = (raw) => raw;
+/** v4 only adds optional fields (layer masks, clipping) and raster layers, so existing documents stay valid. */
+const migrateV3ToV4: Migration = (raw) => raw;
 
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   1: migrateV1ToV2,
   2: migrateV2ToV3,
+  3: migrateV3ToV4,
 };
 
 function invalidProject(cause?: unknown): AppError {

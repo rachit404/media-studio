@@ -57,15 +57,6 @@ export const adjustmentSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-export const imageLayerSchema = z.strictObject({
-  ...layerBase,
-  type: z.literal('image'),
-  blendMode: z.enum(BLEND_MODES),
-  assetId: idSchema,
-  transform: transformSchema,
-});
-export type ImageLayer = z.infer<typeof imageLayerSchema>;
-
 /** Applies an adjustment to everything below it in the stack. */
 export const adjustmentLayerSchema = z.strictObject({
   ...layerBase,
@@ -113,7 +104,43 @@ export type ShapeSpec = z.infer<typeof shapeSpecSchema>;
 /** A layer drawn from parameters (text or shape) instead of from an imported image. */
 export type RasterSpec = ({ kind: 'text' } & TextSpec) | ({ kind: 'shape' } & ShapeSpec);
 
-const placed = { blendMode: z.enum(BLEND_MODES), transform: transformSchema };
+/** A layer mask: a single-channel pixel surface in the layer's own pixel space (255 shows, 0 hides). */
+export const layerMaskSchema = z.strictObject({
+  /** Content id of the mask pixels, or null while nothing has been painted (everything shows). */
+  pixels: idSchema.nullable(),
+  width: z.number().int().min(1).max(MAX_CANVAS_SIZE),
+  height: z.number().int().min(1).max(MAX_CANVAS_SIZE),
+  enabled: z.boolean(),
+});
+export type LayerMask = z.infer<typeof layerMaskSchema>;
+
+const placed = {
+  blendMode: z.enum(BLEND_MODES),
+  transform: transformSchema,
+  mask: layerMaskSchema.optional(),
+  /** Clip this layer to the opaque parts of the layer below it. */
+  clip: z.boolean().optional(),
+};
+
+/** A paintable layer: sparse tiles of straight-alpha RGBA in a width x height surface. */
+export const rasterLayerSchema = z.strictObject({
+  ...layerBase,
+  type: z.literal('raster'),
+  ...placed,
+  width: z.number().int().min(1).max(MAX_CANVAS_SIZE),
+  height: z.number().int().min(1).max(MAX_CANVAS_SIZE),
+  /** Content id of the painted pixels, or null while the layer is empty. */
+  pixels: idSchema.nullable(),
+});
+export type RasterLayer = z.infer<typeof rasterLayerSchema>;
+
+export const imageLayerSchema = z.strictObject({
+  ...layerBase,
+  type: z.literal('image'),
+  ...placed,
+  assetId: idSchema,
+});
+export type ImageLayer = z.infer<typeof imageLayerSchema>;
 
 export const textLayerSchema = z.strictObject({
   ...layerBase,
@@ -135,12 +162,13 @@ export const layerSchema = z.discriminatedUnion('type', [
   imageLayerSchema,
   textLayerSchema,
   shapeLayerSchema,
+  rasterLayerSchema,
   adjustmentLayerSchema,
 ]);
 export type Layer = z.infer<typeof layerSchema>;
 
 /** Layers that have a position, blend mode and transform (everything except adjustment layers). */
-export type PlacedLayer = ImageLayer | TextLayer | ShapeLayer;
+export type PlacedLayer = ImageLayer | TextLayer | ShapeLayer | RasterLayer;
 
 /** Stable text key for generated pixels: equal specs always give equal keys. */
 export function rasterKey(spec: RasterSpec): string {
