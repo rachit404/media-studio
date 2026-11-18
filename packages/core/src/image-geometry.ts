@@ -55,3 +55,19 @@ export function normalizeDegrees(degrees: number): number {
   const wrapped = ((((degrees + 180) % 360) + 360) % 360) - 180;
   return wrapped === -180 ? 180 : wrapped;
 }
+
+/** The matrix that undoes `m`, or null when `m` flattens the plane (zero scale). */
+export function invertAffine(m: Affine): Affine | null {
+  const det = m[0] * m[3] - m[1] * m[2];
+  if (!Number.isFinite(det) || Math.abs(det) < 1e-12) return null;
+  const a = m[3] / det;
+  const b = -m[1] / det;
+  const c = -m[2] / det;
+  const d = m[0] / det;
+  return [a, b, c, d, -(a * m[4] + c * m[5]), -(b * m[4] + d * m[5])];
+}
+
+/** Average scale of a matrix: the square root of its area factor. */
+export function affineScale(m: Affine): number {
+  return Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2]));
+}
