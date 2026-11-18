@@ -122,8 +122,10 @@ export {
   addShapeLayer,
   addTextLayer,
   cropCanvas,
+  duplicateLayer,
   flipCanvas,
   moveLayer,
+  pasteLayer,
   removeLayer,
   renameLayer,
   resizeCanvas,
@@ -136,6 +138,7 @@ export {
   setLayerVisible,
   setShapeSpec,
   setTextSpec,
+  snapshotLayer,
 } from './image-commands';
-export type { LayerAssetRef } from './image-commands';
+export type { LayerAssetRef, LayerSnapshot } from './image-commands';
 export type { WithoutKey } from './ordered';

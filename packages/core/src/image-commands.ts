@@ -1,4 +1,4 @@
-import type { Draft } from 'immer';
+import { current, type Draft } from 'immer';
 import { defaultAdjustment, type Adjustment, type AdjustmentKind, type BlendMode } from './color';
 import { AppError } from './errors';
 import type { Command } from './history';
@@ -17,7 +17,7 @@ import {
   type Transform,
 } from './image-document';
 import { normalizeDegrees, type Rect } from './image-geometry';
-import { appendItems, moveTo, removeItem } from './ordered';
+import { appendItems, moveTo, removeItem, sortedItems, type WithoutKey } from './ordered';
 import { normalizeName, type ProjectDocument } from './project';
 
 function invalid(message: string): AppError {
@@ -84,12 +84,18 @@ export interface LayerAssetRef {
  * Add an image layer on top, centred. The first layer of an empty canvas sets the canvas size to the image size;
  * later layers are scaled down to fit inside the canvas if they are larger.
  */
-export function addImageLayer(layerId: string, asset: LayerAssetRef): Command<ProjectDocument> {
+export function addImageLayer(
+  layerId: string,
+  asset: LayerAssetRef,
+  /** Where to put the layer centre (document pixels), for example where it was dropped. Default: the canvas centre. */
+  at?: { x: number; y: number },
+): Command<ProjectDocument> {
   return {
     label: 'Add layer',
     apply(draft) {
       const content = imageContent(draft);
-      if (Object.keys(content.layers.byId).length === 0) {
+      const isFirstLayer = Object.keys(content.layers.byId).length === 0;
+      if (isFirstLayer) {
         content.width = Math.min(asset.width, MAX_CANVAS_SIZE);
         content.height = Math.min(asset.height, MAX_CANVAS_SIZE);
       }
@@ -104,8 +110,8 @@ export function addImageLayer(layerId: string, asset: LayerAssetRef): Command<Pr
           blendMode: 'normal',
           assetId: asset.id,
           transform: {
-            x: content.width / 2,
-            y: content.height / 2,
+            x: !isFirstLayer && at ? at.x : content.width / 2,
+            y: !isFirstLayer && at ? at.y : content.height / 2,
             scaleX: fit,
             scaleY: fit,
             rotation: 0,
@@ -308,6 +314,68 @@ export function moveLayer(id: string, index: number): Command<ProjectDocument> {
       const content = imageContent(draft);
       layerFor(content, id);
       moveTo(content.layers, id, index);
+    },
+  };
+}
+
+/** Layers are plain JSON data, so a JSON round trip is a complete deep copy (core has no DOM or Node types). */
+function clonePlain<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+/** A layer without its position in the stack, safe to keep (for example as clipboard content) and insert later. */
+export type LayerSnapshot = WithoutKey<Layer>;
+
+/** Copy a layer's content for later insertion. Plain data, so it can sit in memory while the document changes. */
+export function snapshotLayer(layer: Layer): LayerSnapshot {
+  const { key, ...rest } = layer;
+  void key;
+  return clonePlain<LayerSnapshot>(rest);
+}
+
+function insertSnapshot(
+  draft: Draft<ProjectDocument>,
+  snapshot: LayerSnapshot,
+  newId: string,
+  aboveId: string | null,
+): void {
+  const content = imageContent(draft);
+  if (newId in content.layers.byId) throw invalid('That layer id is already in use.');
+  if (snapshot.type === 'image' && !(snapshot.assetId in draft.assets.byId)) {
+    throw invalid('The image for this layer is not in this project.');
+  }
+  const copy = {
+    ...clonePlain(snapshot),
+    id: newId,
+    name: `${snapshot.name} copy`.slice(0, 255),
+  };
+  const stack = sortedItems(content.layers);
+  const aboveIndex = aboveId === null ? -1 : stack.findIndex((layer) => layer.id === aboveId);
+  appendItems(content.layers, [copy]);
+  if (aboveIndex >= 0) moveTo(content.layers, newId, aboveIndex + 1);
+}
+
+/** Duplicate a layer in place, directly above the original. */
+export function duplicateLayer(id: string, newId: string): Command<ProjectDocument> {
+  return {
+    label: 'Duplicate layer',
+    apply(draft) {
+      const original = layerFor(imageContent(draft), id);
+      insertSnapshot(draft, snapshotLayer(current(original)), newId, id);
+    },
+  };
+}
+
+/** Paste a copied layer: above `aboveId` when it still exists, otherwise on top of the stack. */
+export function pasteLayer(
+  snapshot: LayerSnapshot,
+  newId: string,
+  aboveId: string | null,
+): Command<ProjectDocument> {
+  return {
+    label: 'Paste layer',
+    apply(draft) {
+      insertSnapshot(draft, snapshot, newId, aboveId);
     },
   };
 }

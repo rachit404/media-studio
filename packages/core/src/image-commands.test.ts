@@ -8,8 +8,10 @@ import {
   addShapeLayer,
   addTextLayer,
   cropCanvas,
+  duplicateLayer,
   flipCanvas,
   moveLayer,
+  pasteLayer,
   removeLayer,
   renameLayer,
   resizeCanvas,
@@ -22,6 +24,7 @@ import {
   setLayerVisible,
   setShapeSpec,
   setTextSpec,
+  snapshotLayer,
 } from './image-commands';
 import { rasterKey, type Layer } from './image-document';
 import { applyAffine, layerMatrix } from './image-geometry';
@@ -30,6 +33,7 @@ import {
   CURRENT_FORMAT_VERSION,
   createProject,
   parseProject,
+  addAssets,
   parseProjectFile,
   type ProjectDocument,
 } from './project';
@@ -505,5 +509,115 @@ describe('levels, black & white, blur, sharpen and presets', () => {
     expect(history.undoLabel).toBe('Apply Vivid');
     history.undo();
     expect(history.state).toEqual(before);
+  });
+});
+
+describe('duplicate and paste layers', () => {
+  const setup = () => {
+    const history = newHistory();
+    history.execute(
+      addAssets([
+        {
+          id: 'a1',
+          kind: 'image',
+          name: 'photo.png',
+          mime: 'image/png',
+          size: 1,
+          width: 400,
+          height: 200,
+          file: 'media/a1.png',
+          thumb: 'thumbs/a1.webp',
+        },
+      ]),
+    );
+    history.execute(addImageLayer('L1', photo));
+    history.execute(addShapeLayer('S1', 'rectangle'));
+    history.execute(addAdjustmentLayer('A1', 'levels'));
+    return history;
+  };
+  const order = (history: History<ProjectDocument>) =>
+    sortedItems(content(history).layers).map((l) => l.id);
+
+  it('duplicates a layer directly above the original with the same settings and a new id', () => {
+    const history = setup();
+    history.execute(setLayerOpacity('L1', 0.4));
+    history.execute(duplicateLayer('L1', 'L1b'));
+    expect(order(history)).toEqual(['L1', 'L1b', 'S1', 'A1']);
+    const copy = content(history).layers.byId['L1b'];
+    expect(copy).toMatchObject({
+      type: 'image',
+      opacity: 0.4,
+      name: 'photo.png copy',
+      assetId: 'a1',
+    });
+  });
+
+  it('keeps copies independent of the original', () => {
+    const history = setup();
+    history.execute(duplicateLayer('S1', 'S2'));
+    history.execute(setShapeSpec('S2', { width: 12 }));
+    const original = content(history).layers.byId['S1'];
+    const copy = content(history).layers.byId['S2'];
+    expect(original?.type === 'shape' && original.spec.width).not.toBe(12);
+    expect(copy?.type === 'shape' && copy.spec.width).toBe(12);
+  });
+
+  it('duplicates adjustment layers with their parameters', () => {
+    const history = setup();
+    history.execute(setAdjustmentParams('A1', { gamma: 2 }));
+    history.execute(duplicateLayer('A1', 'A2'));
+    const copy = content(history).layers.byId['A2'];
+    expect(copy?.type === 'adjustment' && copy.adjustment).toMatchObject({
+      kind: 'levels',
+      gamma: 2,
+    });
+  });
+
+  it('pastes a snapshot above a given layer, or on top when that layer is gone', () => {
+    const history = setup();
+    const layer = content(history).layers.byId['S1'];
+    if (!layer) throw new Error('missing');
+    const snapshot = snapshotLayer(layer);
+    history.execute(removeLayer('S1'));
+    history.execute(pasteLayer(snapshot, 'P1', 'L1'));
+    expect(order(history)).toEqual(['L1', 'P1', 'A1']);
+    history.execute(pasteLayer(snapshot, 'P2', 'gone'));
+    expect(order(history)).toEqual(['L1', 'P1', 'A1', 'P2']);
+  });
+
+  it('refuses to paste an image layer whose image is not in the project, and reused ids', () => {
+    const history = setup();
+    const layer = content(history).layers.byId['L1'];
+    if (!layer) throw new Error('missing');
+    const snapshot = snapshotLayer(layer);
+    const other = newHistory();
+    expect(() => {
+      other.execute(pasteLayer(snapshot, 'X', null));
+    }).toThrow(AppError);
+    expect(() => {
+      history.execute(pasteLayer(snapshot, 'L1', null));
+    }).toThrow(AppError);
+    expect(order(history)).toEqual(['L1', 'S1', 'A1']);
+  });
+
+  it('is one undo step', () => {
+    const history = setup();
+    history.execute(duplicateLayer('L1', 'L1b'));
+    history.undo();
+    expect(order(history)).toEqual(['L1', 'S1', 'A1']);
+    history.redo();
+    expect(order(history)).toEqual(['L1', 'L1b', 'S1', 'A1']);
+  });
+});
+
+describe('addImageLayer position', () => {
+  it('puts a later layer where it was dropped, but centres the first layer', () => {
+    const history = newHistory();
+    history.execute(addImageLayer('L1', { ...photo, id: 'a1' }, { x: 5, y: 5 }));
+    expect(content(history).layers.byId['L1']).toMatchObject({ transform: { x: 200, y: 100 } });
+    history.execute(
+      addImageLayer('L2', { id: 'a2', name: 'small.png', width: 20, height: 20 }, { x: 30, y: 40 }),
+    );
+    expect(content(history).layers.byId['L2']).toMatchObject({ transform: { x: 30, y: 40 } });
   });
 });
