@@ -1,5 +1,6 @@
 import {
   clipGainAt,
+  isAnimated,
   sortedTracks,
   type Clip,
   type Track,
@@ -30,7 +31,7 @@ export function clipGainOnTimeline(track: Track, clip: Clip): (timelineUs: numbe
   return (timelineUs) => trackVolume * clipGainAt(clip, timelineUs - clip.start);
 }
 
-/** True when the gain of this clip is the same everywhere (no fades), so the mix can use one number. */
-export function hasFades(clip: Pick<Clip, 'fadeIn' | 'fadeOut'>): boolean {
-  return (clip.fadeIn ?? 0) > 0 || (clip.fadeOut ?? 0) > 0;
+/** True when the gain of a clip changes over its length (fades or volume keyframes); otherwise one number does. */
+export function hasFades(clip: Pick<Clip, 'fadeIn' | 'fadeOut' | 'keyframes'>): boolean {
+  return (clip.fadeIn ?? 0) > 0 || (clip.fadeOut ?? 0) > 0 || isAnimated(clip, 'volume');
 }

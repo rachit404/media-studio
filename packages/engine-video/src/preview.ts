@@ -1,9 +1,9 @@
 import {
   activeTransition,
   clipColour,
-  clipOpacity,
+  clipOpacityAt,
   clipSourceAt,
-  clipTransform,
+  clipTransformAt,
   clipsAt,
   isTextClip,
   multiplyAffine,
@@ -226,12 +226,14 @@ export function buildPreviewScene(
   for (const layer of layers) {
     const clip = content.clips[layer.clipId];
     if (clip && isTextClip(clip)) {
-      nodes.push(...textNodes(clip, width, height, metrics));
+      nodes.push(...textNodes(clip, time - clip.start, width, height, metrics));
       continue;
     }
     const size = sizes.get(layer.clipId);
     if (!size || !clip) continue;
-    const transform = clipTransform(clip);
+    // Animated properties are read at this moment of the clip (past its end, for a clip going out, they hold).
+    const offset = time - clip.start;
+    const transform = clipTransformAt(clip, offset);
     const colour = clipColour(clip);
     const look = transitionLook(layer.transition, transform.crop, width, height);
     if (look === 'hidden') continue;
@@ -253,7 +255,7 @@ export function buildPreviewScene(
         matrix[4] + look.dx,
         matrix[5] + look.dy,
       ],
-      opacity: clipOpacity(clip) * look.opacity,
+      opacity: clipOpacityAt(clip, offset) * look.opacity,
       blendMode: 'normal',
       ...(cropped ? { crop } : {}),
       ...(corrected ? { colour } : {}),
@@ -269,11 +271,13 @@ export function buildPreviewScene(
  */
 function textNodes(
   clip: TextClip,
+  offset: number,
   frameWidth: number,
   frameHeight: number,
   metrics: RasterMetrics,
 ): ImageNode[] {
-  const transform = clipTransform(clip);
+  const transform = clipTransformAt(clip, offset);
+  const opacity = clipOpacityAt(clip, offset);
   const colour = clipColour(clip);
   const cropped = Object.values(transform.crop).some((amount) => amount > 0);
   const corrected = Object.values(colour).some((amount) => amount !== 0);
@@ -300,7 +304,7 @@ function textNodes(
   };
 
   const text: RasterSpec = { kind: 'text', ...clip.text };
-  const textNode = build(clip.id, text, clipOpacity(clip));
+  const textNode = build(clip.id, text, opacity);
   if (!clip.backdrop) return [textNode];
   const padX = clip.text.fontSize * 0.4;
   const padY = clip.text.fontSize * 0.15;
@@ -315,7 +319,7 @@ function textNodes(
     cornerRadius: clip.text.fontSize * 0.2,
     sides: 3,
   };
-  return [build(`${clip.id}:backdrop`, box, clipOpacity(clip) * clip.backdrop.opacity), textNode];
+  return [build(`${clip.id}:backdrop`, box, opacity * clip.backdrop.opacity), textNode];
 }
 
 interface TransitionLook {
