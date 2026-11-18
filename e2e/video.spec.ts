@@ -869,3 +869,205 @@ test.describe('clip look (picture and sound properties)', () => {
     });
   });
 });
+
+test.describe('markers and in/out points', () => {
+  async function focusPage(page: Page): Promise<void> {
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+  }
+  async function stepTo(page: Page, frames: number): Promise<void> {
+    await focusPage(page);
+    await page.keyboard.press('Home');
+    for (let i = 0; i < frames; i += 1) await page.keyboard.press('ArrowRight');
+  }
+  const clock = (page: Page) => page.getByTestId('clock');
+
+  test('adds, names, finds and removes a marker, with undo', async ({ page }) => {
+    await createVideoProject(page, 'Marker test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await stepTo(page, 25); // 1 s at 25 fps
+    await expect(clock(page)).toHaveText('00:00:01:00');
+    await page.keyboard.press('m');
+    const marker = page.getByRole('button', { name: 'Marker without a name, at 00:00:01:00' });
+    await expect(marker).toBeVisible();
+
+    await page.getByRole('textbox', { name: 'Marker name' }).fill('Intro');
+    await expect(page.getByRole('button', { name: 'Marker Intro, at 00:00:01:00' })).toBeVisible();
+
+    // Ctrl+Left and Ctrl+Right jump between markers.
+    await focusPage(page);
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Control+ArrowRight');
+    await expect(clock(page)).toHaveText('00:00:01:00');
+    await page.keyboard.press('End');
+    await page.keyboard.press('Control+ArrowLeft');
+    await expect(clock(page)).toHaveText('00:00:01:00');
+
+    // Two markers cannot share a time.
+    await page.getByRole('button', { name: 'Add marker' }).click();
+    await expect(page.getByText('There is already a marker there.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Remove marker' }).click();
+    await expect(page.locator('[data-marker-id]')).toHaveCount(0);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(page.locator('[data-marker-id]')).toHaveCount(1);
+  });
+
+  test('sets and clears the in and out points', async ({ page }) => {
+    await createVideoProject(page, 'In out test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await expect(page.getByTestId('range-band')).toHaveCount(0);
+    await stepTo(page, 10);
+    await page.keyboard.press('i');
+    for (let i = 0; i < 25; i += 1) await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('o');
+    await expect(page.getByTestId('range-band')).toBeVisible();
+    await expect(page.getByTestId('range-readout')).toHaveText('In 00:00:00:10 · Out 00:00:01:10');
+
+    await page.keyboard.press('Alt+x');
+    await expect(page.getByTestId('range-band')).toHaveCount(0);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(page.getByTestId('range-readout')).toBeVisible();
+  });
+
+  test('markers and the range survive a reload', async ({ page }) => {
+    await createVideoProject(page, 'Marker reload');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await stepTo(page, 5);
+    await page.keyboard.press('m');
+    await page.keyboard.press('i');
+    await expect(page.getByTestId('range-readout')).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'All changes saved' })).toBeVisible();
+    await page.reload();
+    await page
+      .getByRole('alertdialog', { name: 'Restore unsaved changes?' })
+      .getByRole('button', { name: 'Restore changes' })
+      .click();
+    await expect(page.locator('[data-marker-id]')).toHaveCount(1);
+    await expect(page.getByTestId('range-readout')).toHaveText('In 00:00:00:05 · Out end');
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('export can be limited to the part between the in and out points', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(150_000);
+      await createVideoProject(page, 'Range export');
+      await importMedia(page, [media.red, media.blue]);
+      await addToTimeline(page, 'red.mp4'); // 0 s .. 2 s
+      await addToTimeline(page, 'blue.mp4'); // 2 s .. 5 s
+      await stepTo(page, 50); // 2 s
+      await page.keyboard.press('i');
+      for (let i = 0; i < 50; i += 1) await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('o'); // 4 s
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      const limit = dialog.getByRole('checkbox', { name: /^Only the part between the in and out/ });
+      await expect(limit).toBeChecked();
+      await expect(dialog).toContainText('50'); // 2 s at 25 fps
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('range.mp4');
+      await (await downloading).saveAs(file);
+
+      const facts = probe(file);
+      expect(Number(facts.video?.nb_read_frames)).toBe(50);
+      expect(facts.duration).toBeGreaterThan(1.9);
+      expect(facts.duration).toBeLessThan(2.2);
+      // Blue from the start: the red part was left out.
+      const first = pixelAtSecond(file, 0.2);
+      expect(first[2]).toBeGreaterThan(200);
+      expect(first[0]).toBeLessThan(60);
+    });
+  });
+});
+
+test.describe('J, K and L shuttle and the master meter', () => {
+  const clock = (page: Page) => page.getByTestId('clock');
+  async function focusPage(page: Page): Promise<void> {
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+  }
+
+  test('L plays and goes faster, K stops, J runs backwards', async ({ page }) => {
+    await createVideoProject(page, 'Shuttle test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4'); // 2 s
+    await focusPage(page);
+    await page.keyboard.press('Home');
+
+    await page.keyboard.press('l');
+    await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
+    await expect(page.getByTestId('shuttle-rate')).toHaveCount(0); // normal speed
+    await page.keyboard.press('l');
+    await expect(page.getByTestId('shuttle-rate')).toHaveText('Shuttle 2×');
+    await page.keyboard.press('k');
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+
+    await page.keyboard.press('End');
+    await expect(clock(page)).toHaveText('00:00:02:00');
+    await page.keyboard.press('j');
+    await expect(page.getByTestId('shuttle-rate')).toHaveText('Shuttle −1×');
+    await expect
+      .poll(async () => clock(page).textContent(), { timeout: 10_000 })
+      .not.toBe('00:00:02:00');
+    await page.keyboard.press('k');
+    const stopped = await clock(page).textContent();
+    await page.waitForTimeout(400);
+    await expect(clock(page)).toHaveText(stopped ?? '');
+  });
+
+  test('forwards at 4x reaches the end in a quarter of the time and stops there', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Fast forward');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await focusPage(page);
+    await page.keyboard.press('Home');
+    await page.keyboard.press('l');
+    await page.keyboard.press('l');
+    await page.keyboard.press('l'); // 4x
+    await expect(clock(page)).toHaveText('00:00:02:00', { timeout: 10_000 });
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+  });
+
+  test('the master meter shows the level while playing, and the lamp stays on after clipping', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Meter test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4'); // 2 s of a 440 Hz tone
+    const left = page.getByTestId('meter-left');
+    await expect(left).toHaveAttribute('aria-valuetext', 'silent');
+    await expect(page.getByTestId('clip-lamp')).toBeDisabled();
+
+    // Make it much too loud: clip and track volume at 400%.
+    await clip(page, 'red.mp4', 'Audio 1').click();
+    await page.getByRole('slider', { name: 'Volume', exact: true }).fill('400');
+    await page.getByRole('slider', { name: 'Track volume' }).fill('400');
+
+    await focusPage(page);
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Space');
+    await expect
+      .poll(async () => Number(await left.getAttribute('aria-valuenow')), { timeout: 10_000 })
+      .toBeGreaterThan(-30);
+    await expect(page.getByTestId('clip-lamp')).toBeEnabled({ timeout: 10_000 });
+    // It stays lit after playback has ended, until it is pressed.
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByTestId('clip-lamp')).toBeEnabled();
+    await page.getByTestId('clip-lamp').click();
+    await expect(page.getByTestId('clip-lamp')).toBeDisabled();
+    await expect(left).toHaveAttribute('aria-valuetext', 'silent');
+  });
+});

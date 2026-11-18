@@ -6,7 +6,9 @@ import {
   buildPreviewScene,
   frameTextureId,
   previewPlan,
+  shuttle,
   type FrameStreamSource,
+  type ShuttleKey,
   type TimedFrame,
 } from '@media-studio/engine-video';
 import { AudioPlayer, VideoSource } from '@media-studio/media-io';
@@ -25,6 +27,8 @@ interface ClipStream {
   pump: FramePump<ImageBitmap>;
   /** Timestamp of the picture last uploaded to the GPU. */
   uploaded: number | null;
+  /** Running backwards: the place in the file decoding last started from (null = not yet). */
+  seekTarget: number | null;
 }
 
 export interface PreviewState {
@@ -33,6 +37,8 @@ export interface PreviewState {
   time: number;
   /** A message for the user when something cannot be shown (missing file, decode failure). */
   problem: string | null;
+  /** Playback rate while playing: 1 is normal, 2 twice as fast, negative backwards (absent = 1). */
+  rate?: number;
 }
 
 export interface PreviewDocument {
@@ -57,7 +63,7 @@ export class PreviewPlayer {
   private frame: number | undefined;
   private disposed = false;
   private problemText: string | null = null;
-  private snapshot: PreviewState = { playing: false, time: 0, problem: null };
+  private snapshot: PreviewState = { playing: false, time: 0, problem: null, rate: 1 };
   /** Whether the audio clock drives the picture (it does once the audio context is running). */
   private audioClock = false;
   /** Increases whenever playback is (re)started, so an older start that finishes late is ignored. */
@@ -109,10 +115,17 @@ export class PreviewPlayer {
       playing: this.transport.playing,
       time: this.transport.time,
       problem: this.problemText,
+      rate: this.transport.rate,
     };
     const old = this.snapshot;
-    if (old.playing === next.playing && old.time === next.time && old.problem === next.problem)
+    if (
+      old.playing === next.playing &&
+      old.time === next.time &&
+      old.problem === next.problem &&
+      old.rate === next.rate
+    ) {
       return;
+    }
     this.snapshot = next;
     for (const listener of this.listeners) listener();
   }
@@ -146,7 +159,32 @@ export class PreviewPlayer {
 
   play(): void {
     if (this.transport.playing) return;
+    if (this.transport.rate !== 1) this.transport.setRate(1);
     void this.begin(true);
+  }
+
+  /**
+   * J, K and L: L plays forwards (again for 2, 4 and 8 times as fast), J backwards, K stops. Only normal speed has
+   * sound; faster or backwards the picture alone follows the page clock. Backwards has to start decoding again from
+   * every place it shows, so it moves in steps, as fast as the decoder allows.
+   */
+  shuttleKey(key: ShuttleKey): void {
+    const next = shuttle(key, this.transport.playing, this.transport.rate);
+    if (!next.playing) {
+      this.pause();
+      return;
+    }
+    this.begun += 1;
+    this.audio?.stop();
+    this.transport.pause(); // read the time with the clock it was started with
+    this.transport.setRate(next.rate);
+    if (next.rate === 1) void this.begin(true);
+    else this.beginShuttle();
+  }
+
+  /** The loudest sample of the mix in each channel just now (0 when nothing plays); more than 1 clips. */
+  levels(): { left: number; right: number } {
+    return this.audio?.levels() ?? { left: 0, right: 0 };
   }
 
   pause(): void {
@@ -188,6 +226,10 @@ export class PreviewPlayer {
    * picture follow the moment it is heard. Only the latest call has an effect.
    */
   private async begin(fromStopped: boolean): Promise<void> {
+    if (this.transport.rate !== 1) {
+      this.beginShuttle();
+      return;
+    }
     const generation = ++this.begun;
     if (!fromStopped) this.transport.pause(); // hold still while the sound is prepared
     this.audio?.stop();
@@ -206,6 +248,18 @@ export class PreviewPlayer {
     }
     if (generation !== this.begun || this.disposed) return;
     this.transport.play(anchor);
+    this.restartStreams();
+    this.publish();
+    this.schedule();
+  }
+
+  /** Start or continue a faster or backwards run from the current time, without sound. */
+  private beginShuttle(): void {
+    this.begun += 1;
+    this.transport.pause();
+    this.audio?.stop();
+    this.audioClock = false; // the picture follows the page clock
+    this.transport.play();
     this.restartStreams();
     this.publish();
     this.schedule();
@@ -307,6 +361,7 @@ export class PreviewPlayer {
       assetId: asset.id,
       pump: new FramePump(frames, 6),
       uploaded: null,
+      seekTarget: null,
     };
     this.streams.set(clipId, stream);
     stream.pump.start(startUs);
@@ -335,9 +390,11 @@ export class PreviewPlayer {
       const sourceTime = showing.get(stream.clipId);
       if (clip && sourceTime !== undefined) {
         stream.uploaded = null;
+        stream.seekTarget = null;
         stream.pump.start(Math.max(0, sourceTime));
       } else if (clip && time < clip.start && clip.start - time <= PREROLL_US) {
         stream.uploaded = null;
+        stream.seekTarget = null;
         stream.pump.start(Math.max(0, clip.sourceIn));
       } else {
         this.release(stream.clipId);
@@ -374,6 +431,9 @@ export class PreviewPlayer {
       if (stream.pump.error !== null) {
         this.report(stream.pump.error);
         continue;
+      }
+      if (this.transport.playing && this.transport.rate < 0) {
+        this.followBackwards(stream, asset, layer.sourceTime);
       }
       const picture = stream.pump.frameFor(layer.sourceTime);
       if (!picture) {
@@ -416,6 +476,23 @@ export class PreviewPlayer {
     }
     if (this.transport.playing || waiting) this.schedule();
     else this.publish();
+  }
+
+  /**
+   * Decoding only goes forwards, so running backwards starts again from each place to show. The next start waits for
+   * the picture of the last one to be on screen and for the time to have moved by a whole frame, so a slow decoder
+   * means fewer, not later, pictures.
+   */
+  private followBackwards(stream: ClipStream, asset: Asset, sourceTime: number): void {
+    const frameGap = asset.kind === 'video' ? (1_000_000 * asset.fps.den) / asset.fps.num : 40_000;
+    const settled = stream.seekTarget === null || stream.uploaded !== null;
+    const moved =
+      stream.seekTarget === null || Math.abs(sourceTime - stream.seekTarget) >= frameGap;
+    if (settled && moved) {
+      stream.uploaded = null;
+      stream.seekTarget = sourceTime;
+      stream.pump.start(Math.max(0, sourceTime));
+    }
   }
 
   /** Release decoders, pictures and the audio output. */

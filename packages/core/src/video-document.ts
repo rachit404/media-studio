@@ -216,12 +216,27 @@ export function clipEnd(clip: Pick<Clip, 'start' | 'duration'>): number {
   return clip.start + clip.duration;
 }
 
+export const MAX_MARKERS = 1000;
+
+/** A named point on the timeline. */
+export const markerSchema = z.strictObject({
+  id: idSchema,
+  time: timeSchema,
+  name: z.string().max(60),
+});
+export type Marker = z.infer<typeof markerSchema>;
+
 export const videoContentSchema = z
   .strictObject({
     kind: z.literal('video'),
     sequence: sequenceSchema,
     tracks: orderedSchema(trackSchema),
     clips: z.record(idSchema, clipSchema),
+    /** Markers in time order, one per time (absent = none). */
+    markers: z.array(markerSchema).max(MAX_MARKERS).optional(),
+    /** The range between these two points is what export can be limited to (absent = not set). */
+    inPoint: timeSchema.optional(),
+    outPoint: timeSchema.optional(),
   })
   .superRefine((content, ctx) => {
     const fail = (message: string) => {
@@ -229,6 +244,17 @@ export const videoContentSchema = z
     };
     if (Object.keys(content.tracks.byId).length > MAX_TRACKS) fail('too many tracks');
     if (Object.keys(content.clips).length > MAX_CLIPS) fail('too many clips');
+    if (content.inPoint !== undefined && content.outPoint !== undefined) {
+      if (content.inPoint >= content.outPoint) fail('the in point must be before the out point');
+    }
+    const markers = content.markers ?? [];
+    for (let i = 1; i < markers.length; i += 1) {
+      if ((markers[i]?.time ?? 0) <= (markers[i - 1]?.time ?? 0))
+        fail('markers must be in time order');
+    }
+    if (new Set(markers.map((marker) => marker.id)).size !== markers.length) {
+      fail('two markers have the same id');
+    }
     const listed = new Set<string>();
     for (const track of Object.values(content.tracks.byId)) {
       let previousEnd = 0;

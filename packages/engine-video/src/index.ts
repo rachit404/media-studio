@@ -37,6 +37,8 @@ export {
   subtitleStyle,
   textTrackFor,
 } from './text-defaults';
+export { SHUTTLE_RATES, formatRate, shuttle } from './shuttle';
+export type { ShuttleKey, ShuttleResult } from './shuttle';
 export { Transport } from './transport';
 export type { PlaybackStats, TransportOptions } from './transport';
 export { FramePump } from './frame-pump';

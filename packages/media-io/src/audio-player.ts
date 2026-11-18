@@ -18,6 +18,25 @@ export interface AudioSlice {
   gainAt?: (timelineUs: number) => number;
 }
 
+/** Samples the meter looks at: about 40 ms at 48 kHz. */
+const METER_WINDOW = 2048;
+
+/** The largest absolute sample value. */
+export function peakLevel(samples: ArrayLike<number>): number {
+  let peak = 0;
+  for (let i = 0; i < samples.length; i += 1) {
+    const value = Math.abs(samples[i] ?? 0);
+    if (value > peak) peak = value;
+  }
+  return peak;
+}
+
+/** Level in decibels relative to full scale (0 dBFS = 1), with silence reported as `floor`. */
+export function levelToDb(level: number, floor = -60): number {
+  if (!(level > 0)) return floor;
+  return Math.max(floor, 20 * Math.log10(level));
+}
+
 /** Where and how one decoded buffer of a slice is heard. */
 export interface BufferPlacement {
   /** Timeline time of the start of the buffer, microseconds. */
@@ -107,8 +126,39 @@ export class AudioPlayer {
   private nodes = new Set<AudioBufferSourceNode>();
   private generation = 0;
 
+  /** Everything is mixed here, then heard and measured (the master meter). */
+  private readonly master: GainNode;
+  private readonly meters: [AnalyserNode, AnalyserNode];
+  private readonly meterData: [Float32Array<ArrayBuffer>, Float32Array<ArrayBuffer>];
+
   constructor(context?: AudioContext) {
     this.context = context ?? new AudioContext({ latencyHint: 'interactive' });
+    this.master = this.context.createGain();
+    this.master.connect(this.context.destination);
+    const splitter = this.context.createChannelSplitter(2);
+    this.master.connect(splitter);
+    const analyser = () => {
+      const node = this.context.createAnalyser();
+      node.fftSize = METER_WINDOW;
+      return node;
+    };
+    this.meters = [analyser(), analyser()];
+    this.meters.forEach((node, channel) => {
+      splitter.connect(node, channel);
+    });
+    this.meterData = [new Float32Array(METER_WINDOW), new Float32Array(METER_WINDOW)];
+  }
+
+  /**
+   * The loudest sample of the mix in each channel over the last moment (about 40 ms): 1 is full scale, and more
+   * than 1 means the sound is too loud and clips (export clips it too). Zero while nothing plays.
+   */
+  levels(): { left: number; right: number } {
+    const [left, right] = this.meters;
+    const [leftData, rightData] = this.meterData;
+    left.getFloatTimeDomainData(leftData);
+    right.getFloatTimeDomainData(rightData);
+    return { left: peakLevel(leftData), right: peakLevel(rightData) };
   }
 
   /** The audio clock in microseconds. Steady and monotonic, also while nothing plays. */
@@ -206,7 +256,7 @@ export class AudioPlayer {
       const gain = this.context.createGain();
       node.playbackRate.value = speed;
       applyGain(gain, slice.gainAt, timeline + late * 1_000_000, heardSeconds, when);
-      node.connect(gain).connect(this.context.destination);
+      node.connect(gain).connect(this.master);
       node.addEventListener('ended', () => {
         this.nodes.delete(node);
         gain.disconnect();

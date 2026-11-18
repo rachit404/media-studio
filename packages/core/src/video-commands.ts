@@ -23,6 +23,7 @@ import {
   MAX_TRACKS,
   MAX_VOLUME,
   clipBackdropSchema,
+  MAX_MARKERS,
   MAX_SPEED,
   MIN_SPEED,
   clipColourSchema,
@@ -664,6 +665,98 @@ export function setClipSpeed(clipId: string, speed: number): Command<ProjectDocu
         if (speed === 1) delete target.speed;
         else target.speed = speed;
       }
+    },
+  };
+}
+
+// Markers and in/out ------------------------------------------------------------------------------------
+
+function validTime(time: number): void {
+  if (!Number.isSafeInteger(time) || time < 0 || time > MAX_TIME_US) {
+    throw invalid('That time is not valid.');
+  }
+}
+
+/** Put a marker at `time`. There can be one marker per time. */
+export function addMarker(id: string, time: number, name = ''): Command<ProjectDocument> {
+  return {
+    label: 'Add marker',
+    apply(draft) {
+      const content = videoDraft(draft);
+      validTime(time);
+      const cleaned = name.trim();
+      if (cleaned.length > 60) throw invalid('Marker names can have up to 60 characters.');
+      const markers = content.markers ?? [];
+      if (markers.length >= MAX_MARKERS) {
+        throw invalid(`A sequence can have up to ${String(MAX_MARKERS)} markers.`);
+      }
+      if (markers.some((marker) => marker.time === time)) {
+        throw invalid('There is already a marker there.');
+      }
+      if (markers.some((marker) => marker.id === id)) throw invalid('That marker already exists.');
+      content.markers = [...markers, { id, time, name: cleaned }].sort((a, b) => a.time - b.time);
+    },
+  };
+}
+
+/** Rename a marker; typing merges into one undo step. */
+export function renameMarker(id: string, name: string): Command<ProjectDocument> {
+  return {
+    label: 'Rename marker',
+    coalesceKey: `marker-name:${id}`,
+    apply(draft) {
+      const marker = videoDraft(draft).markers?.find((candidate) => candidate.id === id);
+      if (!marker) throw new RangeError(`Marker ${id} does not exist`);
+      if (name.length > 60) throw invalid('Marker names can have up to 60 characters.');
+      marker.name = name;
+    },
+  };
+}
+
+export function removeMarker(id: string): Command<ProjectDocument> {
+  return {
+    label: 'Remove marker',
+    apply(draft) {
+      const content = videoDraft(draft);
+      const markers = content.markers ?? [];
+      if (!markers.some((marker) => marker.id === id)) {
+        throw new RangeError(`Marker ${id} does not exist`);
+      }
+      const rest = markers.filter((marker) => marker.id !== id);
+      if (rest.length === 0) delete content.markers;
+      else content.markers = rest;
+    },
+  };
+}
+
+/**
+ * Set or clear (null) the in and out points. A point that would land on the wrong side of the other one clears the
+ * other one: setting the in point after the out point removes the out point, and the other way round.
+ */
+export function setInOut(patch: {
+  in?: number | null;
+  out?: number | null;
+}): Command<ProjectDocument> {
+  return {
+    label:
+      patch.in === null && patch.out === null ? 'Clear in and out points' : 'Set in or out point',
+    apply(draft) {
+      const content = videoDraft(draft);
+      if (typeof patch.in === 'number') validTime(patch.in);
+      if (typeof patch.out === 'number') validTime(patch.out);
+      if (typeof patch.in === 'number' && typeof patch.out === 'number' && patch.in >= patch.out) {
+        throw invalid('The in point must be before the out point.');
+      }
+      let inPoint = patch.in === undefined ? content.inPoint : (patch.in ?? undefined);
+      let outPoint = patch.out === undefined ? content.outPoint : (patch.out ?? undefined);
+      if (inPoint !== undefined && outPoint !== undefined && inPoint >= outPoint) {
+        if (typeof patch.in === 'number') outPoint = undefined;
+        else inPoint = undefined;
+      }
+      if (inPoint === undefined) delete content.inPoint;
+      else content.inPoint = inPoint;
+      if (outPoint === undefined) delete content.outPoint;
+      else content.outPoint = outPoint;
     },
   };
 }

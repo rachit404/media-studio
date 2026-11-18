@@ -21,8 +21,11 @@ export function useGlobalShortcuts(handlers: CommandHandlers): void {
       if (event.defaultPrevented || event.isComposing || isEditable(event.target)) return;
       const combo = comboFromEvent(event, isMac);
       if (!combo) return;
-      const id = shortcutRegistry.resolve(combo);
-      const handler = id === null ? undefined : latest.current[id as CommandId];
+      // Commands of different scopes can share a key; the one this screen handles wins.
+      const id = shortcutRegistry
+        .resolveAll(combo)
+        .find((candidate) => latest.current[candidate as CommandId] !== undefined);
+      const handler = id === undefined ? undefined : latest.current[id as CommandId];
       if (handler) {
         event.preventDefault();
         handler();

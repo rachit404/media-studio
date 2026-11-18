@@ -151,6 +151,34 @@ describe('ShortcutRegistry', () => {
     expect(registry.rebind('a', ['not a combo+'])).toEqual({ ok: false, reason: 'invalid-combo' });
   });
 
+  it('lets commands of different scopes share a key, and still refuses it within a scope', () => {
+    const registry = new ShortcutRegistry([
+      { id: 'lasso', label: 'Lasso', defaults: ['L'], scope: 'image' },
+      { id: 'forward', label: 'Forward', defaults: ['L'], scope: 'video' },
+      { id: 'brush', label: 'Brush', defaults: ['B'], scope: 'image' },
+      { id: 'everywhere', label: 'Everywhere', defaults: ['Mod+Q'] },
+    ]);
+    expect(registry.resolveAll('L')).toEqual(['lasso', 'forward']);
+    expect(registry.resolve('L')).toBe('lasso');
+    expect(registry.rebind('brush', ['L'])).toEqual({
+      ok: false,
+      reason: 'conflict',
+      conflictWith: 'lasso',
+    });
+    // A command that works everywhere cannot share a key with a scoped one, in either direction.
+    expect(registry.rebind('everywhere', ['B'])).toMatchObject({
+      ok: false,
+      conflictWith: 'brush',
+    });
+    expect(registry.rebind('brush', ['Mod+Q'])).toMatchObject({
+      ok: false,
+      conflictWith: 'everywhere',
+    });
+    expect(registry.rebind('forward', ['B'])).toEqual({ ok: true });
+    registry.loadOverrides({ lasso: ['Q'], brush: ['Q'], forward: ['Q'] });
+    expect(registry.exportOverrides()).toEqual({ lasso: ['Q'], forward: ['Q'] }); // brush clashes within the image scope
+  });
+
   it('resets to defaults and notifies subscribers', () => {
     const registry = new ShortcutRegistry(commands);
     const listener = vi.fn();
