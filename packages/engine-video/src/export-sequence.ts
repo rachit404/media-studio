@@ -162,10 +162,15 @@ export async function exportSequence<F extends ExportFrame>(
     }
   };
 
+  // Cancelling is honoured at every stage, up to and including the moment the finished file would be handed over.
+  const stopIfCancelled = () => {
+    if (signal?.aborted)
+      throw new AppError({ code: 'cancelled', message: 'The export was cancelled.' });
+  };
+
   try {
     for (let index = 0; index < total; index += 1) {
-      if (signal?.aborted)
-        throw new AppError({ code: 'cancelled', message: 'The export was cancelled.' });
+      stopIfCancelled();
       // `written` is the time in the file, `time` the time on the timeline (they differ by the start of the range).
       const written = frameToTime(index, fps);
       const time = offset + written;
@@ -212,7 +217,10 @@ export async function exportSequence<F extends ExportFrame>(
       options.onProgress?.(index + 1, total);
     }
     if (withAudio) await writeAudioUntil(duration);
-    return await deps.sink.finalize();
+    stopIfCancelled();
+    const file = await deps.sink.finalize();
+    stopIfCancelled(); // cancelled while finishing: the file is thrown away
+    return file;
   } catch (error) {
     await deps.sink.cancel().catch(() => undefined);
     throw error instanceof AppError ? error : toAppError(error);

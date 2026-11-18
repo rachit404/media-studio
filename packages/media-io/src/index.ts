@@ -19,4 +19,13 @@ export { VideoSource } from './video-source';
 export type { DecodedFrame } from './video-source';
 export { AudioFileReader } from './audio-file-reader';
 export { Mp4Writer, defaultVideoBitrate } from './mp4-writer';
+export {
+  DURATION_TOLERANCE_FRAMES,
+  FRAME_COUNT_TOLERANCE,
+  checkOutput,
+  probeOutput,
+  verifyExport,
+} from './verify-output';
+export type { ExpectedOutput, OutputFacts } from './verify-output';
+
 export type { Mp4WriterOptions } from './mp4-writer';
