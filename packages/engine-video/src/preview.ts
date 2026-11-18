@@ -2,6 +2,7 @@ import {
   activeTransition,
   clipColour,
   clipOpacity,
+  clipSourceAt,
   clipTransform,
   clipsAt,
   isTextClip,
@@ -55,8 +56,11 @@ export interface PreviewPlan {
 }
 
 /** Where in its file a clip is at timeline time `time`. */
-export function sourceTimeAt(clip: { start: number; sourceIn: number }, time: number): number {
-  return clip.sourceIn + (time - clip.start);
+export function sourceTimeAt(
+  clip: { start: number; sourceIn: number; speed?: number | undefined },
+  time: number,
+): number {
+  return clipSourceAt(clip, time - clip.start);
 }
 
 /**

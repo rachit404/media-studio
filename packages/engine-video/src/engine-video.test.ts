@@ -167,6 +167,7 @@ describe('audio segments', () => {
         end: 4 * S,
         clipEnd: 12 * S,
         sourceStart: 1 * S,
+        speed: 1,
         gainAt: expect.any(Function) as unknown,
       },
     ]);

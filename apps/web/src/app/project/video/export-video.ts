@@ -75,6 +75,7 @@ export function startVideoExport(
   project: ProjectDocument,
   size: { width: number; height: number },
   onProgress: (done: number, total: number) => void,
+  range: { start: number; end: number } | null = null,
 ): RunningExport {
   const content = project.content;
   if (content.kind !== 'video') throw new Error('Not a video project');
@@ -127,6 +128,7 @@ export function startVideoExport(
       content,
       assets,
       files,
+      ...(range ? { range } : {}),
       settings: {
         width: size.width,
         height: size.height,

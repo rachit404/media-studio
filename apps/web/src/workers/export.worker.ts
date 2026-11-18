@@ -81,6 +81,7 @@ async function run(job: ExportJob): Promise<void> {
       fps: settings.fps,
       sampleRate: settings.sampleRate,
       signal: abort.signal,
+      ...(job.range ? { range: job.range } : {}),
       onProgress: (done, total) => send({ type: 'progress', done, total }),
     });
     send({ type: 'done', blob });

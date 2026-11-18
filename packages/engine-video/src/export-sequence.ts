@@ -55,6 +55,11 @@ export interface ExportOptions {
   fps: FrameRate;
   sampleRate: number;
   signal?: AbortSignal;
+  /**
+   * Export only this part of the sequence (timeline microseconds, from the in point to the out point). The file
+   * starts at 0: picture and sound are taken from `start` on and written as if it were the beginning.
+   */
+  range?: { start: number; end: number };
   /** Called after every frame with the frames done and the total. */
   onProgress?: (done: number, total: number) => void;
 }
@@ -100,7 +105,11 @@ export async function exportSequence<F extends ExportFrame>(
   options: ExportOptions,
 ): Promise<Blob> {
   const { fps, sampleRate, signal } = options;
-  const duration = sequenceDuration(content);
+  const range = options.range;
+  const offset = range ? Math.max(0, range.start) : 0;
+  const duration = range
+    ? Math.min(range.end, sequenceDuration(content)) - offset
+    : sequenceDuration(content);
   const total = exportFrameCount(duration, fps);
   if (total === 0) {
     throw new AppError({
@@ -111,6 +120,7 @@ export async function exportSequence<F extends ExportFrame>(
   }
   const withAudio = hasExportAudio(content, assets);
   const totalSamples = timeToSamples(duration, sampleRate);
+  const sampleOffset = timeToSamples(offset, sampleRate);
   const blockSamples = Math.round(AUDIO_BLOCK_SECONDS * sampleRate);
   const readers = new Map<string, AudioReader>();
   const readerFor = (assetId: string): AudioReader => {
@@ -139,7 +149,14 @@ export async function exportSequence<F extends ExportFrame>(
     const wanted = Math.min(totalSamples, timeToSamples(timeUs, sampleRate));
     while (audioDone < wanted) {
       const frames = Math.min(blockSamples, totalSamples - audioDone);
-      const block = await mixAudioBlock(content, assets, readerFor, audioDone, frames, sampleRate);
+      const block = await mixAudioBlock(
+        content,
+        assets,
+        readerFor,
+        sampleOffset + audioDone,
+        frames,
+        sampleRate,
+      );
       await deps.sink.addAudio(block, samplesToTime(audioDone, sampleRate));
       audioDone += frames;
     }
@@ -149,9 +166,11 @@ export async function exportSequence<F extends ExportFrame>(
     for (let index = 0; index < total; index += 1) {
       if (signal?.aborted)
         throw new AppError({ code: 'cancelled', message: 'The export was cancelled.' });
-      const time = frameToTime(index, fps);
+      // `written` is the time in the file, `time` the time on the timeline (they differ by the start of the range).
+      const written = frameToTime(index, fps);
+      const time = offset + written;
       const next = Math.min(frameToTime(index + 1, fps), duration);
-      if (withAudio) await writeAudioUntil(time + AUDIO_BLOCK_SECONDS * 1_000_000);
+      if (withAudio) await writeAudioUntil(written + AUDIO_BLOCK_SECONDS * 1_000_000);
 
       const plan = previewPlan(content, assets, time);
       const active = new Set<string>();
@@ -189,7 +208,7 @@ export async function exportSequence<F extends ExportFrame>(
       for (const clipId of [...streams.keys()]) if (!active.has(clipId)) release(clipId);
 
       deps.renderer.render(buildPreviewScene(content, assets, time, sizes, deps.metrics));
-      await deps.sink.addVideoFrame(time, Math.max(1, next - time));
+      await deps.sink.addVideoFrame(written, Math.max(1, next - written));
       options.onProgress?.(index + 1, total);
     }
     if (withAudio) await writeAudioUntil(duration);

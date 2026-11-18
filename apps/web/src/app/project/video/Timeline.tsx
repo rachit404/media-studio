@@ -1,15 +1,20 @@
 import {
   US_PER_SECOND,
   activeTransition,
+  addMarker,
   addMediaToTimeline,
   addTrack,
   clampMoveDelta,
   clipEnd,
+  clipSpeed,
   deleteClips,
   formatTimecode,
   joinClips,
   linkedGroup,
   moveClips,
+  nextMarker,
+  previousMarker,
+  setInOut,
   setTrackState,
   snapToFrame,
   sortedTracks,
@@ -20,6 +25,7 @@ import {
   unlinkClips,
   type Asset,
   type Clip,
+  type Marker,
   type Track,
   type TrimEdge,
   type VideoContent,
@@ -45,6 +51,8 @@ import { ASSET_DRAG_TYPE } from '../asset-drag';
 import { AssetThumb } from '../AssetThumb';
 import type { ProjectSession } from '../project-session';
 import type { PreviewPlayer } from './preview-player';
+import { MarkerTools, RulerMarks } from './MarkerTools';
+import { MasterMeter } from './MasterMeter';
 import { TitleTools } from './TitleTools';
 import { Waveform } from './waveform';
 
@@ -116,6 +124,7 @@ export function Timeline({
     setDragState(next);
   };
   const [snapping, setSnapping] = useState(true);
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const fps = content.sequence.fps;
   const scale = { pxPerSecond, originUs: 0 };
   const rows = trackRows(content);
@@ -242,7 +251,29 @@ export function Timeline({
       session.history.execute(deleteClips([selectedId], ripple));
       onSelect(null);
     });
+  const pickMarker = (marker: Marker | null) => {
+    setSelectedMarkerId(marker?.id ?? null);
+    if (marker) seekTo(marker.time);
+  };
+  const goToMarker = (which: 'next' | 'previous') => {
+    const marker = (which === 'next' ? nextMarker : previousMarker)(current(), playheadTime());
+    if (marker) pickMarker(marker);
+  };
   useGlobalShortcuts({
+    'transport.reverse': () => player?.shuttleKey('J'),
+    'transport.pause': () => player?.shuttleKey('K'),
+    'transport.shuttle': () => player?.shuttleKey('L'),
+    'marker.add': () =>
+      run(() => {
+        const id = crypto.randomUUID();
+        session.history.execute(addMarker(id, playheadTime()));
+        setSelectedMarkerId(id);
+      }),
+    'marker.next': () => goToMarker('next'),
+    'marker.previous': () => goToMarker('previous'),
+    'range.in': () => run(() => session.history.execute(setInOut({ in: playheadTime() }))),
+    'range.out': () => run(() => session.history.execute(setInOut({ out: playheadTime() }))),
+    'range.clear': () => run(() => session.history.execute(setInOut({ in: null, out: null }))),
     'timeline.split': splitAtPlayhead,
     'edit.delete': () => deleteSelected(false),
     'timeline.rippleDelete': () => deleteSelected(true),
@@ -491,6 +522,15 @@ export function Timeline({
           onSelect={onSelect}
           onProblem={onProblem}
         />
+        <MarkerTools
+          session={session}
+          content={content}
+          fps={fps}
+          playheadTime={playheadTime}
+          run={run}
+          selectedMarkerId={selectedMarkerId}
+          onPick={pickMarker}
+        />
         <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
         <Button
           variant="secondary"
@@ -523,6 +563,7 @@ export function Timeline({
         >
           Fit
         </Button>
+        <MasterMeter player={player} />
       </div>
 
       <div className="flex min-h-0 flex-1">
@@ -633,6 +674,13 @@ export function Timeline({
                   </span>
                 );
               })}
+              <RulerMarks
+                content={content}
+                pxPerSecond={pxPerSecond}
+                endUs={lastEnd}
+                selectedMarkerId={selectedMarkerId}
+                onPick={pickMarker}
+              />
             </div>
 
             {rows.map((track, index) => (
@@ -673,7 +721,7 @@ export function Timeline({
                         type="button"
                         data-clip-id={clip.id}
                         aria-pressed={selectedId === clip.id}
-                        aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}`}
+                        aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}${clipSpeed(clip) === 1 ? '' : `, speed ${String(clipSpeed(clip))} times`}`}
                         onPointerDown={(event) => onClipPointerDown(event, clip)}
                         onPointerMove={(event) => onClipPointerMove(event, clip)}
                         onPointerUp={(event) => onClipPointerUp(event, clip)}
@@ -703,7 +751,7 @@ export function Timeline({
                             projectId={session.id}
                             asset={asset}
                             sourceInSeconds={clip.sourceIn / US_PER_SECOND}
-                            seconds={at.duration / US_PER_SECOND}
+                            seconds={(at.duration * clipSpeed(clip)) / US_PER_SECOND}
                             width={width}
                             height={ROW_HEIGHT - 12}
                           />
@@ -723,6 +771,11 @@ export function Timeline({
                         )}
                         <span className="relative block truncate px-1.5 pt-1.5 text-fg">
                           {label}
+                          {clipSpeed(clip) !== 1 && (
+                            <span data-testid="speed-badge" className="ml-1 text-fg-muted">
+                              {`${String(clipSpeed(clip))}×`}
+                            </span>
+                          )}
                         </span>
                       </button>
                     );

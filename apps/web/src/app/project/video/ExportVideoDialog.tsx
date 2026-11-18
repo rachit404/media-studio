@@ -1,4 +1,6 @@
 import {
+  exportRange,
+  formatTimecode,
   sequenceDuration,
   toAppError,
   type AppError,
@@ -58,10 +60,15 @@ export function ExportVideoDialog({
 }) {
   const presetId = useId();
   const [preset, setPreset] = useState('sequence');
+  const [limitToRange, setLimitToRange] = useState(true);
+  const rangeId = useId();
   const [phase, setPhase] = useState<Phase>({ name: 'settings' });
   const running = useRef<RunningExport | null>(null);
 
-  const duration = sequenceDuration(content);
+  // The in and out points, when set, can limit the export to the part between them.
+  const marked = exportRange(content);
+  const range = limitToRange ? marked : null;
+  const duration = range ? range.end - range.start : sequenceDuration(content);
   const chosen = EXPORT_PRESETS.find((entry) => entry.id === preset) ?? EXPORT_PRESETS[0];
   const size = exportSize(content.sequence, chosen?.longSide ?? null);
   const estimate = estimateExport(content, size, duration);
@@ -79,8 +86,12 @@ export function ExportVideoDialog({
   const start = () => {
     setPhase({ name: 'working', done: 0, total: estimate.frames });
     try {
-      const job = startVideoExport(projectId, project, size, (done, total) =>
-        setPhase({ name: 'working', done, total }),
+      const job = startVideoExport(
+        projectId,
+        project,
+        size,
+        (done, total) => setPhase({ name: 'working', done, total }),
+        range,
       );
       running.current = job;
       job.result
@@ -134,6 +145,19 @@ export function ExportVideoDialog({
               ))}
             </select>
           </div>
+          {marked && (
+            <label htmlFor={rangeId} className="flex items-center gap-2 text-sm">
+              <input
+                id={rangeId}
+                type="checkbox"
+                checked={limitToRange}
+                onChange={(event) => {
+                  setLimitToRange(event.target.checked);
+                }}
+              />
+              {`Only the part between the in and out points (${formatTimecode(marked.start, content.sequence.fps)} to ${formatTimecode(marked.end, content.sequence.fps)})`}
+            </label>
+          )}
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
             <dt className="text-fg-muted">Picture</dt>
             <dd>

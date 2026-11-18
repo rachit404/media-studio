@@ -1,5 +1,6 @@
 import {
   clipEnd,
+  clipSpeed,
   frameDuration,
   linkedGroup,
   trackClips,
@@ -34,18 +35,20 @@ export function trimRange(
         : asset?.kind === 'video' || asset?.kind === 'audio'
           ? asset.duration
           : 0;
-    const sourceIn = clip.assetId === null ? clip.start : clip.sourceIn;
+    // Timeline time the file can give before and after the clip: the file runs `speed` times faster than the timeline.
+    const speed = clipSpeed(clip);
+    const before = clip.assetId === null ? clip.start : Math.floor(clip.sourceIn / speed);
     const neighbours = trackClips(content, clip.trackId).filter((other) => !inGroup.has(other.id));
     if (edge === 'start') {
-      const before = neighbours.filter((other) => clipEnd(other) <= clip.start);
-      min = Math.max(min, 0, clip.start - sourceIn, ...before.map(clipEnd));
+      const touching = neighbours.filter((other) => clipEnd(other) <= clip.start);
+      min = Math.max(min, 0, clip.start - before, ...touching.map(clipEnd));
       max = Math.min(max, clipEnd(clip) - frame);
     } else {
       const after = neighbours.filter((other) => other.start >= clipEnd(clip));
       min = Math.max(min, clip.start + frame);
       max = Math.min(
         max,
-        clip.start + (fileLength - clip.sourceIn),
+        clip.start + Math.floor((fileLength - clip.sourceIn) / speed),
         ...after.map((other) => other.start),
       );
     }

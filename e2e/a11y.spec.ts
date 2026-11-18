@@ -114,6 +114,13 @@ for (const colorScheme of ['dark', 'light'] as const) {
       await page.getByRole('checkbox', { name: 'Box behind the text' }).check();
       await expect(page.getByRole('slider', { name: 'Box opacity' })).toBeVisible();
       await expectNoViolations(page);
+
+      // A marker (flag on the ruler and its name field) and the in and out points.
+      await page.getByRole('button', { name: 'Add marker' }).click();
+      await page.getByRole('button', { name: 'Set in' }).click();
+      await expect(page.getByRole('textbox', { name: 'Marker name' })).toBeVisible();
+      await expect(page.getByTestId('range-readout')).toBeVisible();
+      await expectNoViolations(page);
     });
   });
 }

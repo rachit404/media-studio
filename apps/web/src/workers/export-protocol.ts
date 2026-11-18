@@ -6,6 +6,8 @@ export interface ExportJob {
   assets: Record<string, Asset>;
   /** The stored media files the sequence uses, by asset id (file handles, not copies). */
   files: Record<string, Blob>;
+  /** Export only this part of the sequence (timeline microseconds); absent = all of it. */
+  range?: { start: number; end: number };
   settings: {
     width: number;
     height: number;

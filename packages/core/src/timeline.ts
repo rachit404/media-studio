@@ -2,6 +2,7 @@ import { sortedItems } from './ordered';
 import {
   clipEnd,
   type Clip,
+  type Marker,
   type TransitionDirection,
   type TransitionKind,
   type Track,
@@ -59,6 +60,28 @@ export function activeTransition(
     duration: Math.min(transitionIn.duration, clip.duration),
     from,
   };
+}
+
+/** The first marker after `time`, if any. */
+export function nextMarker(content: VideoContent, time: number): Marker | undefined {
+  return (content.markers ?? []).find((marker) => marker.time > time);
+}
+
+/** The last marker before `time`, if any. */
+export function previousMarker(content: VideoContent, time: number): Marker | undefined {
+  return [...(content.markers ?? [])].reverse().find((marker) => marker.time < time);
+}
+
+/**
+ * The part of the sequence export is limited to: from the in point (or the start) to the out point (or the end).
+ * Null when neither point is set, or the range is empty.
+ */
+export function exportRange(content: VideoContent): { start: number; end: number } | null {
+  if (content.inPoint === undefined && content.outPoint === undefined) return null;
+  const length = sequenceDuration(content);
+  const start = content.inPoint ?? 0;
+  const end = Math.min(content.outPoint ?? length, length);
+  return end > start ? { start, end } : null;
 }
 
 /** Where the last clip ends (0 for an empty sequence). */

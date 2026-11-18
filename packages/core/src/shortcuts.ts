@@ -109,6 +109,11 @@ export interface CommandDef {
   readonly id: string;
   readonly label: string;
   readonly defaults: readonly string[];
+  /**
+   * Where the command works (for example 'video'). Two commands may share a key when their scopes differ; a command
+   * without a scope works everywhere and so shares keys with none.
+   */
+  readonly scope?: string;
 }
 
 export type RebindResult =
@@ -139,12 +144,25 @@ export class ShortcutRegistry {
     return command.defaults.map(canonicalCombo).filter((c): c is string => c !== null);
   }
 
-  /** Command id bound to a combo, or null. */
+  /** Command id bound to a combo, or null (the first, when commands of different scopes share it). */
   resolve(combo: string): string | null {
+    return this.resolveAll(combo)[0] ?? null;
+  }
+
+  /** Every command bound to a combo: more than one only when their scopes differ. */
+  resolveAll(combo: string): string[] {
     const canonical = canonicalCombo(combo);
-    if (!canonical) return null;
-    for (const id of this.commands.keys()) {
-      if (this.bindingsFor(id).includes(canonical)) return id;
+    if (!canonical) return [];
+    return [...this.commands.keys()].filter((id) => this.bindingsFor(id).includes(canonical));
+  }
+
+  /** A command that already uses `combo` in a scope that overlaps with the scope of `id`, if any. */
+  private conflictFor(id: string, combo: string): string | null {
+    const scope = this.commands.get(id)?.scope;
+    for (const other of this.resolveAll(combo)) {
+      if (other === id) continue;
+      const otherScope = this.commands.get(other)?.scope;
+      if (scope === undefined || otherScope === undefined || scope === otherScope) return other;
     }
     return null;
   }
@@ -158,9 +176,8 @@ export class ShortcutRegistry {
       canonical.push(value);
     }
     for (const combo of canonical) {
-      const owner = this.resolve(combo);
-      if (owner !== null && owner !== id)
-        return { ok: false, reason: 'conflict', conflictWith: owner };
+      const owner = this.conflictFor(id, combo);
+      if (owner !== null) return { ok: false, reason: 'conflict', conflictWith: owner };
     }
     this.overrides.set(id, [...new Set(canonical)]);
     this.changed();
@@ -186,10 +203,7 @@ export class ShortcutRegistry {
         const canonical = combos.map(canonicalCombo);
         if (canonical.some((c) => c === null)) continue;
         const valid = canonical as string[];
-        const clash = valid.some((c) => {
-          const owner = this.resolve(c);
-          return owner !== null && owner !== id;
-        });
+        const clash = valid.some((c) => this.conflictFor(id, c) !== null);
         if (!clash) this.overrides.set(id, valid);
       }
     }

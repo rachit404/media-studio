@@ -23,8 +23,14 @@ import {
   MAX_TRACKS,
   MAX_VOLUME,
   clipBackdropSchema,
+  MAX_MARKERS,
+  MAX_SPEED,
+  MIN_SPEED,
   clipColourSchema,
   clipEnd,
+  clipSourceAt,
+  clipSpeed,
+  sourceSpan,
   clipTransformSchema,
   clipTransitionSchema,
   isTextClip,
@@ -385,9 +391,18 @@ export function trimClip(
         const limit = clip.assetId === null ? Infinity : sourceDuration(draft, clip.assetId);
         const start = edge === 'start' ? clip.start + delta : clip.start;
         const end = edge === 'end' ? clipEnd(clip) + delta : clipEnd(clip);
+        // The file moves by `speed` times the timeline change.
+        const speed = clipSpeed(clip);
         const sourceIn =
-          edge === 'start' && clip.assetId !== null ? clip.sourceIn + delta : clip.sourceIn;
-        if (start < 0 || end <= start || sourceIn < 0 || sourceIn + (end - start) > limit) {
+          edge === 'start' && clip.assetId !== null
+            ? clip.sourceIn + sourceSpan(delta, speed)
+            : clip.sourceIn;
+        if (
+          start < 0 ||
+          end <= start ||
+          sourceIn < 0 ||
+          sourceIn + sourceSpan(end - start, speed) > limit
+        ) {
           throw invalid('The clip cannot be trimmed that far.', 'There is no more of the file.');
         }
         if (end > MAX_TIME_US) throw invalid('That is past the end of the longest sequence.');
@@ -402,7 +417,9 @@ export function trimClip(
         const target = clipDraft(content, clip.id);
         if (edge === 'start') {
           target.start = clip.start + delta;
-          if (clip.assetId !== null) target.sourceIn = clip.sourceIn + delta;
+          if (clip.assetId !== null) {
+            target.sourceIn = clip.sourceIn + sourceSpan(delta, clipSpeed(clip));
+          }
           target.duration = clip.duration - delta;
         } else {
           target.duration = clip.duration + delta;
@@ -468,8 +485,9 @@ export function splitClips(
           assetId: clip.assetId,
           start: time,
           duration: clipEnd(clip) - time,
-          sourceIn: clip.assetId === null ? 0 : clip.sourceIn + (time - clip.start),
+          sourceIn: clip.assetId === null ? 0 : clipSourceAt(clip, time - clip.start),
           linkId: clip.linkId === null ? null : (rightLinks.get(clip.linkId) ?? null),
+          ...(clip.speed === undefined ? {} : { speed: clip.speed }),
           ...(clip.text === undefined ? {} : { text: clip.text }),
           ...(clip.backdrop === undefined ? {} : { backdrop: clip.backdrop }),
           ...splitLook(clip),
@@ -598,6 +616,148 @@ export function setTransition(
       target.transitionIn = { kind, duration, ...(wipes && direction ? { direction } : {}) };
     },
     ...(transition ? { coalesceKey: `transition:${clipId}` } : {}),
+  };
+}
+
+/**
+ * Play clips (and the clips linked to them, so picture and sound stay together) at a constant `speed` from 0.25
+ * to 4. The same stretch of the file is used, so the clip gets shorter when faster and longer when slower; a
+ * clip that would then run into the next one is refused. Speed 1 removes the setting. Sound changes pitch with
+ * speed. Repeated edits of one clip merge into one undo step.
+ */
+export function setClipSpeed(clipId: string, speed: number): Command<ProjectDocument> {
+  return {
+    label: 'Change speed',
+    coalesceKey: `clip-speed:${clipId}`,
+    apply(draft) {
+      const content = videoDraft(draft);
+      const snapshot = before(content);
+      if (!snapshot.clips[clipId]) throw new RangeError(`Clip ${clipId} does not exist`);
+      if (!(speed >= MIN_SPEED && speed <= MAX_SPEED)) {
+        throw invalid(`Speed must be between ${String(MIN_SPEED)} and ${String(MAX_SPEED)} times.`);
+      }
+      const group = linkedGroup(snapshot, clipId);
+      assertEditable(snapshot, group);
+      const ids = new Set(group.map((clip) => clip.id));
+      const changes = group.map((clip) => {
+        if (clip.assetId === null) throw invalid('Text clips have no speed.');
+        const limit = sourceDuration(draft, clip.assetId);
+        const span = sourceSpan(clip.duration, clipSpeed(clip));
+        let duration = Math.max(1, Math.round(span / speed));
+        // Rounding must not make the clip use more of the file than there is.
+        while (duration > 1 && clip.sourceIn + sourceSpan(duration, speed) > limit) duration -= 1;
+        if (clip.start + duration > MAX_TIME_US)
+          throw invalid('That is past the end of the longest sequence.');
+        if (
+          duration > clip.duration &&
+          !isFree(snapshot, clip.trackId, clip.start, duration, ids)
+        ) {
+          throw invalid(
+            'There is no room for the clip to get longer.',
+            'Another clip is in the way.',
+          );
+        }
+        return { clip, duration };
+      });
+      for (const { clip, duration } of changes) {
+        const target = clipDraft(content, clip.id);
+        target.duration = duration;
+        if (speed === 1) delete target.speed;
+        else target.speed = speed;
+      }
+    },
+  };
+}
+
+// Markers and in/out ------------------------------------------------------------------------------------
+
+function validTime(time: number): void {
+  if (!Number.isSafeInteger(time) || time < 0 || time > MAX_TIME_US) {
+    throw invalid('That time is not valid.');
+  }
+}
+
+/** Put a marker at `time`. There can be one marker per time. */
+export function addMarker(id: string, time: number, name = ''): Command<ProjectDocument> {
+  return {
+    label: 'Add marker',
+    apply(draft) {
+      const content = videoDraft(draft);
+      validTime(time);
+      const cleaned = name.trim();
+      if (cleaned.length > 60) throw invalid('Marker names can have up to 60 characters.');
+      const markers = content.markers ?? [];
+      if (markers.length >= MAX_MARKERS) {
+        throw invalid(`A sequence can have up to ${String(MAX_MARKERS)} markers.`);
+      }
+      if (markers.some((marker) => marker.time === time)) {
+        throw invalid('There is already a marker there.');
+      }
+      if (markers.some((marker) => marker.id === id)) throw invalid('That marker already exists.');
+      content.markers = [...markers, { id, time, name: cleaned }].sort((a, b) => a.time - b.time);
+    },
+  };
+}
+
+/** Rename a marker; typing merges into one undo step. */
+export function renameMarker(id: string, name: string): Command<ProjectDocument> {
+  return {
+    label: 'Rename marker',
+    coalesceKey: `marker-name:${id}`,
+    apply(draft) {
+      const marker = videoDraft(draft).markers?.find((candidate) => candidate.id === id);
+      if (!marker) throw new RangeError(`Marker ${id} does not exist`);
+      if (name.length > 60) throw invalid('Marker names can have up to 60 characters.');
+      marker.name = name;
+    },
+  };
+}
+
+export function removeMarker(id: string): Command<ProjectDocument> {
+  return {
+    label: 'Remove marker',
+    apply(draft) {
+      const content = videoDraft(draft);
+      const markers = content.markers ?? [];
+      if (!markers.some((marker) => marker.id === id)) {
+        throw new RangeError(`Marker ${id} does not exist`);
+      }
+      const rest = markers.filter((marker) => marker.id !== id);
+      if (rest.length === 0) delete content.markers;
+      else content.markers = rest;
+    },
+  };
+}
+
+/**
+ * Set or clear (null) the in and out points. A point that would land on the wrong side of the other one clears the
+ * other one: setting the in point after the out point removes the out point, and the other way round.
+ */
+export function setInOut(patch: {
+  in?: number | null;
+  out?: number | null;
+}): Command<ProjectDocument> {
+  return {
+    label:
+      patch.in === null && patch.out === null ? 'Clear in and out points' : 'Set in or out point',
+    apply(draft) {
+      const content = videoDraft(draft);
+      if (typeof patch.in === 'number') validTime(patch.in);
+      if (typeof patch.out === 'number') validTime(patch.out);
+      if (typeof patch.in === 'number' && typeof patch.out === 'number' && patch.in >= patch.out) {
+        throw invalid('The in point must be before the out point.');
+      }
+      let inPoint = patch.in === undefined ? content.inPoint : (patch.in ?? undefined);
+      let outPoint = patch.out === undefined ? content.outPoint : (patch.out ?? undefined);
+      if (inPoint !== undefined && outPoint !== undefined && inPoint >= outPoint) {
+        if (typeof patch.in === 'number') outPoint = undefined;
+        else inPoint = undefined;
+      }
+      if (inPoint === undefined) delete content.inPoint;
+      else content.inPoint = inPoint;
+      if (outPoint === undefined) delete content.outPoint;
+      else content.outPoint = outPoint;
+    },
   };
 }
 
@@ -824,7 +984,8 @@ export function joinClips(clipId: string): Command<ProjectDocument> {
           clip.assetId !== null &&
           next.assetId === clip.assetId &&
           next.start === clipEnd(clip) &&
-          next.sourceIn === clip.sourceIn + clip.duration;
+          clipSpeed(next) === clipSpeed(clip) &&
+          next.sourceIn === clip.sourceIn + sourceSpan(clip.duration, clipSpeed(clip));
         if (!joinable) throw invalid('These clips are not one continuous piece of the same file.');
         return { clip, next };
       });

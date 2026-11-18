@@ -23,6 +23,7 @@ export class Transport {
   private lastFrame = -1;
   private length = 0;
   private isPlaying = false;
+  private speed = 1;
   readonly stats: PlaybackStats = { presented: 0, dropped: 0 };
 
   constructor(
@@ -38,6 +39,22 @@ export class Transport {
   }
   get duration(): number {
     return this.length;
+  }
+  /** Playback rate: 1 is normal, 2 twice as fast, negative runs backwards (J/K/L shuttle). */
+  get rate(): number {
+    return this.speed;
+  }
+
+  /** Change the playback rate, from now on (the clock is re-anchored, so the time does not jump). */
+  setRate(rate: number): void {
+    if (!Number.isFinite(rate) || rate === 0)
+      throw new RangeError('The rate must be a non-zero number');
+    if (this.isPlaying) {
+      this.tick();
+      this.startedAtClock = this.options.clock();
+      this.startedAtTime = this.current;
+    }
+    this.speed = rate;
   }
 
   setFrameRate(fps: FrameRate): void {
@@ -78,7 +95,9 @@ export class Transport {
       }
       return;
     }
-    if (this.current >= this.length) this.current = 0;
+    // Starting at the end plays from the start, unless running backwards (which starts from the end).
+    if (this.speed > 0 && this.current >= this.length) this.current = 0;
+    if (this.speed < 0 && this.current <= 0) return;
     this.isPlaying = true;
     this.startedAtClock = atClock ?? this.options.clock();
     this.startedAtTime = this.current;
@@ -100,17 +119,22 @@ export class Transport {
   tick(): number {
     if (!this.isPlaying) return this.current;
     const elapsed = this.options.clock() - this.startedAtClock;
-    const next = this.startedAtTime + Math.max(0, elapsed);
-    if (next >= this.length) {
-      this.current = this.length;
+    const next = this.startedAtTime + Math.max(0, elapsed) * this.speed;
+    const forwards = this.speed > 0;
+    if (forwards ? next >= this.length : next <= 0) {
+      // Reached the end going forwards, or the start going backwards.
+      this.current = forwards ? this.length : 0;
       this.isPlaying = false;
       return this.current;
     }
     this.current = Math.round(next);
     const frame = timeToFrame(this.current, this.fps);
     if (frame !== this.lastFrame) {
-      this.stats.presented += 1;
-      this.stats.dropped += Math.max(0, frame - this.lastFrame - 1);
+      // Only normal playback counts towards dropped frames: faster or backwards shuttling skips on purpose.
+      if (this.speed === 1) {
+        this.stats.presented += 1;
+        this.stats.dropped += Math.max(0, frame - this.lastFrame - 1);
+      }
       this.lastFrame = frame;
     }
     return this.current;
