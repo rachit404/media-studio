@@ -1,5 +1,6 @@
 import {
   US_PER_SECOND,
+  addMediaToTimeline,
   addTrack,
   clampMoveDelta,
   clipEnd,
@@ -9,9 +10,11 @@ import {
   linkedGroup,
   moveClips,
   setTrackState,
+  snapToFrame,
   sortedTracks,
   splitClips,
   toAppError,
+  tracksOfKind,
   trimClip,
   unlinkClips,
   type Asset,
@@ -37,6 +40,7 @@ import {
 import { Button } from '@media-studio/ui';
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { useGlobalShortcuts } from '../../use-shortcuts';
+import { ASSET_DRAG_TYPE } from '../asset-drag';
 import { AssetThumb } from '../AssetThumb';
 import type { ProjectSession } from '../project-session';
 import type { PreviewPlayer } from './preview-player';
@@ -258,6 +262,32 @@ export function Timeline({
     const top = scroller.getBoundingClientRect().top + RULER_HEIGHT;
     return rows[Math.floor((clientY - top) / ROW_HEIGHT)];
   };
+
+  /** A file dragged from the media library and dropped on the timeline: placed at the drop time, on the lane under it. */
+  const dropAsset = (assetId: string, clientX: number, clientY: number) =>
+    run(() => {
+      const asset = assets[assetId];
+      if (asset?.kind !== 'video' && asset?.kind !== 'audio') return;
+      const lane = laneAt(clientY);
+      const open = (kind: 'video' | 'audio') =>
+        lane && lane.kind === kind && !lane.locked
+          ? lane.id
+          : tracksOfKind(content, kind).find((track) => !track.locked)?.id;
+      const start = snapToFrame(Math.max(0, timeAtClientX(clientX)), fps);
+      const videoTrackId = asset.kind === 'video' ? open('video') : undefined;
+      const audioTrackId = asset.kind === 'audio' || asset.audio ? open('audio') : undefined;
+      session.history.execute(
+        addMediaToTimeline({
+          assetId,
+          start,
+          clipId: crypto.randomUUID(),
+          audioClipId: crypto.randomUUID(),
+          linkId: crypto.randomUUID(),
+          ...(videoTrackId ? { videoTrackId } : {}),
+          ...(audioTrackId ? { audioTrackId } : {}),
+        }),
+      );
+    });
 
   const onClipPointerDown = (event: PointerEvent<HTMLElement>, clip: Clip) => {
     if (event.button !== 0) return;
@@ -529,6 +559,18 @@ export function Timeline({
           ref={scrollRef}
           data-testid="timeline-scroll"
           className="relative min-w-0 flex-1 overflow-x-auto overflow-y-hidden"
+          onDragOver={(event) => {
+            if (event.dataTransfer.types.includes(ASSET_DRAG_TYPE)) {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = 'copy';
+            }
+          }}
+          onDrop={(event) => {
+            const assetId = event.dataTransfer.getData(ASSET_DRAG_TYPE);
+            if (assetId === '') return;
+            event.preventDefault();
+            dropAsset(assetId, event.clientX, event.clientY);
+          }}
           onPointerDown={(event) => {
             // Empty space: move the playhead there, and keep following the pointer while it is held down.
             if (event.button !== 0) return;

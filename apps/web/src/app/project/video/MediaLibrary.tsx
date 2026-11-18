@@ -18,6 +18,7 @@ import { useRef, useState, type DragEvent } from 'react';
 import { getAnalysis } from '../../analysis-client';
 import { diagnostics } from '../../diagnostics';
 import { getStorage } from '../../storage-client';
+import { ASSET_DRAG_TYPE } from '../asset-drag';
 import { AssetThumb } from '../AssetThumb';
 import type { ProjectSession } from '../project-session';
 import { importMediaFiles } from '../import-media';
@@ -166,7 +167,15 @@ export function MediaLibrary({
             const thumb = assetThumb(asset);
             const used = clipsUsingAsset(content, asset.id).length > 0;
             return (
-              <li key={asset.id} className="rounded-md border border-line bg-surface-raised p-2">
+              <li
+                key={asset.id}
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.effectAllowed = 'copy';
+                  event.dataTransfer.setData(ASSET_DRAG_TYPE, asset.id);
+                }}
+                className="rounded-md border border-line bg-surface-raised p-2"
+              >
                 <div className="flex items-center gap-2">
                   {thumb ? (
                     <AssetThumb

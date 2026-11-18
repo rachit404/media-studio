@@ -399,3 +399,32 @@ test.describe('export', () => {
     await expect(dialog.getByRole('button', { name: 'Start export' })).toBeDisabled();
   });
 });
+
+test.describe('drag and drop from the library', () => {
+  test('dropping a video on the timeline places it at the drop time on the lane under it', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Drop test');
+    await importMedia(page, [media.blue]);
+    const item = page.getByRole('list', { name: 'Project media' }).getByRole('listitem').first();
+    const lane = page.getByRole('group', { name: 'Video 1' });
+    await lane.scrollIntoViewIfNeeded();
+    // 300 px from the left edge of the lane at 60 px per second is 5 seconds.
+    await item.dragTo(lane, { targetPosition: { x: 300, y: 28 } });
+    const placed = clip(page, 'blue.mp4', 'Video 1');
+    await expect(placed).toBeVisible();
+    await expect(placed).toHaveAccessibleName(/starts 00:00:05:00/);
+  });
+
+  test('dropping where there is no room says so and changes nothing', async ({ page }) => {
+    await createVideoProject(page, 'Drop test 2');
+    await importMedia(page, [media.blue]);
+    await addToTimeline(page, 'blue.mp4'); // 0 s .. 3 s
+    const item = page.getByRole('list', { name: 'Project media' }).getByRole('listitem').first();
+    const lane = page.getByRole('group', { name: 'Video 1' });
+    await lane.scrollIntoViewIfNeeded();
+    await item.dragTo(lane, { targetPosition: { x: 60, y: 28 } }); // 1 s: inside the existing clip
+    await expect(page.getByRole('status').filter({ hasText: /no room/i })).toBeVisible();
+    await expect(clip(page, 'blue.mp4', 'Video 1')).toHaveCount(1);
+  });
+});
