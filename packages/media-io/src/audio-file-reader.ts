@@ -148,7 +148,8 @@ export class AudioFileReader {
       }
       position = chunkEnd;
     }
-    this.dropBefore(end);
+    // Keep a few samples: resampled (sped up or slowed down) reads continue just before where this one ended.
+    this.dropBefore(end - 4);
     return out;
   }
 

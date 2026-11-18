@@ -38,6 +38,12 @@ export interface ImageNode {
   mask?: PixelSurface;
   /** Clip to the opaque parts of the nearest layer below that is not itself clipped. */
   clip?: boolean;
+  /** Video clips: the fraction of the picture removed from each side, 0..1 (absent = none). */
+  crop?: { left: number; top: number; right: number; bottom: number };
+  /** Video clips: colour correction of this layer only, each -1..1 (absent = none). */
+  colour?: { brightness: number; contrast: number; saturation: number; temperature: number };
+  /** Video clips: mix the picture towards black or white by `amount` 0..1, keeping its alpha (dip transitions). */
+  dip?: { colour: 'black' | 'white'; amount: number };
 }
 
 export interface AdjustmentNode {

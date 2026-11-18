@@ -428,3 +428,646 @@ test.describe('drag and drop from the library', () => {
     await expect(clip(page, 'blue.mp4', 'Video 1')).toHaveCount(1);
   });
 });
+
+/** The pitch of the sound of an exported file between `from` and `from + length` seconds, by counting zero crossings. */
+function toneFrequency(path: string, from: number, length: number): number {
+  const raw = execFileSync(
+    'ffmpeg',
+    [
+      '-v',
+      'error',
+      '-ss',
+      String(from),
+      '-t',
+      String(length),
+      '-i',
+      path,
+      '-vn',
+      '-ac',
+      '1',
+      '-ar',
+      '48000',
+      '-f',
+      's16le',
+      '-',
+    ],
+    { maxBuffer: 50_000_000 },
+  );
+  let crossings = 0;
+  let previous = raw.readInt16LE(0);
+  for (let i = 2; i + 1 < raw.length; i += 2) {
+    const sample = raw.readInt16LE(i);
+    if (previous < 0 !== sample < 0) crossings += 1;
+    previous = sample;
+  }
+  return crossings / 2 / length;
+}
+
+test.describe('speed', () => {
+  const speedField = (page: Page) => page.getByRole('spinbutton', { name: /^Speed/ });
+  const length = (page: Page) => page.getByRole('textbox', { name: 'Length' });
+
+  test('a clip plays faster and gets shorter, picture and sound together, and undo restores it', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Speed test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4'); // 2 s with sound
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await expect(length(page)).toHaveValue('00:00:02:00');
+    await speedField(page).fill('2');
+    await expect(length(page)).toHaveValue('00:00:01:00');
+    await expect(clip(page, 'red.mp4', 'Video 1').getByTestId('speed-badge')).toHaveText('2×');
+    await expect(clip(page, 'red.mp4', 'Audio 1')).toHaveAccessibleName(/speed 2 times/);
+
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(length(page)).toHaveValue('00:00:02:00');
+    await expect(page.getByTestId('speed-badge')).toHaveCount(0);
+  });
+
+  test('a speed outside 0.25 to 4 is not applied', async ({ page }) => {
+    await createVideoProject(page, 'Speed limits');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await speedField(page).fill('9');
+    await expect(length(page)).toHaveValue('00:00:02:00');
+    await expect(page.getByTestId('speed-badge')).toHaveCount(0);
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('double speed halves the length and doubles the pitch of the sound', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(120_000);
+      await createVideoProject(page, 'Speed export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4'); // 2 s of a 440 Hz tone
+      await clip(page, 'red.mp4', 'Video 1').click();
+      await speedField(page).fill('2');
+      await expect(length(page)).toHaveValue('00:00:01:00');
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('fast.mp4');
+      await (await downloading).saveAs(file);
+
+      const facts = probe(file);
+      expect(Number(facts.video?.nb_read_frames)).toBe(25);
+      expect(facts.duration).toBeGreaterThan(0.95);
+      expect(facts.duration).toBeLessThan(1.2);
+      expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+      // 440 Hz played twice as fast is 880 Hz.
+      const pitch = toneFrequency(file, 0.1, 0.8);
+      expect(pitch).toBeGreaterThan(840);
+      expect(pitch).toBeLessThan(920);
+    });
+  });
+});
+
+test.describe('transitions', () => {
+  /** red (0 to 2 s, 25 fps) then blue (2 to 5 s), with a 1 s dip to black into blue. */
+  async function dipProject(page: Page, name: string): Promise<void> {
+    await createVideoProject(page, name);
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4');
+    await addToTimeline(page, 'blue.mp4');
+    await clip(page, 'blue.mp4', 'Video 1').click();
+    await page.getByLabel('Transition in', { exact: true }).selectOption('dip-black');
+    await page.getByRole('spinbutton', { name: /^Duration/ }).fill('1');
+    await expect(page.getByRole('spinbutton', { name: /^Duration/ })).toHaveValue('1');
+  }
+
+  test('a dip to black goes dark between the two clips and undo takes it away', async ({
+    page,
+  }) => {
+    await dipProject(page, 'Dip preview');
+    await expect(clip(page, 'blue.mp4', 'Video 1')).toHaveAccessibleName(/dip-black transition in/);
+    await expect(page.getByTestId('transition-marker')).toBeVisible();
+
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+    await page.keyboard.press('Home');
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 20_000 }).toBe(true);
+    // Frame 62 at 25 fps is 2.48 s: just before the middle of the dip, so the red is nearly black.
+    for (let i = 0; i < 62; i += 1) await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('clock')).toHaveText('00:00:02:12');
+    await expect
+      .poll(async () => (await previewColour(page)).every((value) => value < 60), {
+        timeout: 20_000,
+      })
+      .toBe(true);
+    // After the dip the blue is back.
+    await page.keyboard.press('End');
+    await page.keyboard.press('ArrowLeft');
+    await expect
+      .poll(async () => isBlue(await previewColour(page)), { timeout: 20_000 })
+      .toBe(true);
+
+    await clip(page, 'blue.mp4', 'Video 1').click();
+    await page.getByLabel('Transition in', { exact: true }).selectOption('');
+    await expect(page.getByTestId('transition-marker')).toHaveCount(0);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(page.getByTestId('transition-marker')).toBeVisible();
+  });
+
+  test('the first clip on a track has no clip to come from, and says so', async ({ page }) => {
+    await createVideoProject(page, 'Transition first');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await expect(page.getByLabel('Transition in', { exact: true })).toBeDisabled();
+    await expect(page.getByText(/place this clip directly after another clip/i)).toBeVisible();
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('the exported picture dips to black between the clips and returns to blue', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(120_000);
+      await dipProject(page, 'Dip export');
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('dip.mp4');
+      await (await downloading).saveAs(file);
+
+      expect(pixelAtSecond(file, 1.5)[0]).toBeGreaterThan(200); // red before the dip
+      const dark = pixelAtSecond(file, 2.5); // the middle of the dip
+      expect(Math.max(...dark)).toBeLessThan(60);
+      expect(pixelAtSecond(file, 4)[2]).toBeGreaterThan(200); // blue after it
+    });
+  });
+});
+
+/** How many pixels of the preview are (nearly) white: the text of titles and subtitles in these tests. */
+async function whitePixels(page: Page): Promise<number> {
+  const png = await page.getByTestId('preview-canvas').screenshot();
+  return page.evaluate(async (base64) => {
+    const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+    const bitmap = await createImageBitmap(new Blob([bytes]));
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('no 2d context');
+    context.drawImage(bitmap, 0, 0);
+    const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height);
+    let count = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if ((data[i] ?? 0) > 200 && (data[i + 1] ?? 0) > 200 && (data[i + 2] ?? 0) > 200) count += 1;
+    }
+    return count;
+  }, png.toString('base64'));
+}
+
+const SUBTITLES = [
+  '1',
+  '00:00:00,200 --> 00:00:01,000',
+  'Hello <i>there</i>',
+  '',
+  '2',
+  '00:00:01,400 --> 00:00:01,900',
+  'Second line',
+  '',
+].join('\n');
+const subtitleFile = (text: string) => ({
+  name: 'captions.srt',
+  mimeType: 'application/x-subrip',
+  buffer: Buffer.from(text),
+});
+
+async function stepFrames(page: Page, frames: number): Promise<void> {
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('Home');
+  for (let i = 0; i < frames; i += 1) await page.keyboard.press('ArrowRight');
+}
+
+test.describe('text and subtitles', () => {
+  test('adds a title over the picture, edits its words, and deleting it takes it away', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Title test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 20_000 }).toBe(true);
+    expect(await whitePixels(page)).toBeLessThan(20);
+
+    await page.getByRole('button', { name: 'Add text' }).click();
+    await expect(clip(page, 'Text: Your text', 'Video 2')).toBeVisible();
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(50);
+
+    await page.getByRole('textbox', { name: 'Words' }).fill('Hi');
+    await expect(clip(page, 'Text: Hi', 'Video 2')).toBeVisible();
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(20);
+
+    await page.getByRole('button', { name: 'Delete clip', exact: true }).click();
+    await expect(clip(page, 'Text: Hi', 'Video 2')).toHaveCount(0);
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeLessThan(20);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(20);
+  });
+
+  test('imports subtitles as a track, shows them at their times, and undo removes them', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Subtitle test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await page.getByTestId('import-subtitles-input').setInputFiles(subtitleFile(SUBTITLES));
+    const track = page.getByRole('group', { name: 'Subtitles' });
+    await expect(track.getByRole('button', { name: /^Text: Hello there/ })).toBeVisible();
+    await expect(track.getByRole('button', { name: /^Text: Second line/ })).toBeVisible();
+
+    await stepFrames(page, 15); // 0.6 s: the first subtitle
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(20);
+    await stepFrames(page, 28); // 1.12 s: between the two
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeLessThan(5);
+    await stepFrames(page, 40); // 1.6 s: the second
+    await expect.poll(() => whitePixels(page), { timeout: 20_000 }).toBeGreaterThan(20);
+
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(page.getByRole('group', { name: 'Subtitles' })).toHaveCount(0);
+  });
+
+  test('a file with no subtitles in it is refused with a message', async ({ page }) => {
+    await createVideoProject(page, 'Bad subtitles');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await page.getByTestId('import-subtitles-input').setInputFiles(subtitleFile('not subtitles'));
+    await expect(page.getByText('No subtitles were found in that file.')).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Subtitles' })).toHaveCount(0);
+  });
+
+  test('a subtitle track survives a reload', async ({ page }) => {
+    await createVideoProject(page, 'Subtitle reload');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await page.getByTestId('import-subtitles-input').setInputFiles(subtitleFile(SUBTITLES));
+    await expect(page.getByRole('button', { name: /^Text: Second line/ })).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'All changes saved' })).toBeVisible();
+    await page.reload();
+    await page
+      .getByRole('alertdialog', { name: 'Restore unsaved changes?' })
+      .getByRole('button', { name: 'Restore changes' })
+      .click();
+    await expect(page.getByRole('button', { name: /^Text: Second line/ })).toBeVisible();
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('subtitles are burned into the picture at their times', async ({ page }, testInfo) => {
+      test.setTimeout(120_000);
+      await createVideoProject(page, 'Subtitle export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4');
+      await page.getByTestId('import-subtitles-input').setInputFiles(subtitleFile(SUBTITLES));
+      await expect(page.getByRole('button', { name: /^Text: Second line/ })).toBeVisible();
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('subtitled.mp4');
+      await (await downloading).saveAs(file);
+
+      expect(whitePixelsAt(file, 0.6)).toBeGreaterThan(20); // while the first one shows
+      expect(whitePixelsAt(file, 1.12)).toBeLessThan(5); // between the two
+      expect(whitePixelsAt(file, 1.6)).toBeGreaterThan(20); // while the second one shows
+    });
+  });
+});
+
+/** How many pixels of the frame at `seconds` of an exported file are (nearly) white (the file is 320 by 240). */
+function whitePixelsAt(path: string, seconds: number): number {
+  const raw = execFileSync(
+    'ffmpeg',
+    [
+      '-v',
+      'error',
+      '-ss',
+      String(seconds),
+      '-i',
+      path,
+      '-frames:v',
+      '1',
+      '-f',
+      'rawvideo',
+      '-pix_fmt',
+      'rgb24',
+      '-',
+    ],
+    { maxBuffer: 10_000_000 },
+  );
+  let count = 0;
+  for (let i = 0; i + 2 < raw.length; i += 3) {
+    if ((raw[i] ?? 0) > 200 && (raw[i + 1] ?? 0) > 200 && (raw[i + 2] ?? 0) > 200) count += 1;
+  }
+  return count;
+}
+
+test.describe('clip look (picture and sound properties)', () => {
+  test('cropping and opacity change the preview, and undo restores it', async ({ page }) => {
+    await createVideoProject(page, 'Look test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 20_000 }).toBe(true);
+
+    await clip(page, 'red.mp4', 'Video 1').click();
+    // Cropping away the left 60% takes the middle of the picture out of view: black shows through.
+    await page.getByRole('spinbutton', { name: /^Crop left/ }).fill('60');
+    await expect
+      .poll(async () => (await previewColour(page)).every((value) => value < 30), {
+        timeout: 10_000,
+      })
+      .toBe(true);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 10_000 }).toBe(true);
+
+    // Half opacity over black halves the red.
+    await page.getByRole('slider', { name: 'Opacity' }).fill('50');
+    await expect
+      .poll(
+        async () => {
+          const [r, g, b] = await previewColour(page);
+          return r > 90 && r < 170 && g < 40 && b < 40;
+        },
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+    await page.getByRole('button', { name: 'Reset position, opacity and colour' }).click();
+    await expect.poll(async () => isRed(await previewColour(page)), { timeout: 10_000 }).toBe(true);
+  });
+
+  test('the look survives a reload', async ({ page }) => {
+    await createVideoProject(page, 'Look reload');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await page.getByRole('spinbutton', { name: /^Rotation/ }).fill('15');
+    await expect(page.getByRole('spinbutton', { name: /^Rotation/ })).toHaveValue('15');
+    await expect(page.getByRole('status').filter({ hasText: 'All changes saved' })).toBeVisible();
+    await page.reload(); // no checkpoint was written: the same as a crash
+    await page
+      .getByRole('alertdialog', { name: 'Restore unsaved changes?' })
+      .getByRole('button', { name: 'Restore changes' })
+      .click();
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await expect(page.getByRole('spinbutton', { name: /^Rotation/ })).toHaveValue('15');
+  });
+
+  test('solo on a track is shown as pressed and can be undone', async ({ page }) => {
+    await createVideoProject(page, 'Solo test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    const solo = page.getByRole('button', { name: 'Solo Audio 1' });
+    await expect(solo).toHaveAttribute('aria-pressed', 'false');
+    await solo.click();
+    await expect(solo).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(solo).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('a clip volume of 0 makes the exported sound silent', async ({ page }, testInfo) => {
+      test.setTimeout(120_000);
+      await createVideoProject(page, 'Look export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4'); // 2 s with a tone
+      await clip(page, 'red.mp4', 'Audio 1').click();
+      await page.getByRole('slider', { name: 'Volume', exact: true }).fill('0');
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('silent.mp4');
+      await (await downloading).saveAs(file);
+
+      expect(meanVolume(file, 0.2, 1.5)).toBeLessThan(-60);
+    });
+  });
+});
+
+test.describe('markers and in/out points', () => {
+  async function focusPage(page: Page): Promise<void> {
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+  }
+  async function stepTo(page: Page, frames: number): Promise<void> {
+    await focusPage(page);
+    await page.keyboard.press('Home');
+    for (let i = 0; i < frames; i += 1) await page.keyboard.press('ArrowRight');
+  }
+  const clock = (page: Page) => page.getByTestId('clock');
+
+  test('adds, names, finds and removes a marker, with undo', async ({ page }) => {
+    await createVideoProject(page, 'Marker test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await stepTo(page, 25); // 1 s at 25 fps
+    await expect(clock(page)).toHaveText('00:00:01:00');
+    await page.keyboard.press('m');
+    const marker = page.getByRole('button', { name: 'Marker without a name, at 00:00:01:00' });
+    await expect(marker).toBeVisible();
+
+    await page.getByRole('textbox', { name: 'Marker name' }).fill('Intro');
+    await expect(page.getByRole('button', { name: 'Marker Intro, at 00:00:01:00' })).toBeVisible();
+
+    // Ctrl+Left and Ctrl+Right jump between markers.
+    await focusPage(page);
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Control+ArrowRight');
+    await expect(clock(page)).toHaveText('00:00:01:00');
+    await page.keyboard.press('End');
+    await page.keyboard.press('Control+ArrowLeft');
+    await expect(clock(page)).toHaveText('00:00:01:00');
+
+    // Two markers cannot share a time.
+    await page.getByRole('button', { name: 'Add marker' }).click();
+    await expect(page.getByText('There is already a marker there.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Remove marker' }).click();
+    await expect(page.locator('[data-marker-id]')).toHaveCount(0);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(page.locator('[data-marker-id]')).toHaveCount(1);
+  });
+
+  test('sets and clears the in and out points', async ({ page }) => {
+    await createVideoProject(page, 'In out test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await expect(page.getByTestId('range-band')).toHaveCount(0);
+    await stepTo(page, 10);
+    await page.keyboard.press('i');
+    for (let i = 0; i < 25; i += 1) await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('o');
+    await expect(page.getByTestId('range-band')).toBeVisible();
+    await expect(page.getByTestId('range-readout')).toHaveText('In 00:00:00:10 · Out 00:00:01:10');
+
+    await page.keyboard.press('Alt+x');
+    await expect(page.getByTestId('range-band')).toHaveCount(0);
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(page.getByTestId('range-readout')).toBeVisible();
+  });
+
+  test('markers and the range survive a reload', async ({ page }) => {
+    await createVideoProject(page, 'Marker reload');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await stepTo(page, 5);
+    await page.keyboard.press('m');
+    await page.keyboard.press('i');
+    await expect(page.getByTestId('range-readout')).toBeVisible();
+    await expect(page.getByRole('status').filter({ hasText: 'All changes saved' })).toBeVisible();
+    await page.reload();
+    await page
+      .getByRole('alertdialog', { name: 'Restore unsaved changes?' })
+      .getByRole('button', { name: 'Restore changes' })
+      .click();
+    await expect(page.locator('[data-marker-id]')).toHaveCount(1);
+    await expect(page.getByTestId('range-readout')).toHaveText('In 00:00:00:05 · Out end');
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('export can be limited to the part between the in and out points', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(150_000);
+      await createVideoProject(page, 'Range export');
+      await importMedia(page, [media.red, media.blue]);
+      await addToTimeline(page, 'red.mp4'); // 0 s .. 2 s
+      await addToTimeline(page, 'blue.mp4'); // 2 s .. 5 s
+      await stepTo(page, 50); // 2 s
+      await page.keyboard.press('i');
+      for (let i = 0; i < 50; i += 1) await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('o'); // 4 s
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      const limit = dialog.getByRole('checkbox', { name: /^Only the part between the in and out/ });
+      await expect(limit).toBeChecked();
+      await expect(dialog).toContainText('50'); // 2 s at 25 fps
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('range.mp4');
+      await (await downloading).saveAs(file);
+
+      const facts = probe(file);
+      expect(Number(facts.video?.nb_read_frames)).toBe(50);
+      expect(facts.duration).toBeGreaterThan(1.9);
+      expect(facts.duration).toBeLessThan(2.2);
+      // Blue from the start: the red part was left out.
+      const first = pixelAtSecond(file, 0.2);
+      expect(first[2]).toBeGreaterThan(200);
+      expect(first[0]).toBeLessThan(60);
+    });
+  });
+});
+
+test.describe('J, K and L shuttle and the master meter', () => {
+  const clock = (page: Page) => page.getByTestId('clock');
+  async function focusPage(page: Page): Promise<void> {
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+  }
+
+  test('L plays and goes faster, K stops, J runs backwards', async ({ page }) => {
+    await createVideoProject(page, 'Shuttle test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4'); // 2 s
+    await focusPage(page);
+    await page.keyboard.press('Home');
+
+    await page.keyboard.press('l');
+    await expect(page.getByRole('button', { name: 'Pause' })).toBeVisible();
+    await expect(page.getByTestId('shuttle-rate')).toHaveCount(0); // normal speed
+    await page.keyboard.press('l');
+    await expect(page.getByTestId('shuttle-rate')).toHaveText('Shuttle 2×');
+    await page.keyboard.press('k');
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+
+    await page.keyboard.press('End');
+    await expect(clock(page)).toHaveText('00:00:02:00');
+    await page.keyboard.press('j');
+    await expect(page.getByTestId('shuttle-rate')).toHaveText('Shuttle −1×');
+    await expect
+      .poll(async () => clock(page).textContent(), { timeout: 10_000 })
+      .not.toBe('00:00:02:00');
+    await page.keyboard.press('k');
+    const stopped = await clock(page).textContent();
+    await page.waitForTimeout(400);
+    await expect(clock(page)).toHaveText(stopped ?? '');
+  });
+
+  test('forwards at 4x reaches the end in a quarter of the time and stops there', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Fast forward');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await focusPage(page);
+    await page.keyboard.press('Home');
+    await page.keyboard.press('l');
+    await page.keyboard.press('l');
+    await page.keyboard.press('l'); // 4x
+    await expect(clock(page)).toHaveText('00:00:02:00', { timeout: 10_000 });
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+  });
+
+  test('the master meter shows the level while playing, and the lamp stays on after clipping', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Meter test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4'); // 2 s of a 440 Hz tone
+    const left = page.getByTestId('meter-left');
+    await expect(left).toHaveAttribute('aria-valuetext', 'silent');
+    await expect(page.getByTestId('clip-lamp')).toBeDisabled();
+
+    // Make it much too loud: clip and track volume at 400%.
+    await clip(page, 'red.mp4', 'Audio 1').click();
+    await page.getByRole('slider', { name: 'Volume', exact: true }).fill('400');
+    await page.getByRole('slider', { name: 'Track volume' }).fill('400');
+
+    await focusPage(page);
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Space');
+    await expect
+      .poll(async () => Number(await left.getAttribute('aria-valuenow')), { timeout: 10_000 })
+      .toBeGreaterThan(-30);
+    await expect(page.getByTestId('clip-lamp')).toBeEnabled({ timeout: 10_000 });
+    // It stays lit after playback has ended, until it is pressed.
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByTestId('clip-lamp')).toBeEnabled();
+    await page.getByTestId('clip-lamp').click();
+    await expect(page.getByTestId('clip-lamp')).toBeDisabled();
+    await expect(left).toHaveAttribute('aria-valuetext', 'silent');
+  });
+});

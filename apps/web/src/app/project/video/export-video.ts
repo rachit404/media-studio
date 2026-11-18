@@ -75,6 +75,7 @@ export function startVideoExport(
   project: ProjectDocument,
   size: { width: number; height: number },
   onProgress: (done: number, total: number) => void,
+  range: { start: number; end: number } | null = null,
 ): RunningExport {
   const content = project.content;
   if (content.kind !== 'video') throw new Error('Not a video project');
@@ -110,7 +111,9 @@ export function startVideoExport(
     });
   });
 
-  const used = new Set(Object.values(content.clips).map((clip) => clip.assetId));
+  const used = new Set(
+    Object.values(content.clips).flatMap((clip) => (clip.assetId === null ? [] : [clip.assetId])),
+  );
   const start = async (): Promise<void> => {
     const files: Record<string, Blob> = {};
     const assets: Record<string, Asset> = {};
@@ -125,6 +128,7 @@ export function startVideoExport(
       content,
       assets,
       files,
+      ...(range ? { range } : {}),
       settings: {
         width: size.width,
         height: size.height,

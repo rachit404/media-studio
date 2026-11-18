@@ -2,6 +2,9 @@ import { sortedItems } from './ordered';
 import {
   clipEnd,
   type Clip,
+  type Marker,
+  type TransitionDirection,
+  type TransitionKind,
   type Track,
   type TrackKind,
   type VideoContent,
@@ -24,6 +27,61 @@ export function trackClips(content: VideoContent, trackId: string): Clip[] {
     const clip = content.clips[id];
     return clip ? [clip] : [];
   });
+}
+
+/** The clip on the same track that ends exactly where `clip` starts (what a transition comes from), if any. */
+export function outgoingClip(content: VideoContent, clip: Clip): Clip | undefined {
+  const clips = trackClips(content, clip.trackId);
+  const index = clips.findIndex((other) => other.id === clip.id);
+  const previous = index > 0 ? clips[index - 1] : undefined;
+  // Text has no footage to carry on, so a transition only comes from a picture clip.
+  return previous && previous.assetId !== null && clipEnd(previous) === clip.start
+    ? previous
+    : undefined;
+}
+
+/**
+ * The transition that is in effect on `clip`: it needs a clip right before it on a video track. The duration is
+ * limited to the clip's own length. A stored transition that no longer has a clip before it is dormant (undefined).
+ */
+export function activeTransition(
+  content: VideoContent,
+  clip: Clip,
+):
+  | { kind: TransitionKind; direction: TransitionDirection; duration: number; from: Clip }
+  | undefined {
+  const { transitionIn } = clip;
+  if (!transitionIn || content.tracks.byId[clip.trackId]?.kind !== 'video') return undefined;
+  const from = outgoingClip(content, clip);
+  if (!from) return undefined;
+  return {
+    kind: transitionIn.kind,
+    direction: transitionIn.direction ?? 'left',
+    duration: Math.min(transitionIn.duration, clip.duration),
+    from,
+  };
+}
+
+/** The first marker after `time`, if any. */
+export function nextMarker(content: VideoContent, time: number): Marker | undefined {
+  return (content.markers ?? []).find((marker) => marker.time > time);
+}
+
+/** The last marker before `time`, if any. */
+export function previousMarker(content: VideoContent, time: number): Marker | undefined {
+  return [...(content.markers ?? [])].reverse().find((marker) => marker.time < time);
+}
+
+/**
+ * The part of the sequence export is limited to: from the in point (or the start) to the out point (or the end).
+ * Null when neither point is set, or the range is empty.
+ */
+export function exportRange(content: VideoContent): { start: number; end: number } | null {
+  if (content.inPoint === undefined && content.outPoint === undefined) return null;
+  const length = sequenceDuration(content);
+  const start = content.inPoint ?? 0;
+  const end = Math.min(content.outPoint ?? length, length);
+  return end > start ? { start, end } : null;
 }
 
 /** Where the last clip ends (0 for an empty sequence). */

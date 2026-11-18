@@ -464,6 +464,25 @@ export class Compositor {
     );
     gl.uniform1i(this.uniform(program, 'uHasClip'), clipBase ? 1 : 0);
     gl.uniform2f(this.uniform(program, 'uOut'), width, height);
+    const crop = node.crop;
+    gl.uniform4f(
+      this.uniform(program, 'uCrop'),
+      crop?.left ?? 0,
+      crop?.top ?? 0,
+      crop?.right ?? 0,
+      crop?.bottom ?? 0,
+    );
+    const colour = node.colour;
+    gl.uniform4f(
+      this.uniform(program, 'uColour'),
+      colour?.brightness ?? 0,
+      colour?.contrast ?? 0,
+      colour?.saturation ?? 0,
+      colour?.temperature ?? 0,
+    );
+    const dip = node.dip;
+    const dipLevel = dip?.colour === 'white' ? 1 : 0;
+    gl.uniform4f(this.uniform(program, 'uDip'), dipLevel, dipLevel, dipLevel, dip?.amount ?? 0);
     gl.bindVertexArray(this.quad);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     return true;

@@ -25,5 +25,6 @@ ADRs 0003-0007 and 0012 also carry a "Spike findings" section from the [spike re
 | [0018](0018-ai-module-boundary.md) | Optional AI behind provider interfaces, lazy, local | n/a |
 | [0019](0019-project-licence.md) | Apache-2.0 for first-party code | n/a |
 | [0020](0020-custom-webgl2-compositor.md) | Own WebGL2 compositor instead of PixiJS (supersedes 0004 for the renderer) | M3: exact blends, 60 fps |
+| [0021](0021-video-clip-model-m6.md) | The video clip model in M6: optional fields, text clips, transitions, speed, keyframes, scoped shortcuts | M6: format v6 to v11 |
 
 Spike plan: [feasibility-spikes.md](../research/feasibility-spikes.md). Open items are tracked in [STATUS.md](../STATUS.md).

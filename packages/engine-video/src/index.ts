@@ -1,17 +1,20 @@
 // @media-studio/engine-video
 // Video editor logic: timeline views and snapping, preview planning, transport, caches. No browser APIs here.
+export { audibleTracks, clipGainOnTimeline, isAudible } from './audio-gain';
 export { audioSegments } from './audio-plan';
 export type { AudioSegment } from './audio-plan';
 export { FrameCache } from './frame-cache';
 export type { Closable, FrameCacheOptions } from './frame-cache';
 export {
   buildPreviewScene,
+  clipMatrix,
   containMatrix,
   frameTextureId,
   previewPlan,
   sourceTimeAt,
+  transitionLook,
 } from './preview';
-export type { AudioClipPlan, PreviewPlan, VideoLayerPlan } from './preview';
+export type { AudioClipPlan, LayerTransition, PreviewPlan, VideoLayerPlan } from './preview';
 export {
   MAX_PX_PER_SECOND,
   MIN_PX_PER_SECOND,
@@ -27,6 +30,29 @@ export {
   zoomAround,
 } from './timeline-view';
 export type { RulerTick, SnapResult, TimelineScale } from './timeline-view';
+export {
+  DEFAULT_BACKDROP,
+  DEFAULT_TEXT_DURATION_US,
+  defaultTextSpec,
+  subtitleStyle,
+  textTrackFor,
+} from './text-defaults';
+export {
+  MAX_OFFSET,
+  MAX_SCALE,
+  MIN_SCALE,
+  ROTATION_SNAP,
+  clipCorners,
+  moveTransform,
+  rotateKnob,
+  rotateTransform,
+  scaleTransform,
+  textCorners,
+  transformPivot,
+} from './transform-handles';
+export type { ClipCorners, FramePoint } from './transform-handles';
+export { SHUTTLE_RATES, formatRate, shuttle } from './shuttle';
+export type { ShuttleKey, ShuttleResult } from './shuttle';
 export { Transport } from './transport';
 export type { PlaybackStats, TransportOptions } from './transport';
 export { FramePump } from './frame-pump';

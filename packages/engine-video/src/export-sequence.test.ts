@@ -1,3 +1,4 @@
+import { fakeMetrics } from './fake-metrics';
 import {
   AppError,
   FPS_30,
@@ -66,6 +67,7 @@ function fakes(
   };
   const fps = 25;
   const deps: ExportDependencies<Frame> = {
+    metrics: fakeMetrics,
     frameSource: (): FrameStreamSource<Frame> => ({
       async *frames(startUs: number): AsyncGenerator<TimedFrame<Frame>, void, undefined> {
         const first = Math.floor((startUs * fps) / S);
@@ -191,6 +193,54 @@ describe('exportSequence', () => {
     expect(counts.at(-1)).toBe(1);
     expect(log.audio).toHaveLength(0); // no sound anywhere: no audio blocks
     expect(log.deleted.filter((id) => id === 'clip:c0').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('exports only a range: the file starts at 0, and picture and sound come from the range', async () => {
+    const { history, content } = sequence({ asset: 'vid', start: 0 }); // 2 s of picture and sound
+    const { deps, log } = fakes();
+    const pictureStarts: number[] = [];
+    const soundStarts: number[] = [];
+    const frameSource = deps.frameSource.bind(deps);
+    const ranged: ExportDependencies<Frame> = {
+      ...deps,
+      frameSource: (id) => {
+        const source = frameSource(id);
+        return {
+          frames: (startUs) => {
+            pictureStarts.push(startUs);
+            return source.frames(startUs);
+          },
+        };
+      },
+      audioReader: () => ({
+        read: (startUs, count) => {
+          soundStarts.push(startUs);
+          return Promise.resolve([new Float32Array(count), new Float32Array(count)]);
+        },
+      }),
+    };
+    await exportSequence(content(), history.state.assets.byId, ranged, {
+      ...options(),
+      range: { start: 0.5 * S, end: 1.5 * S },
+    });
+    expect(log.video).toHaveLength(30); // 1 s at 30 fps
+    expect(log.video[0]).toEqual({ t: 0, d: 33_333 });
+    expect(log.video.reduce((sum, entry) => sum + entry.d, 0)).toBe(1 * S);
+    // The first picture is the one at 0.5 s in the file, and the sound is read from 0.5 s on.
+    expect(pictureStarts[0]).toBe(0.5 * S);
+    expect(soundStarts[0]).toBe(0.5 * S);
+    // The sound is written from the start of the new file, exactly as long as the range.
+    expect(log.audio).toEqual([{ t: 0, frames: 1000 }]);
+  });
+
+  it('limits a range that runs past the end of the sequence to the end', async () => {
+    const { history, content } = sequence({ asset: 'mute', start: 0 });
+    const { deps, log } = fakes();
+    await exportSequence(content(), history.state.assets.byId, deps, {
+      ...options(),
+      range: { start: 1 * S, end: 50 * S },
+    });
+    expect(log.video).toHaveLength(30); // 1 s to the end at 2 s
   });
 
   it('turns 29.97 fps into the right number of frames', () => {

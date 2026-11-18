@@ -5,7 +5,7 @@ import {
   type ExportDependencies,
 } from '@media-studio/engine-video';
 import { AudioFileReader, Mp4Writer, VideoSource } from '@media-studio/media-io';
-import { OffscreenRenderer } from '@media-studio/render';
+import { OffscreenRenderer, rasterMetrics } from '@media-studio/render';
 import type { ExportEvent, ExportJob, ExportRequest } from './export-protocol';
 
 // Dedicated worker: decoding, drawing and encoding a whole sequence never blocks the interface.
@@ -49,6 +49,7 @@ async function run(job: ExportJob): Promise<void> {
     });
     const active = renderer;
     const deps: ExportDependencies<ImageBitmap> = {
+      metrics: rasterMetrics,
       frameSource: (assetId) => ({
         frames: async function* (startUs: number) {
           let source = sources.get(assetId);
@@ -80,6 +81,7 @@ async function run(job: ExportJob): Promise<void> {
       fps: settings.fps,
       sampleRate: settings.sampleRate,
       signal: abort.signal,
+      ...(job.range ? { range: job.range } : {}),
       onProgress: (done, total) => send({ type: 'progress', done, total }),
     });
     send({ type: 'done', blob });
