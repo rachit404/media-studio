@@ -12,6 +12,10 @@ export const MAX_TRACKS = 32;
 /** Louder than this (+12 dB) is almost always a mistake and only clips the mix. */
 export const MAX_VOLUME = 4;
 
+/** Slowest and fastest constant playback speed of a clip. */
+export const MIN_SPEED = 0.25;
+export const MAX_SPEED = 4;
+
 export const SAMPLE_RATES = [44_100, 48_000] as const;
 
 export const sequenceSchema = z.strictObject({
@@ -141,6 +145,11 @@ export const clipSchema = z.strictObject({
   fadeOut: timeSchema.optional(),
   /** Picture clips: how this clip comes in from the clip before it (absent = a plain cut). */
   transitionIn: clipTransitionSchema.optional(),
+  /**
+   * Media clips: playback speed, 0.25 to 4 (absent = 1). The clip lasts `duration` on the timeline and uses
+   * `duration * speed` of the file; sound changes pitch with speed.
+   */
+  speed: z.number().min(MIN_SPEED).max(MAX_SPEED).optional(),
   /** Text clips (no media): what to write and how. Its size is in sequence pixels. */
   text: textSpecSchema.optional(),
   /** Text clips: a box behind the text (absent = none). */
@@ -167,6 +176,20 @@ export function clipTransform(clip: Pick<Clip, 'transform'>): ClipTransform {
 export function clipOpacity(clip: Pick<Clip, 'opacity'>): number {
   return clip.opacity ?? 1;
 }
+export function clipSpeed(clip: Pick<Clip, 'speed'>): number {
+  return clip.speed ?? 1;
+}
+
+/** How much of its file a stretch of `duration` timeline microseconds uses at `speed`. */
+export function sourceSpan(duration: number, speed: number): number {
+  return Math.round(duration * speed);
+}
+
+/** Where in its file a media clip is at `offset` microseconds after its start. */
+export function clipSourceAt(clip: Pick<Clip, 'sourceIn' | 'speed'>, offset: number): number {
+  return clip.sourceIn + sourceSpan(offset, clipSpeed(clip));
+}
+
 export function clipColour(clip: Pick<Clip, 'colour'>): ClipColour {
   return clip.colour ?? NEUTRAL_COLOUR;
 }

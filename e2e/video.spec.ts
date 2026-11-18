@@ -429,6 +429,109 @@ test.describe('drag and drop from the library', () => {
   });
 });
 
+/** The pitch of the sound of an exported file between `from` and `from + length` seconds, by counting zero crossings. */
+function toneFrequency(path: string, from: number, length: number): number {
+  const raw = execFileSync(
+    'ffmpeg',
+    [
+      '-v',
+      'error',
+      '-ss',
+      String(from),
+      '-t',
+      String(length),
+      '-i',
+      path,
+      '-vn',
+      '-ac',
+      '1',
+      '-ar',
+      '48000',
+      '-f',
+      's16le',
+      '-',
+    ],
+    { maxBuffer: 50_000_000 },
+  );
+  let crossings = 0;
+  let previous = raw.readInt16LE(0);
+  for (let i = 2; i + 1 < raw.length; i += 2) {
+    const sample = raw.readInt16LE(i);
+    if (previous < 0 !== sample < 0) crossings += 1;
+    previous = sample;
+  }
+  return crossings / 2 / length;
+}
+
+test.describe('speed', () => {
+  const speedField = (page: Page) => page.getByRole('spinbutton', { name: /^Speed/ });
+  const length = (page: Page) => page.getByRole('textbox', { name: 'Length' });
+
+  test('a clip plays faster and gets shorter, picture and sound together, and undo restores it', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Speed test');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4'); // 2 s with sound
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await expect(length(page)).toHaveValue('00:00:02:00');
+    await speedField(page).fill('2');
+    await expect(length(page)).toHaveValue('00:00:01:00');
+    await expect(clip(page, 'red.mp4', 'Video 1').getByTestId('speed-badge')).toHaveText('2×');
+    await expect(clip(page, 'red.mp4', 'Audio 1')).toHaveAccessibleName(/speed 2 times/);
+
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(length(page)).toHaveValue('00:00:02:00');
+    await expect(page.getByTestId('speed-badge')).toHaveCount(0);
+  });
+
+  test('a speed outside 0.25 to 4 is not applied', async ({ page }) => {
+    await createVideoProject(page, 'Speed limits');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await clip(page, 'red.mp4', 'Video 1').click();
+    await speedField(page).fill('9');
+    await expect(length(page)).toHaveValue('00:00:02:00');
+    await expect(page.getByTestId('speed-badge')).toHaveCount(0);
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('double speed halves the length and doubles the pitch of the sound', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(120_000);
+      await createVideoProject(page, 'Speed export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4'); // 2 s of a 440 Hz tone
+      await clip(page, 'red.mp4', 'Video 1').click();
+      await speedField(page).fill('2');
+      await expect(length(page)).toHaveValue('00:00:01:00');
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('fast.mp4');
+      await (await downloading).saveAs(file);
+
+      const facts = probe(file);
+      expect(Number(facts.video?.nb_read_frames)).toBe(25);
+      expect(facts.duration).toBeGreaterThan(0.95);
+      expect(facts.duration).toBeLessThan(1.2);
+      expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+      // 440 Hz played twice as fast is 880 Hz.
+      const pitch = toneFrequency(file, 0.1, 0.8);
+      expect(pitch).toBeGreaterThan(840);
+      expect(pitch).toBeLessThan(920);
+    });
+  });
+});
+
 test.describe('transitions', () => {
   /** red (0 to 2 s, 25 fps) then blue (2 to 5 s), with a 1 s dip to black into blue. */
   async function dipProject(page: Page, name: string): Promise<void> {

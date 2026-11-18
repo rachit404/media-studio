@@ -23,8 +23,13 @@ import {
   MAX_TRACKS,
   MAX_VOLUME,
   clipBackdropSchema,
+  MAX_SPEED,
+  MIN_SPEED,
   clipColourSchema,
   clipEnd,
+  clipSourceAt,
+  clipSpeed,
+  sourceSpan,
   clipTransformSchema,
   clipTransitionSchema,
   isTextClip,
@@ -385,9 +390,18 @@ export function trimClip(
         const limit = clip.assetId === null ? Infinity : sourceDuration(draft, clip.assetId);
         const start = edge === 'start' ? clip.start + delta : clip.start;
         const end = edge === 'end' ? clipEnd(clip) + delta : clipEnd(clip);
+        // The file moves by `speed` times the timeline change.
+        const speed = clipSpeed(clip);
         const sourceIn =
-          edge === 'start' && clip.assetId !== null ? clip.sourceIn + delta : clip.sourceIn;
-        if (start < 0 || end <= start || sourceIn < 0 || sourceIn + (end - start) > limit) {
+          edge === 'start' && clip.assetId !== null
+            ? clip.sourceIn + sourceSpan(delta, speed)
+            : clip.sourceIn;
+        if (
+          start < 0 ||
+          end <= start ||
+          sourceIn < 0 ||
+          sourceIn + sourceSpan(end - start, speed) > limit
+        ) {
           throw invalid('The clip cannot be trimmed that far.', 'There is no more of the file.');
         }
         if (end > MAX_TIME_US) throw invalid('That is past the end of the longest sequence.');
@@ -402,7 +416,9 @@ export function trimClip(
         const target = clipDraft(content, clip.id);
         if (edge === 'start') {
           target.start = clip.start + delta;
-          if (clip.assetId !== null) target.sourceIn = clip.sourceIn + delta;
+          if (clip.assetId !== null) {
+            target.sourceIn = clip.sourceIn + sourceSpan(delta, clipSpeed(clip));
+          }
           target.duration = clip.duration - delta;
         } else {
           target.duration = clip.duration + delta;
@@ -468,8 +484,9 @@ export function splitClips(
           assetId: clip.assetId,
           start: time,
           duration: clipEnd(clip) - time,
-          sourceIn: clip.assetId === null ? 0 : clip.sourceIn + (time - clip.start),
+          sourceIn: clip.assetId === null ? 0 : clipSourceAt(clip, time - clip.start),
           linkId: clip.linkId === null ? null : (rightLinks.get(clip.linkId) ?? null),
+          ...(clip.speed === undefined ? {} : { speed: clip.speed }),
           ...(clip.text === undefined ? {} : { text: clip.text }),
           ...(clip.backdrop === undefined ? {} : { backdrop: clip.backdrop }),
           ...splitLook(clip),
@@ -598,6 +615,56 @@ export function setTransition(
       target.transitionIn = { kind, duration, ...(wipes && direction ? { direction } : {}) };
     },
     ...(transition ? { coalesceKey: `transition:${clipId}` } : {}),
+  };
+}
+
+/**
+ * Play clips (and the clips linked to them, so picture and sound stay together) at a constant `speed` from 0.25
+ * to 4. The same stretch of the file is used, so the clip gets shorter when faster and longer when slower; a
+ * clip that would then run into the next one is refused. Speed 1 removes the setting. Sound changes pitch with
+ * speed. Repeated edits of one clip merge into one undo step.
+ */
+export function setClipSpeed(clipId: string, speed: number): Command<ProjectDocument> {
+  return {
+    label: 'Change speed',
+    coalesceKey: `clip-speed:${clipId}`,
+    apply(draft) {
+      const content = videoDraft(draft);
+      const snapshot = before(content);
+      if (!snapshot.clips[clipId]) throw new RangeError(`Clip ${clipId} does not exist`);
+      if (!(speed >= MIN_SPEED && speed <= MAX_SPEED)) {
+        throw invalid(`Speed must be between ${String(MIN_SPEED)} and ${String(MAX_SPEED)} times.`);
+      }
+      const group = linkedGroup(snapshot, clipId);
+      assertEditable(snapshot, group);
+      const ids = new Set(group.map((clip) => clip.id));
+      const changes = group.map((clip) => {
+        if (clip.assetId === null) throw invalid('Text clips have no speed.');
+        const limit = sourceDuration(draft, clip.assetId);
+        const span = sourceSpan(clip.duration, clipSpeed(clip));
+        let duration = Math.max(1, Math.round(span / speed));
+        // Rounding must not make the clip use more of the file than there is.
+        while (duration > 1 && clip.sourceIn + sourceSpan(duration, speed) > limit) duration -= 1;
+        if (clip.start + duration > MAX_TIME_US)
+          throw invalid('That is past the end of the longest sequence.');
+        if (
+          duration > clip.duration &&
+          !isFree(snapshot, clip.trackId, clip.start, duration, ids)
+        ) {
+          throw invalid(
+            'There is no room for the clip to get longer.',
+            'Another clip is in the way.',
+          );
+        }
+        return { clip, duration };
+      });
+      for (const { clip, duration } of changes) {
+        const target = clipDraft(content, clip.id);
+        target.duration = duration;
+        if (speed === 1) delete target.speed;
+        else target.speed = speed;
+      }
+    },
   };
 }
 
@@ -824,7 +891,8 @@ export function joinClips(clipId: string): Command<ProjectDocument> {
           clip.assetId !== null &&
           next.assetId === clip.assetId &&
           next.start === clipEnd(clip) &&
-          next.sourceIn === clip.sourceIn + clip.duration;
+          clipSpeed(next) === clipSpeed(clip) &&
+          next.sourceIn === clip.sourceIn + sourceSpan(clip.duration, clipSpeed(clip));
         if (!joinable) throw invalid('These clips are not one continuous piece of the same file.');
         return { clip, next };
       });

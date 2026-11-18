@@ -3,13 +3,17 @@ import {
   FPS_25,
   FPS_30,
   FPS_60,
+  MAX_SPEED,
+  MIN_SPEED,
   clipEnd,
+  clipSpeed,
   formatTimecode,
   moveClips,
   outgoingClip,
   parseTimecode,
   isTextClip,
   setClipLook,
+  setClipSpeed,
   setClipText,
   setSequence,
   setTrackState,
@@ -215,6 +219,29 @@ export function VideoInspector({
               )}
             </dl>
             {track.locked && <p className="text-xs text-fg-muted">This track is locked.</p>}
+            {!isTextClip(clip) && (
+              <div className="space-y-2 border-t border-line pt-3">
+                <h3 className="text-sm font-semibold">Speed</h3>
+                <NumberField
+                  label="Speed"
+                  suffix="×"
+                  step={0.25}
+                  min={MIN_SPEED}
+                  max={MAX_SPEED}
+                  value={clipSpeed(clip)}
+                  onChange={(speed) => {
+                    // Typing passes through values that are not allowed ("0" on the way to "0.5"): ignore those.
+                    if (speed >= MIN_SPEED && speed <= MAX_SPEED) {
+                      run(() => session.history.execute(setClipSpeed(clip.id, speed)));
+                    }
+                  }}
+                />
+                <p className="text-xs text-fg-muted">
+                  The clip gets shorter when faster and longer when slower. Sound changes pitch with
+                  speed.
+                </p>
+              </div>
+            )}
             {isTextClip(clip) && (
               <div className="space-y-3 border-t border-line pt-3">
                 <h3 className="text-sm font-semibold">Text</h3>

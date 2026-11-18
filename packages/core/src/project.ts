@@ -104,7 +104,7 @@ export const projectSchema = z
 export type ProjectDocument = z.infer<typeof projectSchema>;
 export type ProjectType = ProjectDocument['type'];
 
-export const CURRENT_FORMAT_VERSION = 8;
+export const CURRENT_FORMAT_VERSION = 9;
 export const PROJECT_FORMAT = 'media-studio-project';
 
 export const projectFileSchema = z.strictObject({
@@ -158,6 +158,9 @@ const migrateV6ToV7: Migration = (raw) => raw;
 /** v8 lets a clip have text instead of media (`assetId` may be null); every v7 clip still has its media. */
 const migrateV7ToV8: Migration = (raw) => raw;
 
+/** v9 only adds the optional clip speed, so v8 stays valid. */
+const migrateV8ToV9: Migration = (raw) => raw;
+
 export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   1: migrateV1ToV2,
   2: migrateV2ToV3,
@@ -166,6 +169,7 @@ export const MIGRATIONS: Readonly<Record<number, Migration>> = {
   5: migrateV5ToV6,
   6: migrateV6ToV7,
   7: migrateV7ToV8,
+  8: migrateV8ToV9,
 };
 
 function invalidProject(cause?: unknown): AppError {

@@ -12,8 +12,52 @@ export interface AudioSlice {
   clipEnd: number;
   /** Where in the file it starts (microseconds). */
   sourceStart: number;
+  /** Playback speed, 0.25 to 4 (absent = 1): the sound plays this much faster, so its pitch changes with it. */
+  speed?: number;
   /** Linear gain at a timeline time (track volume, clip volume, fades). Absent = 1. */
   gainAt?: (timelineUs: number) => number;
+}
+
+/** Where and how one decoded buffer of a slice is heard. */
+export interface BufferPlacement {
+  /** Timeline time of the start of the buffer, microseconds. */
+  timeline: number;
+  /** Audio-clock time to start it, seconds (now, when it is already late). */
+  when: number;
+  /** How far into the buffer to start, in file seconds (non-zero only when late). */
+  offset: number;
+  /** How late it is, in clock seconds. */
+  late: number;
+  /** How long what remains of it is heard, in clock seconds: the file runs `speed` times faster than the clock. */
+  heardSeconds: number;
+}
+
+/**
+ * Place a decoded buffer on the timeline and the audio clock. `sourceUs` is where in the file the buffer starts and
+ * `seconds` how long it is (file seconds). `t0` is the clock time at which timeline time `startedUs` is heard. Null
+ * when the buffer is already over.
+ */
+export function placeBuffer(
+  slice: Pick<AudioSlice, 'start' | 'sourceStart' | 'speed'>,
+  sourceUs: number,
+  seconds: number,
+  startedUs: number,
+  t0: number,
+  now: number,
+): BufferPlacement | null {
+  const speed = slice.speed ?? 1;
+  const timeline = slice.start + (sourceUs - slice.sourceStart) / speed;
+  let when = t0 + (timeline - startedUs) / 1_000_000;
+  let late = 0;
+  let offset = 0;
+  if (when < now) {
+    // Already late (start of a seek, or the clip began before the playhead): play from the middle.
+    late = now - when;
+    offset = late * speed;
+    when = now;
+    if (offset >= seconds) return null;
+  }
+  return { timeline, when, offset, late, heardSeconds: (seconds - offset) / speed };
 }
 
 /** Curve points per second of sound; 200 keeps a fade smooth (5 ms steps). */
@@ -135,20 +179,23 @@ export class AudioPlayer {
     generation: number,
   ): Promise<void> {
     const { sink } = await this.open(slice.blob);
+    const speed = slice.speed ?? 1;
     const from = slice.sourceStart / 1_000_000;
-    const to = (slice.sourceStart + (slice.clipEnd - slice.start)) / 1_000_000;
+    // The file is used `speed` times as fast as the timeline runs.
+    const to = (slice.sourceStart + (slice.clipEnd - slice.start) * speed) / 1_000_000;
     for await (const { buffer, timestamp } of sink.buffers(from, to)) {
       if (generation !== this.generation) return;
-      // Where this buffer belongs on the timeline, and on the audio clock.
-      const timeline = slice.start + secondsToTime(timestamp) - slice.sourceStart;
-      let when = t0 + (timeline - startedUs) / 1_000_000;
-      let offset = 0;
-      if (when < this.context.currentTime) {
-        // Already late (start of a seek, or the clip began before the playhead): play from the middle.
-        offset = this.context.currentTime - when;
-        when = this.context.currentTime;
-        if (offset >= buffer.duration) continue;
-      }
+      const placed = placeBuffer(
+        slice,
+        secondsToTime(timestamp),
+        buffer.duration,
+        startedUs,
+        t0,
+        this.context.currentTime,
+      );
+      if (!placed) continue;
+      const { timeline, offset, late, heardSeconds } = placed;
+      const when = placed.when;
       // Stay about a second ahead of the clock; wait here while far enough in front.
       while (when - this.context.currentTime > AHEAD) {
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -157,7 +204,8 @@ export class AudioPlayer {
       const node = this.context.createBufferSource();
       node.buffer = buffer;
       const gain = this.context.createGain();
-      applyGain(gain, slice.gainAt, timeline + offset * 1_000_000, buffer.duration - offset, when);
+      node.playbackRate.value = speed;
+      applyGain(gain, slice.gainAt, timeline + late * 1_000_000, heardSeconds, when);
       node.connect(gain).connect(this.context.destination);
       node.addEventListener('ended', () => {
         this.nodes.delete(node);

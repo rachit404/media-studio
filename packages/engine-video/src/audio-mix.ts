@@ -1,5 +1,7 @@
 import {
   clipEnd,
+  clipSourceAt,
+  clipSpeed,
   samplesToTime,
   timeToSamples,
   type Asset,
@@ -14,6 +16,34 @@ export interface AudioReader {
    * the end of the file is silence. Calls usually continue where the last one ended (sequential decoding).
    */
   read(startUs: number, frames: number, sampleRate: number): Promise<[Float32Array, Float32Array]>;
+}
+
+/**
+ * `count` samples of a file played at `speed` times: the file is read `speed` times as fast and resampled by
+ * straight-line interpolation, so pitch rises and falls with speed (as in the live player). Speed 1 reads directly.
+ */
+async function readSped(
+  reader: AudioReader,
+  startUs: number,
+  count: number,
+  sampleRate: number,
+  speed: number,
+): Promise<[Float32Array, Float32Array]> {
+  if (speed === 1) return reader.read(startUs, count, sampleRate);
+  const needed = Math.ceil(count * speed) + 2;
+  const [sourceLeft, sourceRight] = await reader.read(startUs, needed, sampleRate);
+  const left = new Float32Array(count);
+  const right = new Float32Array(count);
+  for (let i = 0; i < count; i += 1) {
+    const position = i * speed;
+    const index = Math.floor(position);
+    const fraction = position - index;
+    const nextIndex = index + 1;
+    left[i] = (sourceLeft[index] ?? 0) * (1 - fraction) + (sourceLeft[nextIndex] ?? 0) * fraction;
+    right[i] =
+      (sourceRight[index] ?? 0) * (1 - fraction) + (sourceRight[nextIndex] ?? 0) * fraction;
+  }
+  return [left, right];
 }
 
 /**
@@ -49,10 +79,13 @@ export async function mixAudioBlock(
       const count = Math.min(timeToSamples(overlapEnd, sampleRate) - first, frames - offset);
       if (count <= 0 || offset < 0) continue;
 
-      const [sourceLeft, sourceRight] = await readerFor(asset.id).read(
-        clip.sourceIn + (overlapStart - clip.start),
+      const speed = clipSpeed(clip);
+      const [sourceLeft, sourceRight] = await readSped(
+        readerFor(asset.id),
+        clipSourceAt(clip, overlapStart - clip.start),
         count,
         sampleRate,
+        speed,
       );
       const gainAt = clipGainOnTimeline(track, clip);
       // Without fades the gain is one number for the whole clip; with fades it follows the straight-line ramps.

@@ -1,4 +1,10 @@
-import { clipEnd, type Asset, type VideoContent } from '@media-studio/core';
+import {
+  clipEnd,
+  clipSourceAt,
+  clipSpeed,
+  type Asset,
+  type VideoContent,
+} from '@media-studio/core';
 import { audibleTracks, clipGainOnTimeline } from './audio-gain';
 
 /** A stretch of one clip's sound that falls inside a window of the timeline. */
@@ -12,6 +18,8 @@ export interface AudioSegment {
   clipEnd: number;
   /** Where in the source file it starts. */
   sourceStart: number;
+  /** Playback speed (the sound is played this much faster, which raises its pitch). */
+  speed: number;
   /** Linear gain at a timeline time: track volume, clip volume and fades. */
   gainAt: (timelineUs: number) => number;
 }
@@ -42,7 +50,8 @@ export function audioSegments(
         start,
         end,
         clipEnd: clipEnd(clip),
-        sourceStart: clip.sourceIn + (start - clip.start),
+        sourceStart: clipSourceAt(clip, start - clip.start),
+        speed: clipSpeed(clip),
         gainAt: clipGainOnTimeline(track, clip),
       });
     }

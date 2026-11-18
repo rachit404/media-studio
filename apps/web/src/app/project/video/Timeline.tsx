@@ -5,6 +5,7 @@ import {
   addTrack,
   clampMoveDelta,
   clipEnd,
+  clipSpeed,
   deleteClips,
   formatTimecode,
   joinClips,
@@ -673,7 +674,7 @@ export function Timeline({
                         type="button"
                         data-clip-id={clip.id}
                         aria-pressed={selectedId === clip.id}
-                        aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}`}
+                        aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}${clipSpeed(clip) === 1 ? '' : `, speed ${String(clipSpeed(clip))} times`}`}
                         onPointerDown={(event) => onClipPointerDown(event, clip)}
                         onPointerMove={(event) => onClipPointerMove(event, clip)}
                         onPointerUp={(event) => onClipPointerUp(event, clip)}
@@ -703,7 +704,7 @@ export function Timeline({
                             projectId={session.id}
                             asset={asset}
                             sourceInSeconds={clip.sourceIn / US_PER_SECOND}
-                            seconds={at.duration / US_PER_SECOND}
+                            seconds={(at.duration * clipSpeed(clip)) / US_PER_SECOND}
                             width={width}
                             height={ROW_HEIGHT - 12}
                           />
@@ -723,6 +724,11 @@ export function Timeline({
                         )}
                         <span className="relative block truncate px-1.5 pt-1.5 text-fg">
                           {label}
+                          {clipSpeed(clip) !== 1 && (
+                            <span data-testid="speed-badge" className="ml-1 text-fg-muted">
+                              {`${String(clipSpeed(clip))}×`}
+                            </span>
+                          )}
                         </span>
                       </button>
                     );
