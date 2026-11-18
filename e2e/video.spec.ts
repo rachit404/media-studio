@@ -201,6 +201,8 @@ test.describe('sound and keyboard', () => {
     await page.addInitScript(() => {
       const log: { when: number; offset: number; duration: number; now: number }[] = [];
       (window as unknown as { __sound: typeof log }).__sound = log;
+      // The original is called back with the right `this` below, so taking it unbound is intended.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       const original = AudioBufferSourceNode.prototype.start;
       AudioBufferSourceNode.prototype.start = function (when?: number, offset?: number) {
         log.push({

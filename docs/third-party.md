@@ -12,12 +12,15 @@ WASM binaries, fonts and AI model weights are listed separately below when they 
 | @internationalized/string | 3.2.10 | Apache-2.0 |
 | @react-types/shared | 3.37.0 | Apache-2.0 |
 | @swc/helpers | 0.5.24 | Apache-2.0 |
+| @types/dom-mediacapture-transform | 0.1.12 | MIT |
+| @types/dom-webcodecs | 0.1.13 | MIT |
 | aria-hidden | 1.2.6 | MIT |
 | client-only | 0.0.1 | MIT |
 | clsx | 2.1.1 | MIT |
 | fflate | 0.8.3 | MIT |
 | fractional-indexing | 4.0.0 | CC0-1.0 |
 | immer | 11.2.10 | MIT |
+| mediabunny | 1.66.0 | MPL-2.0 |
 | react | 19.3.1 | MIT |
 | react-aria | 3.53.1 | Apache-2.0 |
 | react-aria-components | 1.22.1 | Apache-2.0 |
