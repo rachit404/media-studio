@@ -253,6 +253,16 @@ export class ProjectStore {
     return this.lock(id, () => this.fs.write(`${this.dir(id)}/${safeAssetPath(path)}`, data));
   }
 
+  /** Store a large file (video, audio) by copying it in chunks. */
+  putBlob(id: string, path: string, blob: Blob): Promise<void> {
+    return this.lock(id, () => this.fs.writeBlob(`${this.dir(id)}/${safeAssetPath(path)}`, blob));
+  }
+
+  /** A stored file as a Blob that reads from disk on demand. */
+  getBlob(id: string, path: string): Promise<Blob | null> {
+    return this.lock(id, () => this.fs.readBlob(`${this.dir(id)}/${safeAssetPath(path)}`));
+  }
+
   getFile(id: string, path: string): Promise<Uint8Array | null> {
     return this.lock(id, () => this.fs.read(`${this.dir(id)}/${safeAssetPath(path)}`));
   }

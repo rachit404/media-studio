@@ -14,6 +14,15 @@ export class MemoryFileSystem implements FileSystemPort {
     return Promise.resolve();
   }
 
+  readBlob(path: string): Promise<Blob | null> {
+    const data = this.files.get(path);
+    return Promise.resolve(data ? new Blob([data.slice()]) : null);
+  }
+
+  async writeBlob(path: string, blob: Blob): Promise<void> {
+    this.files.set(path, new Uint8Array(await blob.arrayBuffer()));
+  }
+
   append(path: string, data: Uint8Array): Promise<void> {
     const existing = this.files.get(path) ?? new Uint8Array(0);
     const merged = new Uint8Array(existing.length + data.length);

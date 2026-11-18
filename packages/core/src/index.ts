@@ -253,3 +253,12 @@ export {
   unlinkClips,
 } from './video-commands';
 export type { AddMediaParams, TrimEdge } from './video-commands';
+export {
+  MAX_PEAKS,
+  PEAKS_PER_SECOND,
+  PeakBuilder,
+  decodePeaks,
+  encodePeaks,
+  peaksForRange,
+} from './waveform';
+export type { Peaks } from './waveform';

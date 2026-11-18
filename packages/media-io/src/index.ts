@@ -10,3 +10,6 @@ export {
   validateImageBytes,
 } from './image';
 export type { ImageInfo, ImageType } from './image';
+export { computePeaks, createVideoThumbnail } from './media-analysis';
+export { MAX_MEDIA_BYTES, extensionForMime, probeMedia } from './media-probe';
+export type { MediaInfo } from './media-probe';

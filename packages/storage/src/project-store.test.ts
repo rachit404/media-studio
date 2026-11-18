@@ -314,3 +314,15 @@ describe('archives', () => {
     void renameProject;
   });
 });
+
+describe('large files as blobs', () => {
+  it('stores and returns a blob, validates the path, and an archive can carry video and peaks', async () => {
+    await store.create(project('v1', 'Video'));
+    await store.putBlob('v1', 'media/a.mp4', new Blob([new Uint8Array([9, 8, 7])]));
+    const back = await store.getBlob('v1', 'media/a.mp4');
+    expect([...new Uint8Array((await back?.arrayBuffer()) ?? new ArrayBuffer(0))]).toEqual([9, 8, 7]);
+    expect(await store.getBlob('v1', 'media/none.mp4')).toBeNull();
+    await expect(store.putBlob('v1', '../evil', new Blob([]))).rejects.toBeInstanceOf(AppError);
+    await expect(store.putBlob('v1', 'peaks/a.bin', new Blob([new Uint8Array([1])]))).resolves.toBeUndefined();
+  });
+});
