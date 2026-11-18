@@ -5,6 +5,7 @@ import {
   FPS_60,
   MAX_SPEED,
   MIN_SPEED,
+  clearKeyframes,
   clipEnd,
   clipSpeed,
   formatTimecode,
@@ -12,22 +13,27 @@ import {
   outgoingClip,
   parseTimecode,
   isTextClip,
+  removeKeyframe,
   setClipLook,
   setClipSpeed,
   setClipText,
+  setKeyframe,
   setSequence,
   setTrackState,
   setTransition,
+  setValuesAt,
   toAppError,
   trimClip,
   type Asset,
+  type Clip,
   type FrameRate,
   type VideoContent,
 } from '@media-studio/core';
 import { useId, useState } from 'react';
 import type { ProjectSession } from '../project-session';
 import { NumberField } from '../image/fields';
-import { ClipLookEditor } from './ClipLookEditor';
+import { ClipLookEditor, type ClipAnimation } from './ClipLookEditor';
+import { diamondState, propertyValueAt } from './keyframe-ui';
 import { TextClipEditor } from './TextClipEditor';
 import { TransitionEditor } from './TransitionEditor';
 
@@ -95,12 +101,15 @@ export function VideoInspector({
   content,
   assets,
   selectedId,
+  time,
   onProblem,
 }: {
   session: ProjectSession;
   content: VideoContent;
   assets: Readonly<Record<string, Asset>>;
   selectedId: string | null;
+  /** Playhead position (microseconds): where keyframes are added and what animated values show. */
+  time: number;
   onProblem: (message: string | null) => void;
 }) {
   const { sequence } = content;
@@ -120,6 +129,39 @@ export function VideoInspector({
       const appError = toAppError(error);
       onProblem(appError.hint ? `${appError.message} ${appError.hint}` : appError.message);
     }
+  };
+
+  /** Keyframe controls for a clip, working at the playhead (`offset` is null when the playhead is not on the clip). */
+  const animationFor = (target: Clip): ClipAnimation => {
+    const offset = time >= target.start && time < clipEnd(target) ? time - target.start : null;
+    const execute = (command: Parameters<typeof session.history.execute>[0]) =>
+      run(() => session.history.execute(command));
+    return {
+      offset,
+      setValues: (values) => {
+        if (offset !== null) execute(setValuesAt(target.id, offset, values));
+      },
+      toggle: (property) => {
+        if (offset === null) return;
+        if (diamondState(target, property, offset) === 'on') {
+          execute(removeKeyframe(target.id, property, offset));
+        } else {
+          execute(
+            setKeyframe(target.id, property, offset, propertyValueAt(target, property, offset)),
+          );
+        }
+      },
+      clear: (property) => execute(clearKeyframes(target.id, property)),
+      setEasing: (property, easing) => {
+        const frame =
+          offset === null
+            ? undefined
+            : target.keyframes?.[property]?.find((f) => f.time === offset);
+        if (offset !== null && frame) {
+          execute(setKeyframe(target.id, property, offset, frame.value, easing));
+        }
+      },
+    };
   };
 
   return (
@@ -280,6 +322,7 @@ export function VideoInspector({
                 changeTrack={(patch) =>
                   run(() => session.history.execute(setTrackState(track.id, patch)))
                 }
+                animation={animationFor(clip)}
               />
             </div>
           </>

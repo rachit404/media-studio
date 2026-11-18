@@ -45,12 +45,20 @@ import {
   xToTime,
 } from '@media-studio/engine-video';
 import { Button } from '@media-studio/ui';
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react';
 import { useGlobalShortcuts } from '../../use-shortcuts';
 import { ASSET_DRAG_TYPE } from '../asset-drag';
 import { AssetThumb } from '../AssetThumb';
 import type { ProjectSession } from '../project-session';
 import type { PreviewPlayer } from './preview-player';
+import { keyframeTimes, neighbourKeyframe } from './keyframe-ui';
 import { MarkerTools, RulerMarks } from './MarkerTools';
 import { MasterMeter } from './MasterMeter';
 import { TitleTools } from './TitleTools';
@@ -259,7 +267,19 @@ export function Timeline({
     const marker = (which === 'next' ? nextMarker : previousMarker)(current(), playheadTime());
     if (marker) pickMarker(marker);
   };
+  const goToKeyframe = (which: 'next' | 'previous') => {
+    const clip = selectedId ? current().clips[selectedId] : undefined;
+    if (!clip) {
+      onProblem('Select a clip to move between its keyframes.');
+      return;
+    }
+    const time = neighbourKeyframe(clip, playheadTime() - clip.start, which);
+    if (time === null) onProblem(`No ${which} keyframe on this clip.`);
+    else seekTo(clip.start + time);
+  };
   useGlobalShortcuts({
+    'keyframe.next': () => goToKeyframe('next'),
+    'keyframe.previous': () => goToKeyframe('previous'),
     'transport.reverse': () => player?.shuttleKey('J'),
     'transport.pause': () => player?.shuttleKey('K'),
     'transport.shuttle': () => player?.shuttleKey('L'),
@@ -716,68 +736,90 @@ export function Timeline({
                       ? activeTransition(content, clip)
                       : undefined;
                     return (
-                      <button
-                        key={clip.id}
-                        type="button"
-                        data-clip-id={clip.id}
-                        aria-pressed={selectedId === clip.id}
-                        aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}${clipSpeed(clip) === 1 ? '' : `, speed ${String(clipSpeed(clip))} times`}`}
-                        onPointerDown={(event) => onClipPointerDown(event, clip)}
-                        onPointerMove={(event) => onClipPointerMove(event, clip)}
-                        onPointerUp={(event) => onClipPointerUp(event, clip)}
-                        onPointerCancel={() => setDrag(null)}
-                        onKeyDown={(event) => onClipKeyDown(event, clip)}
-                        onClick={() => onSelect(clip.id)}
-                        className={`absolute top-1 overflow-hidden rounded-sm border text-left text-xs ${
-                          selected || linked
-                            ? 'border-ring bg-selection'
-                            : 'border-line-strong bg-surface-raised'
-                        } ${at.dragging ? 'opacity-80' : ''} ${track.locked ? 'cursor-not-allowed' : 'cursor-grab'}`}
-                        style={{ left, width, height: ROW_HEIGHT - 8, touchAction: 'none' }}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`absolute inset-x-0 top-0 h-1 ${track.kind === 'video' ? 'bg-track-video' : 'bg-track-audio'}`}
-                        />
-                        {asset?.kind === 'video' && track.kind === 'video' && (
-                          <AssetThumb
-                            projectId={session.id}
-                            path={asset.thumb}
-                            className="pointer-events-none absolute left-0 top-1 h-[calc(100%-0.25rem)] w-16 opacity-60"
-                          />
-                        )}
-                        {asset && track.kind === 'audio' && (
-                          <Waveform
-                            projectId={session.id}
-                            asset={asset}
-                            sourceInSeconds={clip.sourceIn / US_PER_SECOND}
-                            seconds={(at.duration * clipSpeed(clip)) / US_PER_SECOND}
-                            width={width}
-                            height={ROW_HEIGHT - 12}
-                          />
-                        )}
-                        {transition && (
+                      <Fragment key={clip.id}>
+                        <button
+                          type="button"
+                          data-clip-id={clip.id}
+                          aria-pressed={selectedId === clip.id}
+                          aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}${clipSpeed(clip) === 1 ? '' : `, speed ${String(clipSpeed(clip))} times`}`}
+                          onPointerDown={(event) => onClipPointerDown(event, clip)}
+                          onPointerMove={(event) => onClipPointerMove(event, clip)}
+                          onPointerUp={(event) => onClipPointerUp(event, clip)}
+                          onPointerCancel={() => setDrag(null)}
+                          onKeyDown={(event) => onClipKeyDown(event, clip)}
+                          onClick={() => onSelect(clip.id)}
+                          className={`absolute top-1 overflow-hidden rounded-sm border text-left text-xs ${
+                            selected || linked
+                              ? 'border-ring bg-selection'
+                              : 'border-line-strong bg-surface-raised'
+                          } ${at.dragging ? 'opacity-80' : ''} ${track.locked ? 'cursor-not-allowed' : 'cursor-grab'}`}
+                          style={{ left, width, height: ROW_HEIGHT - 8, touchAction: 'none' }}
+                        >
                           <span
                             aria-hidden="true"
-                            data-testid="transition-marker"
-                            className="pointer-events-none absolute inset-y-0 left-0 border-r border-warning bg-warning opacity-40"
-                            style={{
-                              width: Math.min(
-                                width,
-                                (transition.duration / US_PER_SECOND) * pxPerSecond,
-                              ),
-                            }}
+                            className={`absolute inset-x-0 top-0 h-1 ${track.kind === 'video' ? 'bg-track-video' : 'bg-track-audio'}`}
                           />
-                        )}
-                        <span className="relative block truncate px-1.5 pt-1.5 text-fg">
-                          {label}
-                          {clipSpeed(clip) !== 1 && (
-                            <span data-testid="speed-badge" className="ml-1 text-fg-muted">
-                              {`${String(clipSpeed(clip))}×`}
-                            </span>
+                          {asset?.kind === 'video' && track.kind === 'video' && (
+                            <AssetThumb
+                              projectId={session.id}
+                              path={asset.thumb}
+                              className="pointer-events-none absolute left-0 top-1 h-[calc(100%-0.25rem)] w-16 opacity-60"
+                            />
                           )}
-                        </span>
-                      </button>
+                          {asset && track.kind === 'audio' && (
+                            <Waveform
+                              projectId={session.id}
+                              asset={asset}
+                              sourceInSeconds={clip.sourceIn / US_PER_SECOND}
+                              seconds={(at.duration * clipSpeed(clip)) / US_PER_SECOND}
+                              width={width}
+                              height={ROW_HEIGHT - 12}
+                            />
+                          )}
+                          {transition && (
+                            <span
+                              aria-hidden="true"
+                              data-testid="transition-marker"
+                              className="pointer-events-none absolute inset-y-0 left-0 border-r border-warning bg-warning opacity-40"
+                              style={{
+                                width: Math.min(
+                                  width,
+                                  (transition.duration / US_PER_SECOND) * pxPerSecond,
+                                ),
+                              }}
+                            />
+                          )}
+                          <span className="relative block truncate px-1.5 pt-1.5 text-fg">
+                            {label}
+                            {clipSpeed(clip) !== 1 && (
+                              <span data-testid="speed-badge" className="ml-1 text-fg-muted">
+                                {`${String(clipSpeed(clip))}×`}
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                        {selectedId === clip.id &&
+                          keyframeTimes(clip).map(({ time, properties }) => (
+                            <button
+                              key={time}
+                              type="button"
+                              data-testid="keyframe-diamond"
+                              aria-label={`Keyframe at ${formatTimecode(clip.start + time, fps)}: ${properties.join(', ')}`}
+                              onClick={() => seekTo(clip.start + time)}
+                              className="absolute z-10 grid size-6 -translate-x-1/2 place-items-center"
+                              style={{
+                                left: left + (time / US_PER_SECOND) * pxPerSecond,
+                                top: ROW_HEIGHT - 28,
+                              }}
+                            >
+                              {/* The button is 24 px (the smallest comfortable target); the diamond drawn in it is smaller. */}
+                              <span
+                                aria-hidden="true"
+                                className="block size-3 rotate-45 border border-ring bg-warning"
+                              />
+                            </button>
+                          ))}
+                      </Fragment>
                     );
                   })}
               </div>

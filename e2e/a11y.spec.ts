@@ -121,6 +121,13 @@ for (const colorScheme of ['dark', 'light'] as const) {
       await expect(page.getByRole('textbox', { name: 'Marker name' })).toBeVisible();
       await expect(page.getByTestId('range-readout')).toBeVisible();
       await expectNoViolations(page);
+
+      // A keyframed clip: the diamond buttons, the animation list and the diamonds on the timeline.
+      await clip.click();
+      await page.getByRole('button', { name: 'Animate X' }).click();
+      await expect(page.getByRole('button', { name: 'Remove X animation' })).toBeVisible();
+      await expect(page.getByTestId('keyframe-diamond')).toBeVisible();
+      await expectNoViolations(page);
     });
   });
 }
