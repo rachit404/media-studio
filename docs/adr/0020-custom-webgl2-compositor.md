@@ -21,3 +21,8 @@ Write a small WebGL2 compositor in `packages/render`:
 - No PixiJS dependency (saves ~100 KB gzip). We own about 600 lines of GL code, tested through pixel comparisons against a CPU reference implementation of the same formulas.
 - Two full-screen passes per layer (draw, composite). Interactive rendering is bounded by the screen size, not the document size, so cost stays flat for large documents.
 - Limits for M3: no edge anti-aliasing on rotated layers beyond bilinear sampling, no selection masks, no layer masks (M4), canvas size limited by `MAX_TEXTURE_SIZE` and a 100 MP guard.
+
+## Update (M4, 2026-11-18)
+- All 16 W3C blend modes are implemented in the composite shader (the four HSL modes use the spec's non-separable helpers) and checked against the CPU reference in `packages/core/src/color.ts`.
+- Blur and sharpen are two-pass filters on the accumulated image (13 taps spaced sigma/2, sigma = radius / 2 in document pixels), clamped to the document rectangle so nothing outside it bleeds in. Levels and black & white are per-pixel passes with exact CPU references.
+- Text and shape layers are rasterised from parameters on an OffscreenCanvas at 2x supersampling and uploaded as ordinary textures; they are released after each render when no longer used.
