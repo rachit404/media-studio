@@ -4,14 +4,19 @@ import {
   AudioSampleSource,
   BufferTarget,
   CanvasSource,
+  StreamTarget,
   Mp4OutputFormat,
   Output,
   WebMOutputFormat,
   canEncodeAudio,
   canEncodeVideo,
   type AudioCodec,
+  type StreamTargetChunk,
   type VideoCodec,
 } from 'mediabunny';
+
+/** A piece of the file being written, with its place in the file. */
+export type WriteChunk = StreamTargetChunk;
 
 /** The files export can make. */
 export type ContainerFormat = 'mp4' | 'webm';
@@ -61,6 +66,11 @@ export interface VideoWriterOptions {
   hardware: HardwarePreference;
   /** Null for a file without sound. */
   audio: { sampleRate: number; bitrate: number } | null;
+  /**
+   * Write the file to this stream as it is made, instead of keeping it in memory (stream to disk, EXP-5). The
+   * chunks carry their position, so a seekable file writer is needed. `finalize` then returns an empty Blob.
+   */
+  stream?: WritableStream<StreamTargetChunk>;
 }
 
 /** Bits per second that give a good picture at a size and frame rate (about 0.1 bit per pixel for H.264). */
@@ -75,7 +85,7 @@ export function defaultVideoBitrate(width: number, height: number, frameRate: nu
 export class VideoWriter {
   private constructor(
     private readonly output: Output,
-    private readonly target: BufferTarget,
+    private readonly target: BufferTarget | null,
     private readonly video: CanvasSource,
     private readonly sound: AudioSampleSource | null,
     private readonly sampleRate: number,
@@ -116,13 +126,16 @@ export class VideoWriter {
         });
       }
     }
-    const target = new BufferTarget();
+    const target = options.stream ? null : new BufferTarget();
     const output = new Output({
       format:
         options.format === 'mp4'
-          ? new Mp4OutputFormat({ fastStart: 'in-memory' })
+          ? // Streaming cannot keep the media in memory to put the index first, so the index goes last.
+            new Mp4OutputFormat({ fastStart: options.stream ? false : 'in-memory' })
           : new WebMOutputFormat(),
-      target,
+      target: options.stream
+        ? new StreamTarget(options.stream, { chunked: true })
+        : (target as BufferTarget),
     });
     const video = new CanvasSource(options.canvas, {
       codec: info.video,
@@ -195,6 +208,7 @@ export class VideoWriter {
 
   async finalize(): Promise<Blob> {
     await this.output.finalize();
+    if (!this.target) return new Blob([], { type: FORMATS[this.format].mime });
     const buffer = this.target.buffer;
     if (!buffer) {
       throw new AppError({

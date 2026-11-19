@@ -19,7 +19,12 @@ export function startVideoExport(
   settings: ExportSettings,
   onProgress: (done: number, total: number) => void,
   range: { start: number; end: number } | null = null,
-  options: { verify?: boolean; onVerifying?: () => void } = {},
+  options: {
+    verify?: boolean;
+    onVerifying?: () => void;
+    /** Write to this file on disk instead of building the video in memory. */
+    save?: FileSystemFileHandle;
+  } = {},
 ): RunningExport {
   const content = project.content;
   if (content.kind !== 'video') throw new Error('Not a video project');
@@ -75,6 +80,7 @@ export function startVideoExport(
       files,
       ...(range ? { range } : {}),
       ...(options.verify ? { verify: true } : {}),
+      ...(options.save ? { save: options.save } : {}),
       settings,
     };
     const request: ExportRequest = { type: 'start', job };

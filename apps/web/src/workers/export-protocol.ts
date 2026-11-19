@@ -11,6 +11,8 @@ export interface ExportJob {
   range?: { start: number; end: number };
   /** Open the finished file again and check it against what was asked for (EXP-7). */
   verify?: boolean;
+  /** Write the file to this file on disk as it is made, instead of building it in memory (EXP-5). */
+  save?: FileSystemFileHandle;
   settings: ExportSettings;
 }
 

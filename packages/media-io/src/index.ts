@@ -24,6 +24,7 @@ export type {
   FormatInfo,
   HardwarePreference,
   VideoWriterOptions,
+  WriteChunk,
 } from './video-writer';
 export { probeFormats } from './codec-probe';
 export type { FormatSupport } from './codec-probe';

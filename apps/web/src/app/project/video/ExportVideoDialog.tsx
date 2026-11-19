@@ -38,6 +38,7 @@ type Phase =
   | { name: 'working'; done: number; total: number }
   | { name: 'verifying' }
   | { name: 'finished'; url: string; bytes: number }
+  | { name: 'saved'; fileName: string; bytes: number }
   | { name: 'failed'; error: AppError };
 
 /** A file name that is safe on every system, from the project name. */
@@ -48,6 +49,28 @@ function fileName(projectName: string, format: ContainerFormat): string {
     .trim()
     .slice(0, 80);
   return `${base || 'video'}.${FORMATS[format].extension}`;
+}
+
+/** The browser's "save as" window, where it has one (Chrome and Edge): lets export write straight to a file on disk. */
+interface SavePickerWindow {
+  showSaveFilePicker?: (options: {
+    suggestedName: string;
+    types: { description: string; accept: Record<string, string[]> }[];
+  }) => Promise<FileSystemFileHandle>;
+}
+
+function canSaveToDisk(): boolean {
+  return typeof (window as SavePickerWindow).showSaveFilePicker === 'function';
+}
+
+/** About how long is left, in words, from the time spent so far and the share done. */
+function timeLeft(startedAt: number, done: number, total: number): string | null {
+  const spent = (performance.now() - startedAt) / 1000;
+  if (done < 5 || spent < 3 || done >= total) return null;
+  const left = Math.round((spent / done) * (total - done));
+  if (left < 5) return 'a few seconds left';
+  if (left < 90) return `about ${String(left)} seconds left`;
+  return `about ${String(Math.round(left / 60))} minutes left`;
 }
 
 function megabytes(bytes: number): string {
@@ -104,10 +127,13 @@ export function ExportVideoDialog({
     hardware: useId(),
     range: useId(),
     verify: useId(),
+    disk: useId(),
   };
   const [choices, setChoices] = useState<ExportChoices>(startingChoices);
   const [limitToRange, setLimitToRange] = useState(true);
   const [verify, setVerify] = useState(true);
+  const [toDisk, setToDisk] = useState(false);
+  const startedAt = useRef(0);
   const [phase, setPhase] = useState<Phase>({ name: 'settings' });
   const [support, setSupport] = useState<Record<ContainerFormat, FormatSupport> | null>(null);
   const running = useRef<RunningExport | null>(null);
@@ -165,6 +191,34 @@ export function ExportVideoDialog({
   };
 
   const start = () => {
+    if (toDisk && canSaveToDisk()) {
+      // The "save as" window must open straight from the click, before anything else is awaited.
+      const picker = (window as SavePickerWindow).showSaveFilePicker;
+      void picker
+        ?.call(window, {
+          suggestedName: fileName(project.name, choices.format),
+          types: [
+            {
+              description: FORMATS[choices.format].label,
+              accept: { [FORMATS[choices.format].mime]: [`.${FORMATS[choices.format].extension}`] },
+            },
+          ],
+        })
+        .then((handle) => {
+          run(handle);
+        })
+        .catch((error: unknown) => {
+          // Closing the window without choosing a file is not an error.
+          if (toAppError(error).code !== 'cancelled')
+            setPhase({ name: 'failed', error: toAppError(error) });
+        });
+      return;
+    }
+    run(undefined);
+  };
+
+  const run = (save: FileSystemFileHandle | undefined) => {
+    startedAt.current = performance.now();
     setPhase({ name: 'working', done: 0, total: estimate.frames });
     try {
       const job = startVideoExport(
@@ -180,12 +234,14 @@ export function ExportVideoDialog({
           onVerifying: () => {
             setPhase({ name: 'verifying' });
           },
+          ...(save ? { save } : {}),
         },
       );
       running.current = job;
       job.result
         .then((blob) => {
-          setPhase({ name: 'finished', url: URL.createObjectURL(blob), bytes: blob.size });
+          if (save) setPhase({ name: 'saved', fileName: save.name, bytes: blob.size });
+          else setPhase({ name: 'finished', url: URL.createObjectURL(blob), bytes: blob.size });
         })
         .catch((error: unknown) => {
           const appError = toAppError(error);
@@ -366,6 +422,19 @@ export function ExportVideoDialog({
               {`Only the part between the in and out points (${formatTimecode(marked.start, content.sequence.fps)} to ${formatTimecode(marked.end, content.sequence.fps)})`}
             </label>
           )}
+          {canSaveToDisk() && (
+            <label htmlFor={ids.disk} className="flex items-center gap-2 text-sm">
+              <input
+                id={ids.disk}
+                type="checkbox"
+                checked={toDisk}
+                onChange={(event) => {
+                  setToDisk(event.target.checked);
+                }}
+              />
+              Save straight to a file on disk (for long or large exports; no memory limit)
+            </label>
+          )}
           <label htmlFor={ids.verify} className="flex items-center gap-2 text-sm">
             <input
               id={ids.verify}
@@ -406,9 +475,12 @@ export function ExportVideoDialog({
               large sizes.
             </p>
           )}
-          {estimate.bytes > LARGE_EXPORT_BYTES && (
+          {estimate.bytes > LARGE_EXPORT_BYTES && !(toDisk && canSaveToDisk()) && (
             <p role="alert" className="text-sm text-warning">
-              This file is large and is built in memory. If the export fails, choose a smaller size.
+              This file is large and is built in memory.{' '}
+              {canSaveToDisk()
+                ? 'Tick "Save straight to a file on disk" to avoid the memory limit.'
+                : 'If the export fails, choose a smaller size.'}
             </p>
           )}
           {estimate.frames === 0 && (
@@ -443,6 +515,8 @@ export function ExportVideoDialog({
           <p role="status" className="text-sm">
             Frame {phase.done} of {phase.total} (
             {Math.round((phase.done / Math.max(1, phase.total)) * 100)}%)
+            {timeLeft(startedAt.current, phase.done, phase.total) !== null &&
+              `, ${timeLeft(startedAt.current, phase.done, phase.total) ?? ''}`}
           </p>
           <p className="text-xs text-fg-muted">
             Keep this tab open. Exporting runs in the background of the page and can be cancelled.
@@ -465,6 +539,19 @@ export function ExportVideoDialog({
           <p role="status" className="text-sm">
             Checking the finished file…
           </p>
+        </div>
+      )}
+
+      {phase.name === 'saved' && (
+        <div className="space-y-4">
+          <p role="status" className="text-sm">
+            Saved as {phase.fileName} ({megabytes(phase.bytes)}).
+          </p>
+          <div className="flex justify-end">
+            <Button variant="secondary" onPress={onClose}>
+              Close
+            </Button>
+          </div>
         </div>
       )}
 

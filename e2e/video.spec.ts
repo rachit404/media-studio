@@ -1157,3 +1157,75 @@ test.describe('export settings', () => {
     });
   });
 });
+
+test.describe('saving straight to a file on disk', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  /** The "save as" window cannot be driven, so stand in for it with a file in the browser's private storage. */
+  async function fakeSavePicker(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+      const target = window as unknown as {
+        showSaveFilePicker: (options: { suggestedName: string }) => Promise<FileSystemFileHandle>;
+      };
+      target.showSaveFilePicker = async (options) => {
+        const root = await navigator.storage.getDirectory();
+        return root.getFileHandle(`picked-${options.suggestedName}`, { create: true });
+      };
+    });
+  }
+
+  async function readPicked(page: Page, name: string): Promise<Buffer> {
+    const bytes = await page.evaluate(async (fileName) => {
+      const root = await navigator.storage.getDirectory();
+      const file = await (await root.getFileHandle(fileName)).getFile();
+      return Array.from(new Uint8Array(await file.arrayBuffer()));
+    }, name);
+    return Buffer.from(bytes);
+  }
+
+  test('an MP4 written to the chosen file is complete and passes the check', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(150_000);
+    await fakeSavePicker(page);
+    await createVideoProject(page, 'Disk export');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4'); // 2 s with a tone
+
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Save straight to a file on disk/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    await expect(dialog.getByRole('status')).toContainText('Saved as picked-Disk export.mp4', {
+      timeout: 90_000,
+    });
+    // No download link: the file was written where the user chose.
+    await expect(dialog.getByRole('link', { name: /^Download/ })).toHaveCount(0);
+
+    const file = testInfo.outputPath('disk.mp4');
+    const { writeFileSync } = await import('node:fs');
+    writeFileSync(file, await readPicked(page, 'picked-Disk export.mp4'));
+    const facts = probe(file);
+    expect(facts.video).toMatchObject({ codec_name: 'h264', width: 320, height: 240 });
+    expect(Number(facts.video?.nb_read_frames)).toBe(50);
+    expect(facts.audio?.codec_name).toBe('aac');
+    expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+    expect(meanVolume(file, 0.2, 1.5)).toBeGreaterThan(-35);
+  });
+
+  test('choosing no file leaves the dialog as it was', async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { showSaveFilePicker: () => Promise<never> }).showSaveFilePicker = () =>
+        Promise.reject(new DOMException('The user aborted a request.', 'AbortError'));
+    });
+    await createVideoProject(page, 'Disk cancel');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Save straight to a file on disk/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    await expect(dialog.getByRole('button', { name: 'Start export' })).toBeVisible();
+    await expect(dialog.getByRole('alert').filter({ hasText: /./ })).toHaveCount(0);
+  });
+});

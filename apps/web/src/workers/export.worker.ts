@@ -6,7 +6,13 @@ import {
   hasExportAudio,
   type ExportDependencies,
 } from '@media-studio/engine-video';
-import { AudioFileReader, VideoSource, VideoWriter, verifyExport } from '@media-studio/media-io';
+import {
+  AudioFileReader,
+  VideoSource,
+  VideoWriter,
+  verifyExport,
+  type WriteChunk,
+} from '@media-studio/media-io';
 import { OffscreenRenderer, rasterMetrics } from '@media-studio/render';
 import type { ExportEvent, ExportJob, ExportRequest } from './export-protocol';
 
@@ -25,6 +31,7 @@ async function run(job: ExportJob): Promise<void> {
   const sources = new Map<string, Promise<VideoSource>>();
   const readers = new Map<string, AudioFileReader>();
   let renderer: OffscreenRenderer | null = null;
+  let disk: FileSystemWritableFileStream | null = null;
 
   const fileFor = (assetId: string): Blob => {
     const file = job.files[assetId];
@@ -41,7 +48,25 @@ async function run(job: ExportJob): Promise<void> {
   try {
     renderer = new OffscreenRenderer(settings.width, settings.height);
     const withAudio = hasExportAudio(job.content, job.assets);
+    if (job.save) disk = await job.save.createWritable();
+    const file = disk;
     const writer = await VideoWriter.create({
+      ...(file
+        ? {
+            stream: new WritableStream<WriteChunk>({
+              write: (chunk) =>
+                file.write({ type: 'write', data: chunk.data, position: chunk.position }),
+              close: async () => {
+                await file.close();
+                disk = null;
+              },
+              abort: async (reason) => {
+                await file.abort(reason);
+                disk = null;
+              },
+            }),
+          }
+        : {}),
       format: settings.format,
       hardware: settings.hardware,
       canvas: renderer.canvas,
@@ -79,7 +104,16 @@ async function run(job: ExportJob): Promise<void> {
         deleteTexture: (id) => active.deleteTexture(id),
         render: (scene) => active.render(scene),
       },
-      sink: writer,
+      sink: {
+        addVideoFrame: (time, length) => writer.addVideoFrame(time, length),
+        addAudio: (channels, time) => writer.addAudio(channels, time),
+        // A file on disk is handed back as a File that is read from disk, not loaded into memory.
+        finalize: async () => {
+          const made = await writer.finalize();
+          return job.save ? job.save.getFile() : made;
+        },
+        cancel: () => writer.cancel(),
+      },
     };
     const blob = await exportSequence(job.content, job.assets, deps, {
       fps: settings.fps,
@@ -114,6 +148,8 @@ async function run(job: ExportJob): Promise<void> {
       ...(appError.hint ? { hint: appError.hint } : {}),
     });
   } finally {
+    // A file that was started but not finished is thrown away, never left half written.
+    if (disk) await disk.abort().catch(() => undefined);
     renderer?.dispose();
     for (const reader of readers.values()) reader.close();
     for (const source of sources.values())
