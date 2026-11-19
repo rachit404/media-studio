@@ -1,4 +1,5 @@
 import { formatTimecode, type ProjectDocument } from '@media-studio/core';
+import { ShortcutTip } from '../../ShortcutTip';
 import { fitView, toViewTransform, type ViewState } from '@media-studio/engine-image';
 import { CanvasRenderer } from '@media-studio/render';
 import { Button } from '@media-studio/ui';
@@ -178,29 +179,39 @@ export function VideoWorkspace({
         aria-label="Playback"
         className="flex flex-wrap items-center justify-center gap-1 border-t border-line bg-surface px-2 py-1"
       >
-        <Button variant="ghost" aria-label="Go to start" onPress={() => player?.seek(0)}>
-          ⏮
-        </Button>
-        <Button variant="ghost" aria-label="Back one frame" onPress={() => player?.step(-1)}>
-          ◀
-        </Button>
-        <Button
-          variant="primary"
-          aria-label={state.playing ? 'Pause' : 'Play'}
-          onPress={() => player?.toggle()}
-        >
-          {state.playing ? 'Pause' : 'Play'}
-        </Button>
-        <Button variant="ghost" aria-label="Forward one frame" onPress={() => player?.step(1)}>
-          ▶
-        </Button>
-        <Button
-          variant="ghost"
-          aria-label="Go to end"
-          onPress={() => player?.seek(player.transport.duration)}
-        >
-          ⏭
-        </Button>
+        <ShortcutTip command="transport.start">
+          <Button variant="ghost" aria-label="Go to start" onPress={() => player?.seek(0)}>
+            ⏮
+          </Button>
+        </ShortcutTip>
+        <ShortcutTip command="transport.back">
+          <Button variant="ghost" aria-label="Back one frame" onPress={() => player?.step(-1)}>
+            ◀
+          </Button>
+        </ShortcutTip>
+        <ShortcutTip command="transport.toggle">
+          <Button
+            variant="primary"
+            aria-label={state.playing ? 'Pause' : 'Play'}
+            onPress={() => player?.toggle()}
+          >
+            {state.playing ? 'Pause' : 'Play'}
+          </Button>
+        </ShortcutTip>
+        <ShortcutTip command="transport.forward">
+          <Button variant="ghost" aria-label="Forward one frame" onPress={() => player?.step(1)}>
+            ▶
+          </Button>
+        </ShortcutTip>
+        <ShortcutTip command="transport.end">
+          <Button
+            variant="ghost"
+            aria-label="Go to end"
+            onPress={() => player?.seek(player.transport.duration)}
+          >
+            ⏭
+          </Button>
+        </ShortcutTip>
         <output
           ref={clockRef}
           aria-label="Playhead time"

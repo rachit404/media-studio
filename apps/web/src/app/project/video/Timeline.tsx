@@ -62,6 +62,7 @@ import { keyframeTimes, neighbourKeyframe } from './keyframe-ui';
 import { MarkerTools, RulerMarks } from './MarkerTools';
 import { MasterMeter } from './MasterMeter';
 import { TitleTools } from './TitleTools';
+import { ShortcutTip } from '../../ShortcutTip';
 import { Waveform } from './waveform';
 
 const HEADER_WIDTH = 168;
@@ -507,15 +508,25 @@ export function Timeline({
         aria-label="Timeline tools"
         className="flex flex-wrap items-center gap-1 border-b border-line px-2 py-1"
       >
-        <Button variant="secondary" onPress={splitAtPlayhead}>
-          Split
-        </Button>
-        <Button variant="secondary" isDisabled={!selectedId} onPress={() => deleteSelected(false)}>
-          Delete clip
-        </Button>
-        <Button variant="secondary" isDisabled={!selectedId} onPress={() => deleteSelected(true)}>
-          Ripple delete
-        </Button>
+        <ShortcutTip command="timeline.split">
+          <Button variant="secondary" onPress={splitAtPlayhead}>
+            Split
+          </Button>
+        </ShortcutTip>
+        <ShortcutTip command="edit.delete">
+          <Button
+            variant="secondary"
+            isDisabled={!selectedId}
+            onPress={() => deleteSelected(false)}
+          >
+            Delete clip
+          </Button>
+        </ShortcutTip>
+        <ShortcutTip command="timeline.rippleDelete">
+          <Button variant="secondary" isDisabled={!selectedId} onPress={() => deleteSelected(true)}>
+            Ripple delete
+          </Button>
+        </ShortcutTip>
         <Button variant="secondary" isDisabled={!selectedId} onPress={joinSelected}>
           Join
         </Button>
@@ -702,6 +713,17 @@ export function Timeline({
                 onPick={pickMarker}
               />
             </div>
+
+            {Object.keys(content.clips).length === 0 && (
+              <p
+                data-testid="timeline-empty"
+                className="pointer-events-none absolute left-4 max-w-md text-sm text-fg-muted"
+                style={{ top: RULER_HEIGHT + 8 }}
+              >
+                Your timeline is empty. Import a video or sound file in the library, then choose
+                "Add to timeline" or drag it onto a track.
+              </p>
+            )}
 
             {rows.map((track, index) => (
               <div

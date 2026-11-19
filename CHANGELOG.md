@@ -4,6 +4,9 @@ All notable changes are recorded here. Format: [Keep a Changelog](https://keepac
 
 ## [Unreleased]
 
+### Added
+- Tooltips that show the shortcut on the timeline and playback buttons, and a hint on an empty timeline (first items of the v2 frontend plan, `docs/v2/plan.md`).
+
 ## [1.0.0] - 2026-11-19
 
 The first complete release: an image editor and a video editor that run in the browser, keep everything on the computer, and work offline.

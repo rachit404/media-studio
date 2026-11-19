@@ -1455,3 +1455,36 @@ test.describe('metadata (SEC-4)', () => {
     expect(tags).not.toMatch(/location|make|model|gps/i);
   });
 });
+
+test.describe('empty states and tooltips (v2 F1, F2)', () => {
+  test('an empty timeline says what to do first, and the hint goes away with the first clip', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Empty timeline');
+    const hint = page.getByTestId('timeline-empty');
+    await expect(hint).toContainText('Your timeline is empty');
+    await importMedia(page, [media.red]);
+    await expect(hint).toBeVisible(); // importing alone does not fill the timeline
+    await addToTimeline(page, 'red.mp4');
+    await expect(hint).toHaveCount(0);
+  });
+
+  test('buttons with a shortcut show it as a tooltip without changing their names', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Tooltips');
+    const split = page.getByRole('button', { name: 'Split', exact: true });
+    await expect(split.locator('xpath=..')).toHaveAttribute(
+      'title',
+      'Split the clip at the playhead (S)',
+    );
+    await expect(
+      page.getByRole('button', { name: 'Play', exact: true }).locator('xpath=..'),
+    ).toHaveAttribute('title', 'Play or pause (Space)');
+    await expect(
+      page.getByRole('button', { name: 'Add marker' }).locator('xpath=..'),
+    ).toHaveAttribute('title', 'Add a marker at the playhead (M)');
+    // The accessible name of the button itself is unchanged.
+    await expect(split).toHaveAccessibleName('Split');
+  });
+});

@@ -10,6 +10,7 @@ import {
   type VideoContent,
 } from '@media-studio/core';
 import { Button } from '@media-studio/ui';
+import { ShortcutTip } from '../../ShortcutTip';
 import type { ProjectSession } from '../project-session';
 
 const BAND = 'absolute bottom-0 h-1.5 bg-ring opacity-70';
@@ -95,43 +96,51 @@ export function MarkerTools({
   return (
     <>
       <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" />
-      <Button
-        variant="secondary"
-        onPress={() => {
-          run(() => {
-            const id = crypto.randomUUID();
-            session.history.execute(addMarker(id, playheadTime()));
-            onPick({ id, time: playheadTime(), name: '' });
-          });
-        }}
-      >
-        Add marker
-      </Button>
-      <Button
-        variant="secondary"
-        onPress={() => {
-          run(() => session.history.execute(setInOut({ in: playheadTime() })));
-        }}
-      >
-        Set in
-      </Button>
-      <Button
-        variant="secondary"
-        onPress={() => {
-          run(() => session.history.execute(setInOut({ out: playheadTime() })));
-        }}
-      >
-        Set out
-      </Button>
-      <Button
-        variant="secondary"
-        isDisabled={!hasRange}
-        onPress={() => {
-          run(() => session.history.execute(setInOut({ in: null, out: null })));
-        }}
-      >
-        Clear in/out
-      </Button>
+      <ShortcutTip command="marker.add">
+        <Button
+          variant="secondary"
+          onPress={() => {
+            run(() => {
+              const id = crypto.randomUUID();
+              session.history.execute(addMarker(id, playheadTime()));
+              onPick({ id, time: playheadTime(), name: '' });
+            });
+          }}
+        >
+          Add marker
+        </Button>
+      </ShortcutTip>
+      <ShortcutTip command="range.in">
+        <Button
+          variant="secondary"
+          onPress={() => {
+            run(() => session.history.execute(setInOut({ in: playheadTime() })));
+          }}
+        >
+          Set in
+        </Button>
+      </ShortcutTip>
+      <ShortcutTip command="range.out">
+        <Button
+          variant="secondary"
+          onPress={() => {
+            run(() => session.history.execute(setInOut({ out: playheadTime() })));
+          }}
+        >
+          Set out
+        </Button>
+      </ShortcutTip>
+      <ShortcutTip command="range.clear">
+        <Button
+          variant="secondary"
+          isDisabled={!hasRange}
+          onPress={() => {
+            run(() => session.history.execute(setInOut({ in: null, out: null })));
+          }}
+        >
+          Clear in/out
+        </Button>
+      </ShortcutTip>
       {hasRange && (
         <span className="text-xs text-fg-muted" data-testid="range-readout">
           {`In ${content.inPoint === undefined ? 'start' : formatTimecode(content.inPoint, fps)} · Out ${content.outPoint === undefined ? 'end' : formatTimecode(content.outPoint, fps)}`}
