@@ -60,7 +60,7 @@ describe('theme contrast gate', () => {
     expect(contrastRatio({ l: 0.5, c: 0, h: 0 }, { l: 0.5, c: 0, h: 0 })).toBeCloseTo(1, 5);
   });
 
-  it('passes for the real theme file in both themes', () => {
+  it('passes for the real theme file in all three themes', () => {
     const themes = loadThemes(readFileSync(THEME_FILE, 'utf8'));
     expect(checkThemes(themes)).toEqual([]);
   });
@@ -72,6 +72,33 @@ describe('theme contrast gate', () => {
     );
     const failures = checkThemes(loadThemes(css));
     expect(failures.some((f) => f.startsWith('dark: fg-muted on surface'))).toBe(true);
+  });
+
+  it('holds high contrast to 7:1 for text and 3:1 for borders', () => {
+    const css = readFileSync(THEME_FILE, 'utf8').replace(
+      '--color-fg-muted: oklch(0.92 0 0);',
+      '--color-fg-muted: oklch(0.5 0 0);',
+    );
+    const failures = checkThemes(loadThemes(css));
+    expect(failures.some((f) => f.startsWith('high-contrast: fg-muted on surface'))).toBe(true);
+    expect(failures.some((f) => f.startsWith('dark:') || f.startsWith('light:'))).toBe(false);
+    const weak = readFileSync(THEME_FILE, 'utf8').replace(
+      '--color-line: oklch(0.7 0 0);',
+      '--color-line: oklch(0.3 0 0);',
+    );
+    expect(checkThemes(loadThemes(weak)).some((f) => f.startsWith('high-contrast: line on'))).toBe(
+      true,
+    );
+  });
+
+  it('fails when high contrast forgets a required token', () => {
+    const css = readFileSync(THEME_FILE, 'utf8').replace(
+      '--color-accent: oklch(0.9 0.17 100);',
+      '',
+    );
+    expect(checkThemes(loadThemes(css))).toContain(
+      'high-contrast theme does not override --color-accent',
+    );
   });
 
   it('fails when the light theme forgets a required token', () => {
