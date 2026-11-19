@@ -196,6 +196,7 @@
 **Known limitations:** results are for the measured hardware; other GPUs rely on probes.
 
 ## M9: Production readiness, v1.0 (M)
+**Status: done in the repository; the manual release checklist, the tag and the public demo are left** (branch `feat/m9-release`). Delivered: the offline update flow (a waiting new version is offered with "Update now" and "Later", the page also asks for new versions every hour and when it comes to the front; unit tests of the whole flow), a user guide ([../user-guide.md](../user-guide.md)), the audit of security, accessibility and reliability with what proves each requirement and what does not ([audit-v1.md](audit-v1.md)), a manual release checklist for what cannot be automated ([release-checklist.md](release-checklist.md)), a video metadata test for SEC-4, refreshed third-party notices, the changelog entry and version 1.0.0. Not done: the manual checklist items (hardware encode, real file picker, Safari and Firefox, screen reader, 60 minute soak), the `v1.0.0` tag and push, hosting the public demo, the demo project and walkthrough video.
 **Scope:** release quality.
 **Files/modules:** docs, CI/CD, accessibility fixes, security hardening.
 **Implementation plan:** accessibility audit and fixes; CSP/headers validation; offline PWA update flow; error and empty-state polish; user guide; third-party notices and licence audit; release process and changelog; demo project and walkthrough video; manual release checklist (hardware encode, FSA, Safari/Firefox).

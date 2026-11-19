@@ -1,6 +1,6 @@
 {
   "name": "media-studio",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Privacy-first image and video editor that runs entirely in the browser.",
   "license": "Apache-2.0",

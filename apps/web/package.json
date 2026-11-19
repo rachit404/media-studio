@@ -1,6 +1,6 @@
 {
   "name": "@media-studio/web",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Media Studio web application (composition root).",
   "license": "Apache-2.0",
