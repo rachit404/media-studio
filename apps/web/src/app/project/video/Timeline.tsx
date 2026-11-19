@@ -768,6 +768,9 @@ export function Timeline({
         <div
           ref={scrollRef}
           data-testid="timeline-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Timeline tracks"
           className="relative min-w-0 flex-1 overflow-x-auto overflow-y-hidden"
           onDragOver={(event) => {
             if (event.dataTransfer.types.includes(ASSET_DRAG_TYPE)) {

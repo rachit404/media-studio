@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const ORIGIN = 'http://127.0.0.1:4173';
+const ORIGIN = `http://127.0.0.1:${process.env['E2E_PORT'] ?? '4173'}`;
 
 type CspWindow = Window & { __cspViolations?: string[] };
 
