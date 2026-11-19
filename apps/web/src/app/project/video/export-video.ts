@@ -1,64 +1,7 @@
-import {
-  AppError,
-  type Asset,
-  type FrameRate,
-  type ProjectDocument,
-  type VideoContent,
-} from '@media-studio/core';
-import { exportFrameCount } from '@media-studio/engine-video';
-import { defaultVideoBitrate } from '@media-studio/media-io';
+import { AppError, type Asset, type ProjectDocument } from '@media-studio/core';
 import { getStorage } from '../../storage-client';
 import type { ExportEvent, ExportJob, ExportRequest } from '../../../workers/export-protocol';
-
-export interface ExportPreset {
-  id: string;
-  label: string;
-  /** Longest side of the picture in pixels, or null to keep the sequence size. */
-  longSide: number | null;
-}
-
-export const EXPORT_PRESETS: readonly ExportPreset[] = [
-  { id: 'sequence', label: 'Same as the sequence', longSide: null },
-  { id: '1080', label: '1080p (1920 on the long side)', longSide: 1920 },
-  { id: '720', label: '720p (1280 on the long side)', longSide: 1280 },
-  { id: '480', label: '480p (854 on the long side)', longSide: 854 },
-];
-
-/** Round down to an even number (H.264 needs even picture sizes), at least 2. */
-const even = (value: number) => Math.max(2, Math.floor(value / 2) * 2);
-
-/** The picture size for a preset: the sequence's shape scaled to the long side (never enlarged). */
-export function exportSize(
-  sequence: { width: number; height: number },
-  longSide: number | null,
-): { width: number; height: number } {
-  const long = Math.max(sequence.width, sequence.height);
-  const scale = longSide === null ? 1 : Math.min(1, longSide / long);
-  return { width: even(sequence.width * scale), height: even(sequence.height * scale) };
-}
-
-export interface ExportEstimate {
-  frames: number;
-  /** Rough size of the file in bytes. */
-  bytes: number;
-  videoBitrate: number;
-}
-
-const AUDIO_BITRATE = 192_000;
-
-export function estimateExport(
-  content: VideoContent,
-  size: { width: number; height: number },
-  duration: number,
-): ExportEstimate {
-  const fps: FrameRate = content.sequence.fps;
-  const videoBitrate = defaultVideoBitrate(size.width, size.height, fps.num / fps.den);
-  return {
-    frames: exportFrameCount(duration, fps),
-    videoBitrate,
-    bytes: Math.round(((videoBitrate + AUDIO_BITRATE) / 8) * (duration / 1_000_000)),
-  };
-}
+import type { ExportSettings } from './export-settings';
 
 /** The most the in-memory file is allowed to grow to before we warn. */
 export const LARGE_EXPORT_BYTES = 1024 * 1024 * 1024;
@@ -73,9 +16,17 @@ export interface RunningExport {
 export function startVideoExport(
   projectId: string,
   project: ProjectDocument,
-  size: { width: number; height: number },
+  settings: ExportSettings,
   onProgress: (done: number, total: number) => void,
   range: { start: number; end: number } | null = null,
+  options: {
+    verify?: boolean;
+    onVerifying?: () => void;
+    /** Write to this file on disk instead of building the video in memory. */
+    save?: FileSystemFileHandle;
+    /** Make the export in parts of about this many seconds, kept so a stopped export can continue. */
+    partSeconds?: number;
+  } = {},
 ): RunningExport {
   const content = project.content;
   if (content.kind !== 'video') throw new Error('Not a video project');
@@ -90,6 +41,7 @@ export function startVideoExport(
   worker.addEventListener('message', (message: MessageEvent<ExportEvent>) => {
     const event = message.data;
     if (event.type === 'progress') onProgress(event.done, event.total);
+    else if (event.type === 'verifying') options.onVerifying?.();
     else if (event.type === 'done') settle({ blob: event.blob });
     else {
       settle({
@@ -129,18 +81,10 @@ export function startVideoExport(
       assets,
       files,
       ...(range ? { range } : {}),
-      settings: {
-        width: size.width,
-        height: size.height,
-        fps: content.sequence.fps,
-        sampleRate: content.sequence.sampleRate,
-        videoBitrate: defaultVideoBitrate(
-          size.width,
-          size.height,
-          content.sequence.fps.num / content.sequence.fps.den,
-        ),
-        audioBitrate: AUDIO_BITRATE,
-      },
+      ...(options.verify ? { verify: true } : {}),
+      ...(options.save ? { save: options.save } : {}),
+      ...(options.partSeconds ? { parts: { projectId, seconds: options.partSeconds } } : {}),
+      settings,
     };
     const request: ExportRequest = { type: 'start', job };
     worker.postMessage(request);
@@ -153,6 +97,19 @@ export function startVideoExport(
       return done.blob;
     })
     .finally(() => worker.terminate());
+
+  // While the export runs, hold a lock that tells the browser this page is busy: pages that hold a Web Lock are not
+  // frozen when they go to the background. The lock is released when the export ends, however it ends.
+  if (typeof navigator !== 'undefined' && 'locks' in navigator) {
+    void navigator.locks
+      .request('media-studio-export', () =>
+        result.then(
+          () => undefined,
+          () => undefined,
+        ),
+      )
+      .catch(() => undefined);
+  }
 
   return {
     result,

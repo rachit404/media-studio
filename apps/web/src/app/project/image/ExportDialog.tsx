@@ -1,4 +1,10 @@
-import { toAppError, type Asset, type ImageContent, type PixelStore } from '@media-studio/core';
+import {
+  AppError,
+  toAppError,
+  type Asset,
+  type ImageContent,
+  type PixelStore,
+} from '@media-studio/core';
 import {
   DEFAULT_EXPORT_SETTINGS,
   EXPORT_FORMATS,
@@ -25,6 +31,52 @@ export interface ExportDialogProps {
   assets: Readonly<Record<string, Asset>>;
   /** The session's painted pixels. */
   pixels: PixelStore;
+}
+
+/**
+ * Open the finished image again before it is handed over: it must decode, have the size that was asked for, and be
+ * of the type that was asked for (EXP-7 for images). A browser that cannot encode a type (WebP, for one) quietly
+ * gives a PNG instead, which this catches.
+ */
+async function checkImage(blob: Blob, width: number, height: number, mime: string): Promise<void> {
+  const fail = (message: string) =>
+    new AppError({
+      code: 'verification-failed',
+      message,
+      hint: 'Try another format or a smaller size.',
+    });
+  if (blob.size === 0) throw fail('The exported image is empty.');
+  if (blob.type !== '' && blob.type !== mime) {
+    throw fail(
+      'This browser made a ' + blob.type + ' file instead of the ' + mime + ' that was asked for.',
+    );
+  }
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(blob);
+  } catch (error) {
+    throw new AppError({
+      code: 'verification-failed',
+      message: 'The exported image could not be opened again.',
+      hint: 'Try another format or a smaller size.',
+      cause: error,
+    });
+  }
+  const { width: gotWidth, height: gotHeight } = bitmap;
+  bitmap.close();
+  if (gotWidth !== width || gotHeight !== height) {
+    throw fail(
+      'The exported image is ' +
+        String(gotWidth) +
+        ' × ' +
+        String(gotHeight) +
+        ', not ' +
+        String(width) +
+        ' × ' +
+        String(height) +
+        '.',
+    );
+  }
 }
 
 function download(blob: Blob, filename: string): void {
@@ -85,6 +137,7 @@ export function ExportDialog({
           backgroundForOpaque: parseHexColor(settings.background),
           flatten: settings.flatten,
         });
+        await checkImage(blob, plan.width, plan.height, plan.mime);
         const name = exportFilename(projectName, plan.extension);
         download(blob, name);
         diagnostics.log('info', 'export', 'Image exported', {

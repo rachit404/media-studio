@@ -1071,3 +1071,329 @@ test.describe('J, K and L shuttle and the master meter', () => {
     await expect(left).toHaveAttribute('aria-valuetext', 'silent');
   });
 });
+
+test.describe('export settings', () => {
+  test('presets and details change what the dialog says, and unavailable choices are explained', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Export settings');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4'); // 2 s at 25 fps
+    await addToTimeline(page, 'blue.mp4'); // 3 s
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await expect(dialog.getByLabel('Preset')).toHaveValue('web');
+    await expect(dialog).toContainText('125'); // 5 s at 25 fps
+    await expect(dialog).toContainText('MP4 (H.264 and AAC)');
+
+    // A smaller preset never enlarges the 320 x 240 sequence.
+    await dialog.getByLabel('Preset').selectOption('small');
+    await expect(dialog).toContainText('320 × 240');
+
+    // Details: another frame rate changes the number of frames, and the preset becomes custom.
+    await dialog.getByText('More settings').click();
+    await dialog.getByLabel('Frame rate').selectOption('60');
+    await expect(dialog).toContainText('300'); // 5 s at 60 fps
+    await expect(dialog.getByLabel('Preset')).toHaveValue('custom');
+    await dialog.getByLabel('Preset').selectOption('web');
+    await expect(dialog).toContainText('125');
+
+    await dialog.getByLabel('Format').selectOption('webm');
+    await expect(dialog).toContainText('WebM (VP9 and Opus)');
+    await expect(dialog.getByLabel('Preset')).toHaveValue('custom');
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('a WebM export is VP9 and Opus with the right picture, frames and length', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(150_000);
+      await createVideoProject(page, 'WebM export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4'); // 2 s of red with a tone
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByLabel('Preset').selectOption('webm');
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download .*\.webm$/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('export.webm');
+      await (await downloading).saveAs(file);
+
+      const facts = probe(file);
+      expect(facts.video).toMatchObject({ codec_name: 'vp9', width: 320, height: 240 });
+      expect(facts.audio?.codec_name).toBe('opus');
+      expect(Number(facts.video?.nb_read_frames)).toBe(50);
+      expect(facts.duration).toBeGreaterThan(1.9);
+      expect(facts.duration).toBeLessThan(2.3);
+      expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+      expect(meanVolume(file, 0.2, 1.5)).toBeGreaterThan(-35);
+    });
+
+    test('a 60 fps export of a 25 fps sequence has twice and a half the frames', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(150_000);
+      await createVideoProject(page, 'Frame rate export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4'); // 2 s
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByText('More settings').click();
+      await dialog.getByLabel('Frame rate').selectOption('60');
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('sixty.mp4');
+      await (await downloading).saveAs(file);
+      expect(Number(probe(file).video?.nb_read_frames)).toBe(120);
+    });
+  });
+});
+
+test.describe('saving straight to a file on disk', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  /** The "save as" window cannot be driven, so stand in for it with a file in the browser's private storage. */
+  async function fakeSavePicker(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+      const target = window as unknown as {
+        showSaveFilePicker: (options: { suggestedName: string }) => Promise<FileSystemFileHandle>;
+      };
+      target.showSaveFilePicker = async (options) => {
+        const root = await navigator.storage.getDirectory();
+        return root.getFileHandle(`picked-${options.suggestedName}`, { create: true });
+      };
+    });
+  }
+
+  async function readPicked(page: Page, name: string): Promise<Buffer> {
+    const bytes = await page.evaluate(async (fileName) => {
+      const root = await navigator.storage.getDirectory();
+      const file = await (await root.getFileHandle(fileName)).getFile();
+      return Array.from(new Uint8Array(await file.arrayBuffer()));
+    }, name);
+    return Buffer.from(bytes);
+  }
+
+  test('an MP4 written to the chosen file is complete and passes the check', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(150_000);
+    await fakeSavePicker(page);
+    await createVideoProject(page, 'Disk export');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4'); // 2 s with a tone
+
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Save straight to a file on disk/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    await expect(dialog.getByRole('status')).toContainText('Saved as picked-Disk export.mp4', {
+      timeout: 90_000,
+    });
+    // No download link: the file was written where the user chose.
+    await expect(dialog.getByRole('link', { name: /^Download/ })).toHaveCount(0);
+
+    const file = testInfo.outputPath('disk.mp4');
+    const { writeFileSync } = await import('node:fs');
+    writeFileSync(file, await readPicked(page, 'picked-Disk export.mp4'));
+    const facts = probe(file);
+    expect(facts.video).toMatchObject({ codec_name: 'h264', width: 320, height: 240 });
+    expect(Number(facts.video?.nb_read_frames)).toBe(50);
+    expect(facts.audio?.codec_name).toBe('aac');
+    expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+    expect(meanVolume(file, 0.2, 1.5)).toBeGreaterThan(-35);
+  });
+
+  test('choosing no file leaves the dialog as it was', async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { showSaveFilePicker: () => Promise<never> }).showSaveFilePicker = () =>
+        Promise.reject(new DOMException('The user aborted a request.', 'AbortError'));
+    });
+    await createVideoProject(page, 'Disk cancel');
+    await importMedia(page, [media.red]);
+    await addToTimeline(page, 'red.mp4');
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Save straight to a file on disk/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    await expect(dialog.getByRole('button', { name: 'Start export' })).toBeVisible();
+    await expect(dialog.getByRole('alert').filter({ hasText: /./ })).toHaveCount(0);
+  });
+});
+
+test.describe('exporting in parts', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  /** One second per part, so a few seconds of video make several parts. */
+  async function shortParts(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+      localStorage.setItem('ms-export-part-seconds', '1');
+    });
+  }
+
+  async function leftovers(page: Page): Promise<number> {
+    return page.evaluate(async () => {
+      const root = await navigator.storage.getDirectory();
+      try {
+        const exports = await root.getDirectoryHandle('media-studio-export');
+        let count = 0;
+        for await (const entry of exports.values()) count += entry.kind === 'directory' ? 1 : 0;
+        return count;
+      } catch {
+        return 0;
+      }
+    });
+  }
+
+  test('a five second export in five parts joins into one correct file, and leaves nothing behind', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(150_000);
+    await shortParts(page);
+    await createVideoProject(page, 'Parts export');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4'); // 0 s .. 2 s, with a tone
+    await addToTimeline(page, 'blue.mp4'); // 2 s .. 5 s, silent
+
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Make it in parts/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    const link = dialog.getByRole('link', { name: /^Download/ });
+    await expect(link).toBeVisible({ timeout: 120_000 });
+    const downloading = page.waitForEvent('download');
+    await link.click();
+    const file = testInfo.outputPath('parts.mp4');
+    await (await downloading).saveAs(file);
+
+    const facts = probe(file);
+    expect(facts.video).toMatchObject({ codec_name: 'h264', width: 320, height: 240 });
+    expect(Number(facts.video?.nb_read_frames)).toBe(125);
+    expect(facts.audio?.codec_name).toBe('aac');
+    expect(facts.duration).toBeGreaterThan(4.9);
+    expect(facts.duration).toBeLessThan(5.3);
+    // Red, then blue, with the seams between parts (every second) invisible in the colours.
+    expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 1.5)[0]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 2.5)[2]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 4.5)[2]).toBeGreaterThan(200);
+    // The tone plays through the first part boundary without a gap, and the rest is silent.
+    expect(meanVolume(file, 0.2, 1.5)).toBeGreaterThan(-35);
+    expect(meanVolume(file, 2.5, 2)).toBeLessThan(-60);
+    expect(await leftovers(page)).toBe(0);
+  });
+
+  test('cancelling an export in parts removes its parts', async ({ page }) => {
+    test.setTimeout(150_000);
+    await shortParts(page);
+    await createVideoProject(page, 'Parts cancel');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4');
+    await addToTimeline(page, 'blue.mp4');
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Make it in parts/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    await expect(dialog.getByRole('button', { name: 'Cancel export' })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel export' }).click();
+    await expect(dialog.getByRole('button', { name: 'Start export' })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect.poll(() => leftovers(page), { timeout: 10_000 }).toBe(0);
+  });
+});
+
+test.describe('continuing a stopped export', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  test('reloading the page in the middle of an export in parts lets the next export continue', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(180_000);
+    await page.addInitScript(() => {
+      localStorage.setItem('ms-export-part-seconds', '1');
+    });
+    await createVideoProject(page, 'Parts resume');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4');
+    await addToTimeline(page, 'blue.mp4');
+    await expect(page.getByRole('status').filter({ hasText: 'All changes saved' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Export…' }).click();
+    let dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Make it in parts/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    // Stop it like a crash would: after a few parts are on disk but before the end.
+    await page.waitForFunction(
+      () => /Frame (5[0-9]|[6-9][0-9]|1[01][0-9]) of 125/.test(document.body.innerText),
+      undefined,
+      { timeout: 60_000, polling: 20 },
+    );
+    await page.reload();
+    await page
+      .getByRole('alertdialog', { name: 'Restore unsaved changes?' })
+      .getByRole('button', { name: 'Restore changes' })
+      .click();
+
+    await page.getByRole('button', { name: 'Export…' }).click();
+    dialog = page.getByRole('dialog', { name: 'Export video' });
+    await expect(
+      dialog.getByRole('status').filter({ hasText: /stopped after \d+ of 5 parts/ }),
+    ).toBeVisible({
+      timeout: 20_000,
+    });
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    const link = dialog.getByRole('link', { name: /^Download/ });
+    await expect(link).toBeVisible({ timeout: 120_000 });
+    const downloading = page.waitForEvent('download');
+    await link.click();
+    const file = testInfo.outputPath('resumed.mp4');
+    await (await downloading).saveAs(file);
+    const facts = probe(file);
+    expect(Number(facts.video?.nb_read_frames)).toBe(125);
+    expect(facts.duration).toBeGreaterThan(4.9);
+    expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 4.5)[2]).toBeGreaterThan(200);
+  });
+});
+
+test.describe('export in a background tab', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  test('an export carries on and finishes correctly while another tab is in front', async ({
+    page,
+    context,
+  }, testInfo) => {
+    test.setTimeout(150_000);
+    await createVideoProject(page, 'Background export');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4');
+    await addToTimeline(page, 'blue.mp4');
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    // Put another tab in front, so this one is in the background.
+    const other = await context.newPage();
+    await other.goto('about:blank');
+    await other.bringToFront();
+    const link = dialog.getByRole('link', { name: /^Download/ });
+    await expect(link).toBeVisible({ timeout: 120_000 });
+    await page.bringToFront();
+    const downloading = page.waitForEvent('download');
+    await link.click();
+    const file = testInfo.outputPath('background.mp4');
+    await (await downloading).saveAs(file);
+    expect(Number(probe(file).video?.nb_read_frames)).toBe(125);
+    expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 4)[2]).toBeGreaterThan(200);
+  });
+});
