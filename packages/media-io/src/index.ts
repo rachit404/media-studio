@@ -27,3 +27,11 @@ export type {
 } from './video-writer';
 export { probeFormats } from './codec-probe';
 export type { FormatSupport } from './codec-probe';
+export {
+  DURATION_TOLERANCE_FRAMES,
+  FRAME_COUNT_TOLERANCE,
+  checkOutput,
+  probeOutput,
+  verifyExport,
+} from './verify-output';
+export type { ExpectedOutput, OutputFacts } from './verify-output';
