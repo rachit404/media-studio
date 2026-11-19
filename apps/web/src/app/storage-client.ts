@@ -1,5 +1,5 @@
 import type { Remote } from '@media-studio/storage';
-import { createRpcClient } from '@media-studio/storage';
+import { createSupervisedRpc } from '@media-studio/storage';
 import { useSyncExternalStore } from 'react';
 import type { StorageApi } from '../workers/storage-api';
 import { diagnostics } from './diagnostics';
@@ -8,17 +8,33 @@ export type StorageClient = Remote<StorageApi>;
 
 let client: StorageClient | undefined;
 
-/** The storage worker, created on first use. All project data goes through it. */
+/**
+ * The storage worker, created on first use and replaced if it dies (calls that were waiting fail with
+ * `worker-crashed` and the next call starts a new one). All project data goes through it.
+ */
 export function getStorage(): StorageClient {
-  if (!client) {
-    const worker = new Worker(new URL('../workers/storage.worker.ts', import.meta.url), {
-      type: 'module',
-    });
-    worker.addEventListener('error', (event) => {
-      diagnostics.log('error', 'storage-worker', event.message || 'Storage worker error');
-    });
-    client = createRpcClient<StorageApi>(worker);
-  }
+  client ??= createSupervisedRpc<StorageApi>({
+    spawn: (name) => {
+      const worker = new Worker(new URL('../workers/storage.worker.ts', import.meta.url), {
+        type: 'module',
+        name,
+      });
+      worker.addEventListener('error', (event) => {
+        diagnostics.log('error', 'storage-worker', event.message || 'Storage worker error');
+      });
+      return worker;
+    },
+    onCrash: (cause) => {
+      diagnostics.log(
+        'error',
+        'storage-worker',
+        'The storage worker stopped and will be restarted',
+        {
+          cause,
+        },
+      );
+    },
+  });
   return client;
 }
 

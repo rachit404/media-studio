@@ -4,6 +4,7 @@ import {
   Transport,
   audioSegments,
   buildPreviewScene,
+  decoderLimit,
   frameTextureId,
   previewPlan,
   shuttle,
@@ -16,8 +17,11 @@ import { rasterMetrics, type CanvasRenderer } from '@media-studio/render';
 import { diagnostics } from '../../diagnostics';
 import { getStorage } from '../../storage-client';
 
-/** Most pictures decoded at the same time (hardware decoders are limited; see the M5 risk spikes). */
-const MAX_DECODERS = 4;
+/** Most pictures decoded at the same time: hardware decoders are limited (see the M5 risk spikes), so it follows the computer. */
+const MAX_DECODERS = decoderLimit({
+  deviceMemoryGb: (navigator as { deviceMemory?: number }).deviceMemory,
+  cores: navigator.hardwareConcurrency,
+});
 /** Clips that start within this long are decoded ahead, so they are ready at the cut. */
 const PREROLL_US = 600_000;
 

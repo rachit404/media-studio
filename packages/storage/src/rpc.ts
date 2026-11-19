@@ -77,14 +77,44 @@ function isResponse(value: unknown): value is Response {
   );
 }
 
-/** Serve the methods of `target` over a port. Private (underscore) names and constructor are never exposed. */
-export function exposeRpc(target: object, port: PortLike): void {
+/** The part of the Web Locks API used to notice that a worker has died. */
+export interface LockManagerLike {
+  request(name: string, callback: () => unknown): Promise<unknown>;
+}
+
+/**
+ * Serve the methods of `target` over a port. Private (underscore) names and constructor are never exposed. With
+ * `lock`, the worker takes that lock and never lets go: the page can then tell the worker is gone, however it died
+ * (a crash or the browser killing it for memory raises no event), because the lock is released.
+ */
+export function exposeRpc(
+  target: object,
+  port: PortLike,
+  options: { lock?: string; locks?: LockManagerLike } = {},
+): void {
+  const locks =
+    options.locks ?? (globalThis.navigator as { locks?: LockManagerLike } | undefined)?.locks;
+  const held =
+    options.lock && locks
+      ? new Promise<void>((resolve) => {
+          void locks.request(options.lock as string, () => {
+            resolve();
+            return new Promise<void>(() => undefined); // held for as long as the worker lives
+          });
+        })
+      : Promise.resolve();
   port.addEventListener('message', (event) => {
     const message = event.data;
     if (!isRequest(message)) return;
     const { id, method, args } = message;
     const candidate = (target as Record<string, unknown>)[method];
     const respond = (response: Response) => port.postMessage(response);
+
+    if (method === '_ready') {
+      // Built in: answers once the worker holds its lock, so the page knows it can watch for it to be released.
+      void held.then(() => respond({ rpc: 'response', id, ok: true, value: undefined }));
+      return;
+    }
 
     if (typeof candidate !== 'function' || method === 'constructor' || method.startsWith('_')) {
       respond({
@@ -105,8 +135,21 @@ export function exposeRpc(target: object, port: PortLike): void {
   });
 }
 
+/** A client together with what is needed to supervise it. */
+export interface RpcControl<T extends object> {
+  client: Remote<T>;
+  /** Call a method by name (also the built-in `_ready`). */
+  call(method: string, args?: unknown[]): Promise<unknown>;
+  /** Fail every call that has not been answered, for example because the worker died. */
+  failAll(error: Error): void;
+}
+
 /** Call the methods of a remote object as if they were local async functions. */
 export function createRpcClient<T extends object>(port: PortLike): Remote<T> {
+  return createControlledClient<T>(port).client;
+}
+
+export function createControlledClient<T extends object>(port: PortLike): RpcControl<T> {
   let nextId = 1;
   const pending = new Map<
     number,
@@ -123,15 +166,101 @@ export function createRpcClient<T extends object>(port: PortLike): Remote<T> {
     else waiter.reject(deserializeError(message.error));
   });
 
+  const call = (method: string, args: unknown[] = []) =>
+    new Promise<unknown>((resolve, reject) => {
+      const id = nextId++;
+      pending.set(id, { resolve, reject });
+      port.postMessage({ rpc: 'request', id, method, args } satisfies Request);
+    });
+
+  const client = new Proxy({} as Remote<T>, {
+    get(_target, property) {
+      if (typeof property !== 'string' || property === 'then') return undefined;
+      return (...args: unknown[]) => call(property, args);
+    },
+  });
+  return {
+    client,
+    call,
+    failAll(error) {
+      const waiting = [...pending.values()];
+      pending.clear();
+      for (const waiter of waiting) waiter.reject(error);
+    },
+  };
+}
+
+/** A worker that can be watched and stopped. */
+export interface SupervisedWorker extends PortLike {
+  addEventListener(type: 'message', listener: (event: { data: unknown }) => void): void;
+  addEventListener(type: 'error' | 'messageerror', listener: () => void): void;
+  terminate(): void;
+}
+
+/**
+ * A client for a worker that is replaced when it dies (REL-4, worker crash recovery). Calls that were waiting get a
+ * `worker-crashed` error (never an endless wait); the next call starts a fresh worker. A death is noticed from the
+ * worker's error events and, for a worker killed without one, from its lock being released (see `exposeRpc`).
+ * `spawn` receives the lock name and must start the worker so that it calls `exposeRpc` with it.
+ */
+export function createSupervisedRpc<T extends object>(options: {
+  spawn: (lockName: string) => SupervisedWorker;
+  onCrash?: (cause: 'error' | 'lost') => void;
+  locks?: LockManagerLike | undefined;
+}): Remote<T> {
+  const locks =
+    options.locks ?? (globalThis.navigator as { locks?: LockManagerLike } | undefined)?.locks;
+  interface Instance {
+    worker: SupervisedWorker;
+    control: RpcControl<T>;
+  }
+  let current: Instance | null = null;
+  let serial = 0;
+
+  const crash = (instance: Instance, cause: 'error' | 'lost') => {
+    if (current !== instance) return;
+    current = null;
+    instance.control.failAll(
+      new AppError({
+        code: 'worker-crashed',
+        message: 'A background process of the app stopped.',
+        hint: 'Try again. Your project is safe: changes are saved as you work.',
+      }),
+    );
+    try {
+      instance.worker.terminate();
+    } catch {
+      // Already gone.
+    }
+    options.onCrash?.(cause);
+  };
+
+  const start = (): Instance => {
+    serial += 1;
+    const lockName = `media-studio-worker-${String(Date.now())}-${String(serial)}`;
+    const worker = options.spawn(lockName);
+    const instance: Instance = { worker, control: createControlledClient<T>(worker) };
+    current = instance;
+    worker.addEventListener('error', () => {
+      crash(instance, 'error');
+    });
+    worker.addEventListener('messageerror', () => {
+      crash(instance, 'error');
+    });
+    if (locks) {
+      // Once the worker says it holds its lock, wait for the lock: it is ours only when the worker is gone.
+      void instance.control
+        .call('_ready')
+        .then(() => locks.request(lockName, () => crash(instance, 'lost')))
+        .catch(() => undefined);
+    }
+    return instance;
+  };
+
   return new Proxy({} as Remote<T>, {
     get(_target, property) {
       if (typeof property !== 'string' || property === 'then') return undefined;
-      return (...args: unknown[]) =>
-        new Promise((resolve, reject) => {
-          const id = nextId++;
-          pending.set(id, { resolve, reject });
-          port.postMessage({ rpc: 'request', id, method: property, args } satisfies Request);
-        });
+      return (...args: unknown[]) => (current ?? start()).control.call(property, args);
     },
   });
 }

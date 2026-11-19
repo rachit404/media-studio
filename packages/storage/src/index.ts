@@ -24,5 +24,5 @@ export type {
   StoreStats,
 } from './project-store';
 export { decodeTile, encodeTile } from './tile-codec';
-export { createRpcClient, exposeRpc } from './rpc';
-export type { PortLike, Remote } from './rpc';
+export { createRpcClient, createSupervisedRpc, exposeRpc } from './rpc';
+export type { LockManagerLike, PortLike, Remote, RpcControl, SupervisedWorker } from './rpc';

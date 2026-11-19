@@ -63,14 +63,19 @@ export function valueAt(
   const first = frames?.[0];
   if (!frames || !first) return fallback;
   if (offset <= first.time) return first.value;
-  for (let i = 1; i < frames.length; i += 1) {
-    const next = frames[i];
-    const previous = frames[i - 1];
-    if (!next || !previous) continue;
-    if (offset < next.time) {
-      const progress = (offset - previous.time) / (next.time - previous.time);
-      return previous.value + (next.value - previous.value) * ease(previous.easing, progress);
-    }
+  // The first keyframe after `offset`, by bisection (keyframes are in time order): a clip can have 200 of them.
+  let low = 1;
+  let high = frames.length;
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (offset < (frames[middle]?.time ?? Infinity)) high = middle;
+    else low = middle + 1;
+  }
+  const next = frames[low];
+  const previous = frames[low - 1];
+  if (next && previous) {
+    const progress = (offset - previous.time) / (next.time - previous.time);
+    return previous.value + (next.value - previous.value) * ease(previous.easing, progress);
   }
   return frames[frames.length - 1]?.value ?? fallback;
 }

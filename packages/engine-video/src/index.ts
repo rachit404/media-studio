@@ -61,6 +61,13 @@ export {
   planParts,
 } from './export-parts';
 export type { AudioWriter, FinishedPart, PartPlan, PartsDependencies } from './export-parts';
+export {
+  DEFAULT_DECODERS,
+  MAX_DECODERS_CEILING,
+  MIN_DECODERS,
+  decoderLimit,
+} from './device-budget';
+export type { DeviceInfo } from './device-budget';
 export { Transport } from './transport';
 export type { PlaybackStats, TransportOptions } from './transport';
 export { FramePump } from './frame-pump';

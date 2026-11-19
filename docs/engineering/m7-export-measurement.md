@@ -21,7 +21,11 @@ similar here, and the picture work (decoding, drawing) takes as much time as enc
 a hardware encoder was used: Chrome reports hardware and software support for H.264 and VP9 but does not say which one
 did the work.
 
-**Not measured:** three layers, 4K, WebM, Safari and Firefox, other computers. The dropped-frame budget for playback is in
+**4K (best effort).** The same project at 3840 x 2160 for 5 s (`SIZE=3840x2160 SECONDS=5`, results in `spikes/results/m7-export-4k.json`):
+automatic encoder 13.4 s (0.37 times real time, 28 MB), software 15.0 s (0.33 times real time, 27 MB). 4K exports work and finish
+(the check of the finished file was switched off for the timing, so the 4K file was not verified), but at about a third of real time on this machine, which matches "4K best effort".
+
+**Not measured:** three layers, WebM, Safari and Firefox, other computers. The dropped-frame budget for playback is in
 [m6-playback-measurement.md](m6-playback-measurement.md).
 
 **What the probe showed on this machine** (`spikes/m7-export/probe.mjs`): H.264 High profile level 4.0 and VP9 are accepted
