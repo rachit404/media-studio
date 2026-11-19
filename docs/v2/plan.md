@@ -33,16 +33,47 @@ Ordered by value for effort. "Done" means built, tested and merged on `feat/v2-f
 | F9 | Narrow layout below 1024 px: panels become tabs | Small windows and tablets | PLAT-6 (stretch) | planned |
 | F10 | Timeline: zoom to selection, track height choice, collapse tracks | Large projects | VID-3 | done |
 
-## Needs engine or format work (not frontend; listed so they are not forgotten)
+## v2 engine and format work (planned 2026-11-19, not started)
 
-- Social square and vertical exports that crop or letterbox the picture (the export scene fits the whole sequence today).
-- Text outline and shadow, bundled fonts, text on a path.
-- Bezier keyframe curves, speed ramps, reverse, centred transitions.
-- Proxies for 4K editing; background (idle) proxy generation.
-- Soft subtitle tracks and `.srt` export.
-- Audio effects (equaliser, noise reduction) and a limiter on the master.
+Each item gets its own branch from `claude-takeover` (after `feat/v2-frontend` is merged), a small spike or measurement first
+where the risk is in the browser, then code, tests and an end-to-end check. "Doc" says whether the project document changes:
+v12 would only add optional fields, so older files open unchanged (identity migration, as in v2 to v11).
+
+| # | Item | What the person gets | Doc | Effort | Risk | Needs first |
+| --- | --- | --- | --- | --- | --- | --- |
+| E1 | Social frames: square (1:1), vertical (9:16), 4:5 and the sequence's own, each as "fit with bars" or "fill and crop", with a position control | Exports ready for phones and feeds | no (an export setting) | S | low | frame size in the export scene |
+| E2 | Subtitle files: export `.srt` and `.vtt` next to the video from the subtitle track (burned-in already works) | Captions for players and uploads | no | S | low | none |
+| E3 | Master limiter and a loudness readout; optional "normalise to -14 LUFS" at export | No clipping, steady volume | optional export field | M | low | audio mix test vectors |
+| E4 | Text outline, shadow and background box; a small set of bundled fonts | Readable titles on any picture | v12 (optional text fields) | M | medium (font licences, export parity) | licence check of each font |
+| E5 | Centred and "over the cut" transitions | More natural cuts | v12 (optional field) | S | low | preview and export parity test |
+| E6 | Bezier keyframe curves and a curve editor (the frontend part comes after the engine part) | Smooth, custom motion | v12 (easing kind) | M | medium | keyframe maths tests; editor design |
+| E7 | Speed ramps (speed changes along the clip); then reverse playback | Slow motion that eases in and out | v12 (speed keyframes) | M for ramps, L for reverse | high for reverse (needs decoding backwards) | spike: reverse on long-GOP sources |
+| E8 | Proxies for heavy sources (ASSET-5): made in the background, switched automatically, never used for export | 4K and long-GOP footage edits smoothly | v12 (asset proxy fields) | L | high (disk use, decoder time, export must use the original) | spike: proxy speed and size on real 4K |
+| E9 | Soft subtitle tracks inside the MP4 or WebM (VID-14) | Switchable captions | no | M | high (muxer support unverified) | spike: what mediabunny can write |
+| E10 | Audio effects: three-band equaliser, then noise reduction (VID-14, AI-2 later) | Cleaner sound | v12 (effect fields) | M for the equaliser, L for noise reduction | medium | decide on a local-only method |
+
+### Suggested order
+
+1. **E1, E2** first: small, visible, no format change, and they finish the "publish a video" story.
+2. **E3, E5** next: small and safe.
+3. **E4** then **E6** (with its curve-editor frontend): the largest visible gains for editing quality.
+4. **E7 ramps**, then the spikes for **E7 reverse**, **E8 proxies** and **E9 soft subtitles**: decide each from its spike result, not before.
+5. **E10** last (the equaliser first).
+
+### Frontend work that follows the engine items
+
+F9 (narrow layout) stays a stretch item. Each engine item above adds its own small interface (a frame menu, a captions button,
+a loudness readout, text styling fields, a curve editor), built and tested together with it.
+
+### Questions for the owner
+
+- Which of E1 to E10 matter most to you? The order above is a suggestion.
+- Are bundled fonts acceptable (each must have a licence that allows redistribution), or should text use only system fonts?
+- Should proxies (E8) be on by default, or a setting the person turns on?
+- Is F9 (phones and small windows) worth doing before any of these?
 
 ## How v2 is built
 
-One branch (`feat/v2-frontend`), small commits per item, each with unit tests and, for visible changes, an end-to-end test
-and an axe check. `pnpm check` and the full end-to-end suite stay green. No change to the document format is needed for F1 to F10.
+One branch per item (`feat/v2-frontend` for F1 to F10, then `feat/v2-e1-...` and so on from `claude-takeover`), small commits,
+each with unit tests and, for visible changes, an end-to-end test and an axe check. `pnpm check` and the full end-to-end
+suite stay green. No change to the document format was needed for F1 to F10.
