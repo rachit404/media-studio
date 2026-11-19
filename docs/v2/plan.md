@@ -65,12 +65,14 @@ v12 would only add optional fields, so older files open unchanged (identity migr
 F9 (narrow layout) stays a stretch item. Each engine item above adds its own small interface (a frame menu, a captions button,
 a loudness readout, text styling fields, a curve editor), built and tested together with it.
 
-### Questions for the owner
+### Decisions (owner delegated them on 2026-11-19: "your call for all")
 
-- Which of E1 to E10 matter most to you? The order above is a suggestion.
-- Are bundled fonts acceptable (each must have a licence that allows redistribution), or should text use only system fonts?
-- Should proxies (E8) be on by default, or a setting the person turns on?
-- Is F9 (phones and small windows) worth doing before any of these?
+- **Order:** as suggested above. E1 and E2 first, in parallel.
+- **Fonts (E4):** bundled fonts are acceptable only with an open licence that allows redistribution (SIL OFL or Apache 2.0), a
+  small set (about four families), each listed in `docs/third-party.md`. Anything else uses system fonts.
+- **Proxies (E8):** a setting with three choices, "Automatic" (default: only for sources above 1080p, with a long GOP, or decoded
+  in software), "Always" and "Never". Export always reads the original.
+- **F9 (narrow layout):** after E1 to E3, not before; it is a stretch item and nothing in E1 to E3 depends on it.
 
 ## How v2 is built
 
