@@ -4,6 +4,7 @@ import { Button } from '@media-studio/ui';
 import { useState } from 'react';
 import { shortcutRegistry } from './commands';
 import { LimitationsBanner } from './LimitationsBanner';
+import { UpdateBanner } from './UpdateBanner';
 import { isMacPlatform } from './platform';
 import { HomeScreen } from './screens/HomeScreen';
 import { WorkspaceScreen } from './screens/WorkspaceScreen';
@@ -47,6 +48,7 @@ export function AppShell({ report }: { report: CapabilityReport }) {
         </Button>
       </header>
 
+      <UpdateBanner />
       <LimitationsBanner limitations={report.limitations} />
 
       {route.name === 'home' && <HomeScreen />}

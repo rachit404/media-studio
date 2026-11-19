@@ -1397,3 +1397,61 @@ test.describe('export in a background tab', () => {
     expect(pixelAtSecond(file, 4)[2]).toBeGreaterThan(200);
   });
 });
+
+test.describe('metadata (SEC-4)', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  test('an exported video carries nothing from the tags of the original, such as its location', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(150_000);
+    // A source with a place, a camera and a title written into it.
+    const source = testInfo.outputPath('tagged.mp4');
+    execFileSync('ffmpeg', [
+      ...['-y', '-loglevel', 'error'],
+      ...['-f', 'lavfi', '-i', 'color=c=green:s=320x240:r=25:d=1'],
+      ...['-metadata', 'location=+48.8584+002.2945/'],
+      ...['-metadata', 'com.apple.quicktime.make=SecretMaker'],
+      ...['-metadata', 'title=Private holiday'],
+      ...['-movflags', 'use_metadata_tags'],
+      ...['-c:v', 'libx264', '-pix_fmt', 'yuv420p', source],
+    ]);
+    const original = execFileSync(
+      'ffprobe',
+      ['-v', 'error', '-show_format', '-of', 'json', source],
+      {
+        encoding: 'utf8',
+      },
+    );
+    // The test file really has the tags.
+    expect(original).toContain('Private holiday');
+    expect(original).toContain('48.8584');
+
+    await createVideoProject(page, 'Metadata export');
+    await page.getByTestId('import-media-input').setInputFiles(source);
+    await expect(
+      page.getByRole('list', { name: 'Project media' }).getByText('tagged.mp4', { exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    await addToTimeline(page, 'tagged.mp4');
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    const link = dialog.getByRole('link', { name: /^Download/ });
+    await expect(link).toBeVisible({ timeout: 90_000 });
+    const downloading = page.waitForEvent('download');
+    await link.click();
+    const file = testInfo.outputPath('clean.mp4');
+    await (await downloading).saveAs(file);
+
+    // Only the tags: other fields (such as the chroma location of the picture) are not metadata of the original.
+    const tags = execFileSync(
+      'ffprobe',
+      ['-v', 'error', '-show_entries', 'format_tags:stream_tags', '-of', 'json', file],
+      { encoding: 'utf8' },
+    );
+    for (const secret of ['SecretMaker', '48.8584', 'Private holiday']) {
+      expect(tags).not.toContain(secret);
+    }
+    expect(tags).not.toMatch(/location|make|model|gps/i);
+  });
+});
