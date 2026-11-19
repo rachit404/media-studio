@@ -5,6 +5,7 @@ import { displayCombo } from '@media-studio/core';
 import { shortcutRegistry } from '../commands';
 import { isMacPlatform } from '../platform';
 import { useGlobalShortcuts } from '../use-shortcuts';
+import { Walkthrough } from '../Walkthrough';
 
 import type { ProjectSession } from './project-session';
 import { useProjectSession, useSessionVersion } from './use-project-session';
@@ -97,19 +98,22 @@ function OpenProject({ session }: { session: ProjectSession }) {
   );
 
   return (
-    <Suspense
-      fallback={
-        <p role="status" className="p-6 text-fg-muted">
-          Loading the editor…
-        </p>
-      }
-    >
-      {project.type === 'image' ? (
-        <ImageWorkspace session={session} project={project} heading={heading} toolbar={toolbar} />
-      ) : (
-        <VideoWorkspace session={session} project={project} heading={heading} toolbar={toolbar} />
-      )}
-    </Suspense>
+    <>
+      <Walkthrough id={project.type} />
+      <Suspense
+        fallback={
+          <p role="status" className="p-6 text-fg-muted">
+            Loading the editor…
+          </p>
+        }
+      >
+        {project.type === 'image' ? (
+          <ImageWorkspace session={session} project={project} heading={heading} toolbar={toolbar} />
+        ) : (
+          <VideoWorkspace session={session} project={project} heading={heading} toolbar={toolbar} />
+        )}
+      </Suspense>
+    </>
   );
 }
 

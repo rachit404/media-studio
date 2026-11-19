@@ -1,6 +1,7 @@
 import { Button } from '@media-studio/ui';
 import type { Theme } from '../theme';
 import { setTheme, useTheme } from '../use-theme';
+import { resetWalkthroughs } from '../Walkthrough';
 
 // Static class strings so Tailwind can see every utility. Each swatch shows one semantic token.
 const TOKEN_SWATCHES = [
@@ -38,6 +39,13 @@ export function AppearancePanel() {
           </Button>
         ))}
       </div>
+      <h3 className="mt-6 text-sm font-semibold">First-run tips</h3>
+      <p className="mt-1 text-sm text-fg-muted">
+        The short walkthroughs show once. Switch them on to see them again.
+      </p>
+      <Button className="mt-2" variant="secondary" onPress={resetWalkthroughs}>
+        Show the tips again
+      </Button>
       <h3 className="mt-6 text-sm font-semibold">Design tokens</h3>
       <p className="mt-1 text-sm text-fg-muted">
         Every colour comes from <code className="font-mono">theme.css</code>; change it there and

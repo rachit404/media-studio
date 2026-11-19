@@ -14,6 +14,19 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: 'retain-on-failure',
+    // The first-run walkthroughs are marked as seen, so they do not cover the screens the tests drive; e2e/walkthrough.spec.ts
+    // clears this to see them.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: `http://127.0.0.1:${String(PORT)}`,
+          localStorage: [
+            { name: 'ms-walkthrough', value: JSON.stringify(['home', 'image', 'video']) },
+          ],
+        },
+      ],
+    },
   },
   projects: [
     {

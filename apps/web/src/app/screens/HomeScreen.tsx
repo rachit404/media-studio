@@ -4,6 +4,7 @@ import { Button, Dialog } from '@media-studio/ui';
 import { useEffect, useRef, useState } from 'react';
 import { NewProjectDialog } from '../home/NewProjectDialog';
 import { ProjectList } from '../home/ProjectList';
+import { Walkthrough } from '../Walkthrough';
 import { bumpDataVersion, getStorage, useDataVersion, useStorageStatus } from '../storage-client';
 
 const PROJECT_TYPES = [
@@ -94,6 +95,7 @@ export function HomeScreen() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
+      <Walkthrough id="home" />
       <h1 className="text-2xl font-semibold">Media Studio</h1>
       <p className="mt-2 text-fg-muted">
         A privacy-first image and video editor. Everything runs in your browser; nothing you open is

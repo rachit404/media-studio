@@ -27,7 +27,7 @@ Ordered by value for effort. "Done" means built, tested and merged on `feat/v2-f
 | F3 | Keyboard control of the preview box: rotate and scale with keys, not only arrows to move | Closes the pointer-only gap | A11Y-3 | done |
 | F4 | Keyboard and pointer moving of keyframes on the timeline | Closes the other pointer-only gap | A11Y-3, VID-12 | done |
 | F5 | Command palette (Ctrl+K): search every command by name, run it, see its key | Reaches any command without knowing the key | A11Y-2, UX-1 | done |
-| F6 | First-run walkthrough: three dismissible steps on the start screen and in each editor | Onboarding | UX-5 | planned |
+| F6 | First-run walkthrough: three dismissible steps on the start screen and in each editor | Onboarding | UX-5 | done |
 | F7 | Export dialog: a summary line ("MP4, 1920 x 1080, 30 fps, about 120 MB, about 3 minutes") and a "test export" of the first five seconds | Long exports are a commitment | EXP-2, EXP-4 | planned |
 | F8 | High-contrast theme from the same token file | Low-vision users | A11Y-1, PLAT-5 | planned |
 | F9 | Narrow layout below 1024 px: panels become tabs | Small windows and tablets | PLAT-6 (stretch) | planned |
