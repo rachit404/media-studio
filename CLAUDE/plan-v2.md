@@ -62,3 +62,26 @@ frames, E2 captions). No real account is used in automated tests.
 Rules for all C steps: no `any`; secrets never reach the browser or logs; every post needs Approve by default; publishing only
 (no automated likes, follows, comments, messages); `pnpm check` and the full end-to-end suite stay green; manual smoke tests with
 real test accounts are done by the owner and never run in CI.
+
+## Config-based features (basic free, dedicated by config)
+
+Added 2026-11-19 at the owner's request. Design, the first classification of features, the config sketch, tests and the decisions
+still needed: [docs/v2/feature-config.md](../docs/v2/feature-config.md) and [ADR-0022](../docs/adr/0022-config-based-features.md)
+(proposed). Basic features stay free and cannot be switched off by any config (the floor); dedicated features (AI editing, YouTube
+and Instagram upkeep, publishing queue, automation) exist only when a config enables them and grants their permissions.
+**K1 to K3 come before the connected-publishing steps C1 to C9**, so those features are born config-gated. The project document
+format does not change.
+
+| #   | Step                         | Branch                     | What it delivers                                                                                                                                                                                                                                                                      | Depends on | Status  |
+| --- | ---------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- |
+| K0  | Decisions and ADR            | docs on `feat/v2-frontend` | Owner answers the six questions in the design; ADR-0022 accepted                                                                                                                                                                                                                      | owner      | planned |
+| K1  | `packages/features`          | `feat/v2-k1-features`      | Schema `media-studio-features/1`, validator with exact error paths, layer merge, permission check, floor list, feature registry, `features.default.json`; unit tests incl. "every feature has a default and the floor cannot be disabled"                                             | K0         | planned |
+| K2  | Inventory and classification | `feat/v2-k2-inventory`     | Every existing feature gets a descriptor and tier (basic or dedicated) in the registry; options schemas for export, storage, themes, shortcuts, walkthrough; no behaviour change                                                                                                      | K1         | planned |
+| K3  | App integration              | `feat/v2-k3-gating`        | `FeaturesProvider` and `useFeature(id)`; menus, commands, palette, shortcuts and settings panels follow the config; dedicated features lazy-loaded and absent when off; dependency-cruiser rule: only the provider reads config; e2e for no config, enabling config and broken config | K2         | planned |
+| K4  | Settings > Features          | `feat/v2-k4-settings`      | List of features with tier, status and the reason when off; where each option came from; validation errors; Import, Export, Reset; axe check                                                                                                                                          | K3         | planned |
+| K5  | Options migration            | `feat/v2-k5-options`       | Theme, shortcuts, export part length, walkthrough state and similar move to the options model as the user layer; old `localStorage` keys read once and migrated; tests that nobody loses settings                                                                                     | K3         | planned |
+| K6  | Bridge enforcement           | `feat/v2-k6-bridge`        | The bridge reads the same schema and `bridge.config.json`, checks permissions on every route, secrets by `secretRef` only; tests with allowed and denied calls                                                                                                                        | K1, C2     | planned |
+| K7  | Docs and checks              | `feat/v2-k7-docs`          | User guide section "Configuration", example configs, `pnpm check` gate (registry versus defaults, defaults versus schema), changelog                                                                                                                                                  | K4 to K6   | planned |
+
+Order with the other v2 work: finish the manual test (step 2), then K0 to K3, then C0 to C9 (K4, K5 and K6 can run beside C steps
+as soon as their dependencies are done), then the remaining engine steps as in the first table.
