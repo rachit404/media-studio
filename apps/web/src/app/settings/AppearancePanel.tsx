@@ -20,6 +20,7 @@ const TOKEN_SWATCHES = [
 const THEMES: readonly { id: Theme; label: string }[] = [
   { id: 'dark', label: 'Dark' },
   { id: 'light', label: 'Light' },
+  { id: 'high-contrast', label: 'High contrast' },
 ];
 
 export function AppearancePanel() {

@@ -4,7 +4,7 @@
   var theme = 'dark';
   try {
     var stored = window.localStorage.getItem('ms-theme');
-    if (stored === 'light' || stored === 'dark') {
+    if (stored === 'light' || stored === 'dark' || stored === 'high-contrast') {
       theme = stored;
     } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
       theme = 'light';

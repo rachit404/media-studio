@@ -9,9 +9,9 @@
  * (bg-surface, text-fg, border-line ...), never raw palette colours: Tailwind's default palette is
  * removed below and a lint rule rejects raw colours, so there is no way around the tokens.
  *
- * Dark is the default theme. The light theme overrides the same variables under [data-theme='light'].
+ * Dark is the default theme. The light and high-contrast themes override the same variables under [data-theme='light'].
  * Do not use `@theme inline` for themed colours: it would bake values into utilities and break overrides.
- * Colours are OKLCH. scripts/check-theme-contrast.mjs verifies WCAG contrast for both themes in CI.
+ * Colours are OKLCH. scripts/check-theme-contrast.mjs verifies WCAG contrast for every theme in CI.
  */
 @theme static {
   --color-*: initial;
@@ -84,6 +84,36 @@
   --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.12), 0 4px 16px oklch(0 0 0 / 0.1);
 }
 
+/*
+ * High contrast: black and white with bright accents. Text reaches 7:1 (WCAG AAA) on every surface,
+ * borders and focus rings 3:1 or more. Same variables as the other themes; the check script enforces it.
+ */
+:root[data-theme='high-contrast'] {
+  --color-surface: oklch(0 0 0);
+  --color-surface-raised: oklch(0.14 0 0);
+  --color-surface-sunken: oklch(0 0 0);
+  --color-line: oklch(0.7 0 0);
+  --color-line-strong: oklch(0.92 0 0);
+
+  --color-fg: oklch(1 0 0);
+  --color-fg-muted: oklch(0.92 0 0);
+
+  --color-accent: oklch(0.9 0.17 100);
+  --color-on-accent: oklch(0 0 0);
+  --color-success: oklch(0.88 0.2 150);
+  --color-warning: oklch(0.92 0.17 85);
+  --color-danger: oklch(0.82 0.19 25);
+
+  --color-ring: oklch(0.92 0.15 200);
+  --color-selection: oklch(0.38 0.14 255);
+
+  --color-track-video: oklch(0.8 0.13 255);
+  --color-track-audio: oklch(0.8 0.15 160);
+  --color-canvas: oklch(0.3 0 0);
+
+  --shadow-panel: 0 0 0 1px oklch(0.92 0 0);
+}
+
 /* Non-colour tokens that Tailwind has no namespace for */
 :root {
   color-scheme: dark;
@@ -109,6 +139,10 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
+}
+
+:root[data-theme='high-contrast'] :focus-visible {
+  outline-width: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

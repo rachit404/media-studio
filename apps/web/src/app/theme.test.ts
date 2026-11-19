@@ -5,6 +5,7 @@ describe('parseTheme', () => {
   it('accepts only known themes', () => {
     expect(parseTheme('dark')).toBe('dark');
     expect(parseTheme('light')).toBe('light');
+    expect(parseTheme('high-contrast')).toBe('high-contrast');
     expect(parseTheme('sepia')).toBeNull();
     expect(parseTheme(null)).toBeNull();
     expect(parseTheme(undefined)).toBeNull();
@@ -16,6 +17,11 @@ describe('resolveTheme', () => {
   it('prefers a valid stored value over the OS preference', () => {
     expect(resolveTheme('dark', true)).toBe('dark');
     expect(resolveTheme('light', false)).toBe('light');
+  });
+
+  it('keeps a stored high-contrast choice whatever the OS prefers', () => {
+    expect(resolveTheme('high-contrast', true)).toBe('high-contrast');
+    expect(resolveTheme('high-contrast', false)).toBe('high-contrast');
   });
 
   it('ignores corrupted stored values', () => {
@@ -36,5 +42,9 @@ describe('nextTheme', () => {
   it('toggles between the two themes', () => {
     expect(nextTheme('dark')).toBe('light');
     expect(nextTheme('light')).toBe('dark');
+  });
+
+  it('never enters high contrast and leaves it to dark', () => {
+    expect(nextTheme('high-contrast')).toBe('dark');
   });
 });
