@@ -6,18 +6,59 @@ import {
   CanvasSource,
   Mp4OutputFormat,
   Output,
+  WebMOutputFormat,
   canEncodeAudio,
   canEncodeVideo,
+  type AudioCodec,
+  type VideoCodec,
 } from 'mediabunny';
 
-export interface Mp4WriterOptions {
+/** The files export can make. */
+export type ContainerFormat = 'mp4' | 'webm';
+
+/** Whether to ask the browser for a hardware or a software encoder. It is a preference; the browser may decide otherwise. */
+export type HardwarePreference = 'no-preference' | 'prefer-hardware' | 'prefer-software';
+
+export interface FormatInfo {
+  label: string;
+  video: VideoCodec;
+  audio: AudioCodec;
+  mime: string;
+  extension: string;
+  /** Sample rates the sound encoder takes; others are converted to the first one. */
+  audioRates: readonly number[] | null;
+}
+
+export const FORMATS: Readonly<Record<ContainerFormat, FormatInfo>> = {
+  mp4: {
+    label: 'MP4 (H.264 and AAC)',
+    video: 'avc',
+    audio: 'aac',
+    mime: 'video/mp4',
+    extension: 'mp4',
+    audioRates: null,
+  },
+  webm: {
+    label: 'WebM (VP9 and Opus)',
+    video: 'vp9',
+    audio: 'opus',
+    mime: 'video/webm',
+    extension: 'webm',
+    // Opus only takes these; export mixes at the first one for WebM.
+    audioRates: [48_000, 24_000, 16_000, 12_000, 8_000],
+  },
+};
+
+export interface VideoWriterOptions {
   canvas: OffscreenCanvas | HTMLCanvasElement;
   width: number;
   height: number;
   /** Frames per second, as a number (29.97 for 30000/1001). */
   frameRate: number;
+  format: ContainerFormat;
   /** Bits per second of the picture. */
   videoBitrate: number;
+  hardware: HardwarePreference;
   /** Null for a file without sound. */
   audio: { sampleRate: number; bitrate: number } | null;
 }
@@ -28,36 +69,41 @@ export function defaultVideoBitrate(width: number, height: number, frameRate: nu
 }
 
 /**
- * Writes an MP4 with H.264 picture and AAC sound. The picture is whatever is on `canvas` when `addVideoFrame` is
- * called. The file is built in memory (stream-to-disk arrives with the export milestone), so very long exports are
- * limited by memory.
+ * Writes an MP4 (H.264 and AAC) or a WebM (VP9 and Opus). The picture is whatever is on `canvas` when
+ * `addVideoFrame` is called. The file is built in memory, so very long exports are limited by memory.
  */
-export class Mp4Writer {
+export class VideoWriter {
   private constructor(
-    private readonly output: Output<Mp4OutputFormat, BufferTarget>,
+    private readonly output: Output,
     private readonly target: BufferTarget,
     private readonly video: CanvasSource,
     private readonly sound: AudioSampleSource | null,
     private readonly sampleRate: number,
+    private readonly format: ContainerFormat,
   ) {}
 
   /** Check that this browser can encode the formats, then start the file. Throws an AppError when it cannot. */
-  static async create(options: Mp4WriterOptions): Promise<Mp4Writer> {
-    const videoOk = await canEncodeVideo('avc', {
+  static async create(options: VideoWriterOptions): Promise<VideoWriter> {
+    const info = FORMATS[options.format];
+    const videoOk = await canEncodeVideo(info.video, {
       width: options.width,
       height: options.height,
       bitrate: options.videoBitrate,
       frameRate: options.frameRate,
+      hardwareAcceleration: options.hardware,
     });
     if (!videoOk) {
       throw new AppError({
         code: 'unsupported-codec',
-        message: 'This browser cannot encode H.264 video at this size.',
-        hint: 'Use a smaller size, or open the project in Chrome or Edge on a computer with hardware video encoding.',
+        message: `This browser cannot encode ${info.label.split(' (')[0] ?? 'this'} video at this size.`,
+        hint:
+          options.hardware === 'no-preference'
+            ? 'Use a smaller size or another format, or open the project in Chrome or Edge.'
+            : 'Set the encoder to automatic, use a smaller size, or choose another format.',
       });
     }
     if (options.audio) {
-      const audioOk = await canEncodeAudio('aac', {
+      const audioOk = await canEncodeAudio(info.audio, {
         numberOfChannels: 2,
         sampleRate: options.audio.sampleRate,
         bitrate: options.audio.bitrate,
@@ -65,18 +111,28 @@ export class Mp4Writer {
       if (!audioOk) {
         throw new AppError({
           code: 'unsupported-codec',
-          message: 'This browser cannot encode AAC sound.',
-          hint: 'Mute or remove the audio tracks, or use Chrome or Edge.',
+          message: `This browser cannot encode ${info.audio.toUpperCase()} sound.`,
+          hint: 'Mute or remove the audio tracks, choose another format, or use Chrome or Edge.',
         });
       }
     }
     const target = new BufferTarget();
-    const output = new Output({ format: new Mp4OutputFormat({ fastStart: 'in-memory' }), target });
-    const video = new CanvasSource(options.canvas, { codec: 'avc', bitrate: options.videoBitrate });
+    const output = new Output({
+      format:
+        options.format === 'mp4'
+          ? new Mp4OutputFormat({ fastStart: 'in-memory' })
+          : new WebMOutputFormat(),
+      target,
+    });
+    const video = new CanvasSource(options.canvas, {
+      codec: info.video,
+      bitrate: options.videoBitrate,
+      hardwareAcceleration: options.hardware,
+    });
     output.addVideoTrack(video, { frameRate: options.frameRate });
     let sound: AudioSampleSource | null = null;
     if (options.audio) {
-      sound = new AudioSampleSource({ codec: 'aac', bitrate: options.audio.bitrate });
+      sound = new AudioSampleSource({ codec: info.audio, bitrate: options.audio.bitrate });
       output.addAudioTrack(sound);
     }
     try {
@@ -88,7 +144,14 @@ export class Mp4Writer {
         cause: error,
       });
     }
-    return new Mp4Writer(output, target, video, sound, options.audio?.sampleRate ?? 48_000);
+    return new VideoWriter(
+      output,
+      target,
+      video,
+      sound,
+      options.audio?.sampleRate ?? 48_000,
+      options.format,
+    );
   }
 
   async addVideoFrame(timestampUs: number, durationUs: number): Promise<void> {
@@ -98,7 +161,7 @@ export class Mp4Writer {
       throw new AppError({
         code: 'encoder-error',
         message: 'The video encoder stopped working.',
-        hint: 'Try a smaller size, or close other tabs that use the camera or video.',
+        hint: 'Try a smaller size, another format, or close other tabs that use the camera or video.',
         cause: error,
       });
     }
@@ -139,7 +202,7 @@ export class Mp4Writer {
         message: 'The video file could not be finished.',
       });
     }
-    return new Blob([buffer], { type: 'video/mp4' });
+    return new Blob([buffer], { type: FORMATS[this.format].mime });
   }
 
   async cancel(): Promise<void> {

@@ -4,7 +4,7 @@ import {
   hasExportAudio,
   type ExportDependencies,
 } from '@media-studio/engine-video';
-import { AudioFileReader, Mp4Writer, VideoSource } from '@media-studio/media-io';
+import { AudioFileReader, VideoSource, VideoWriter } from '@media-studio/media-io';
 import { OffscreenRenderer, rasterMetrics } from '@media-studio/render';
 import type { ExportEvent, ExportJob, ExportRequest } from './export-protocol';
 
@@ -39,7 +39,9 @@ async function run(job: ExportJob): Promise<void> {
   try {
     renderer = new OffscreenRenderer(settings.width, settings.height);
     const withAudio = hasExportAudio(job.content, job.assets);
-    const writer = await Mp4Writer.create({
+    const writer = await VideoWriter.create({
+      format: settings.format,
+      hardware: settings.hardware,
       canvas: renderer.canvas,
       width: settings.width,
       height: settings.height,

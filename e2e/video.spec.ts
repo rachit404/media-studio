@@ -1071,3 +1071,89 @@ test.describe('J, K and L shuttle and the master meter', () => {
     await expect(left).toHaveAttribute('aria-valuetext', 'silent');
   });
 });
+
+test.describe('export settings', () => {
+  test('presets and details change what the dialog says, and unavailable choices are explained', async ({
+    page,
+  }) => {
+    await createVideoProject(page, 'Export settings');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4'); // 2 s at 25 fps
+    await addToTimeline(page, 'blue.mp4'); // 3 s
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await expect(dialog.getByLabel('Preset')).toHaveValue('web');
+    await expect(dialog).toContainText('125'); // 5 s at 25 fps
+    await expect(dialog).toContainText('MP4 (H.264 and AAC)');
+
+    // A smaller preset never enlarges the 320 x 240 sequence.
+    await dialog.getByLabel('Preset').selectOption('small');
+    await expect(dialog).toContainText('320 × 240');
+
+    // Details: another frame rate changes the number of frames, and the preset becomes custom.
+    await dialog.getByText('More settings').click();
+    await dialog.getByLabel('Frame rate').selectOption('60');
+    await expect(dialog).toContainText('300'); // 5 s at 60 fps
+    await expect(dialog.getByLabel('Preset')).toHaveValue('custom');
+    await dialog.getByLabel('Preset').selectOption('web');
+    await expect(dialog).toContainText('125');
+
+    await dialog.getByLabel('Format').selectOption('webm');
+    await expect(dialog).toContainText('WebM (VP9 and Opus)');
+    await expect(dialog.getByLabel('Preset')).toHaveValue('custom');
+  });
+
+  test.describe('in the exported file', () => {
+    test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+    test('a WebM export is VP9 and Opus with the right picture, frames and length', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(150_000);
+      await createVideoProject(page, 'WebM export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4'); // 2 s of red with a tone
+
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByLabel('Preset').selectOption('webm');
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download .*\.webm$/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('export.webm');
+      await (await downloading).saveAs(file);
+
+      const facts = probe(file);
+      expect(facts.video).toMatchObject({ codec_name: 'vp9', width: 320, height: 240 });
+      expect(facts.audio?.codec_name).toBe('opus');
+      expect(Number(facts.video?.nb_read_frames)).toBe(50);
+      expect(facts.duration).toBeGreaterThan(1.9);
+      expect(facts.duration).toBeLessThan(2.3);
+      expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+      expect(meanVolume(file, 0.2, 1.5)).toBeGreaterThan(-35);
+    });
+
+    test('a 60 fps export of a 25 fps sequence has twice and a half the frames', async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(150_000);
+      await createVideoProject(page, 'Frame rate export');
+      await importMedia(page, [media.red]);
+      await addToTimeline(page, 'red.mp4'); // 2 s
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Export video' });
+      await dialog.getByText('More settings').click();
+      await dialog.getByLabel('Frame rate').selectOption('60');
+      await dialog.getByRole('button', { name: 'Start export' }).click();
+      const link = dialog.getByRole('link', { name: /^Download/ });
+      await expect(link).toBeVisible({ timeout: 90_000 });
+      const downloading = page.waitForEvent('download');
+      await link.click();
+      const file = testInfo.outputPath('sixty.mp4');
+      await (await downloading).saveAs(file);
+      expect(Number(probe(file).video?.nb_read_frames)).toBe(120);
+    });
+  });
+});

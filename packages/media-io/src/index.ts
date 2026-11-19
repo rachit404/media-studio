@@ -18,5 +18,12 @@ export type { AudioSlice, BufferPlacement } from './audio-player';
 export { VideoSource } from './video-source';
 export type { DecodedFrame } from './video-source';
 export { AudioFileReader } from './audio-file-reader';
-export { Mp4Writer, defaultVideoBitrate } from './mp4-writer';
-export type { Mp4WriterOptions } from './mp4-writer';
+export { FORMATS, VideoWriter, defaultVideoBitrate } from './video-writer';
+export type {
+  ContainerFormat,
+  FormatInfo,
+  HardwarePreference,
+  VideoWriterOptions,
+} from './video-writer';
+export { probeFormats } from './codec-probe';
+export type { FormatSupport } from './codec-probe';

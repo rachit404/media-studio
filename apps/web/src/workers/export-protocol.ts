@@ -1,4 +1,5 @@
-import type { Asset, ErrorCode, FrameRate, VideoContent } from '@media-studio/core';
+import type { Asset, ErrorCode, VideoContent } from '@media-studio/core';
+import type { ExportSettings } from '../app/project/video/export-settings';
 
 /** What the export worker is asked to do. Everything here can be cloned between threads. */
 export interface ExportJob {
@@ -8,14 +9,7 @@ export interface ExportJob {
   files: Record<string, Blob>;
   /** Export only this part of the sequence (timeline microseconds); absent = all of it. */
   range?: { start: number; end: number };
-  settings: {
-    width: number;
-    height: number;
-    fps: FrameRate;
-    sampleRate: number;
-    videoBitrate: number;
-    audioBitrate: number;
-  };
+  settings: ExportSettings;
 }
 
 export type ExportRequest = { type: 'start'; job: ExportJob } | { type: 'cancel' };
