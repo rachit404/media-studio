@@ -1,10 +1,12 @@
 import { AppError, toAppError } from '@media-studio/core';
+import { fpsValue, sequenceDuration } from '@media-studio/core';
 import {
+  exportFrameCount,
   exportSequence,
   hasExportAudio,
   type ExportDependencies,
 } from '@media-studio/engine-video';
-import { AudioFileReader, VideoSource, VideoWriter } from '@media-studio/media-io';
+import { AudioFileReader, VideoSource, VideoWriter, verifyExport } from '@media-studio/media-io';
 import { OffscreenRenderer, rasterMetrics } from '@media-studio/render';
 import type { ExportEvent, ExportJob, ExportRequest } from './export-protocol';
 
@@ -86,6 +88,22 @@ async function run(job: ExportJob): Promise<void> {
       ...(job.range ? { range: job.range } : {}),
       onProgress: (done, total) => send({ type: 'progress', done, total }),
     });
+    if (job.verify) {
+      send({ type: 'verifying' });
+      const length = job.range
+        ? Math.min(job.range.end, sequenceDuration(job.content)) - job.range.start
+        : sequenceDuration(job.content);
+      await verifyExport(blob, {
+        container: settings.format,
+        videoCodec: settings.format === 'mp4' ? 'avc' : 'vp9',
+        width: settings.width,
+        height: settings.height,
+        frameCount: exportFrameCount(length, settings.fps),
+        frameRate: fpsValue(settings.fps),
+        durationSeconds: length / 1_000_000,
+        audio: withAudio ? { sampleRate: settings.sampleRate } : null,
+      });
+    }
     send({ type: 'done', blob });
   } catch (error) {
     const appError = toAppError(error);

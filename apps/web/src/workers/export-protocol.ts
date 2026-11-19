@@ -9,6 +9,8 @@ export interface ExportJob {
   files: Record<string, Blob>;
   /** Export only this part of the sequence (timeline microseconds); absent = all of it. */
   range?: { start: number; end: number };
+  /** Open the finished file again and check it against what was asked for (EXP-7). */
+  verify?: boolean;
   settings: ExportSettings;
 }
 
@@ -16,5 +18,6 @@ export type ExportRequest = { type: 'start'; job: ExportJob } | { type: 'cancel'
 
 export type ExportEvent =
   | { type: 'progress'; done: number; total: number }
+  | { type: 'verifying' }
   | { type: 'done'; blob: Blob }
   | { type: 'error'; code: ErrorCode; message: string; hint?: string };

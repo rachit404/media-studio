@@ -36,6 +36,7 @@ import {
 type Phase =
   | { name: 'settings' }
   | { name: 'working'; done: number; total: number }
+  | { name: 'verifying' }
   | { name: 'finished'; url: string; bytes: number }
   | { name: 'failed'; error: AppError };
 
@@ -102,9 +103,11 @@ export function ExportVideoDialog({
     audio: useId(),
     hardware: useId(),
     range: useId(),
+    verify: useId(),
   };
   const [choices, setChoices] = useState<ExportChoices>(startingChoices);
   const [limitToRange, setLimitToRange] = useState(true);
+  const [verify, setVerify] = useState(true);
   const [phase, setPhase] = useState<Phase>({ name: 'settings' });
   const [support, setSupport] = useState<Record<ContainerFormat, FormatSupport> | null>(null);
   const running = useRef<RunningExport | null>(null);
@@ -172,6 +175,12 @@ export function ExportVideoDialog({
           setPhase({ name: 'working', done, total });
         },
         range,
+        {
+          verify,
+          onVerifying: () => {
+            setPhase({ name: 'verifying' });
+          },
+        },
       );
       running.current = job;
       job.result
@@ -357,6 +366,17 @@ export function ExportVideoDialog({
               {`Only the part between the in and out points (${formatTimecode(marked.start, content.sequence.fps)} to ${formatTimecode(marked.end, content.sequence.fps)})`}
             </label>
           )}
+          <label htmlFor={ids.verify} className="flex items-center gap-2 text-sm">
+            <input
+              id={ids.verify}
+              type="checkbox"
+              checked={verify}
+              onChange={(event) => {
+                setVerify(event.target.checked);
+              }}
+            />
+            Check the finished file (size, frames, length and sound)
+          </label>
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
             <dt className="text-fg-muted">Picture</dt>
             <dd>
@@ -437,6 +457,14 @@ export function ExportVideoDialog({
               Cancel export
             </Button>
           </div>
+        </div>
+      )}
+
+      {phase.name === 'verifying' && (
+        <div className="space-y-4">
+          <p role="status" className="text-sm">
+            Checking the finished file…
+          </p>
         </div>
       )}
 

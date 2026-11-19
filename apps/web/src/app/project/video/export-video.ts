@@ -19,6 +19,7 @@ export function startVideoExport(
   settings: ExportSettings,
   onProgress: (done: number, total: number) => void,
   range: { start: number; end: number } | null = null,
+  options: { verify?: boolean; onVerifying?: () => void } = {},
 ): RunningExport {
   const content = project.content;
   if (content.kind !== 'video') throw new Error('Not a video project');
@@ -33,6 +34,7 @@ export function startVideoExport(
   worker.addEventListener('message', (message: MessageEvent<ExportEvent>) => {
     const event = message.data;
     if (event.type === 'progress') onProgress(event.done, event.total);
+    else if (event.type === 'verifying') options.onVerifying?.();
     else if (event.type === 'done') settle({ blob: event.blob });
     else {
       settle({
@@ -72,6 +74,7 @@ export function startVideoExport(
       assets,
       files,
       ...(range ? { range } : {}),
+      ...(options.verify ? { verify: true } : {}),
       settings,
     };
     const request: ExportRequest = { type: 'start', job };
