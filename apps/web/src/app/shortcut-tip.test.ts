@@ -21,9 +21,9 @@ describe('shortcut tooltips', () => {
 
   it('follows a rebinding, and shows the name alone when no key is left', () => {
     const own = new ShortcutRegistry(COMMANDS);
-    own.rebind('timeline.split', ['Mod+K']);
+    own.rebind('timeline.split', ['Mod+Shift+K']);
     expect(shortcutTitle(own, 'timeline.split', false)).toBe(
-      'Split the clip at the playhead (Ctrl+K)',
+      'Split the clip at the playhead (Ctrl+Shift+K)',
     );
     expect(shortcutTitle(own, 'timeline.split', true)).toMatch(
       /^Split the clip at the playhead \(.*K\)$/,

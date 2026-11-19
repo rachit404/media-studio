@@ -4,6 +4,7 @@ import { readJson, writeJson } from './storage';
 export const COMMANDS = [
   { id: 'settings.open', label: 'Open settings', defaults: ['Mod+,'] },
   { id: 'settings.shortcuts', label: 'Show keyboard shortcuts', defaults: ['Mod+/'] },
+  { id: 'palette.open', label: 'Open the command palette', defaults: ['Mod+K'] },
   { id: 'theme.toggle', label: 'Toggle light and dark theme', defaults: ['Mod+Shift+L'] },
   { id: 'nav.home', label: 'Go to the home screen', defaults: ['Alt+H'] },
   { id: 'tool.move', label: 'Move tool', defaults: ['V'], scope: 'image' },

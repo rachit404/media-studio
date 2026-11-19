@@ -2,6 +2,7 @@ import type { CapabilityReport } from '@media-studio/capabilities';
 import { displayCombo } from '@media-studio/core';
 import { Button } from '@media-studio/ui';
 import { useState } from 'react';
+import { CommandPalette } from './CommandPalette';
 import { shortcutRegistry } from './commands';
 import { LimitationsBanner } from './LimitationsBanner';
 import { UpdateBanner } from './UpdateBanner';
@@ -17,6 +18,7 @@ import { toggleTheme } from './use-theme';
 export function AppShell({ report }: { report: CapabilityReport }) {
   const route = useHashRoute();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('appearance');
 
   const openSettings = (tab: SettingsTab) => {
@@ -25,16 +27,20 @@ export function AppShell({ report }: { report: CapabilityReport }) {
   };
 
   useGlobalShortcuts({
+    'palette.open': () => setPaletteOpen(true),
     'settings.open': () => openSettings('appearance'),
     'settings.shortcuts': () => openSettings('shortcuts'),
     'theme.toggle': toggleTheme,
     'nav.home': () => navigate({ name: 'home' }),
   });
 
-  const settingsHint = shortcutRegistry
-    .bindingsFor('settings.open')
-    .map((combo) => displayCombo(combo, isMacPlatform()))
-    .join(' or ');
+  const hintFor = (command: string) =>
+    shortcutRegistry
+      .bindingsFor(command)
+      .map((combo) => displayCombo(combo, isMacPlatform()))
+      .join(' or ');
+  const settingsHint = hintFor('settings.open');
+  const paletteHint = hintFor('palette.open');
 
   return (
     <div className="min-h-screen bg-surface text-fg">
@@ -42,10 +48,16 @@ export function AppShell({ report }: { report: CapabilityReport }) {
         <a href="#/" className="text-base font-semibold">
           Media Studio
         </a>
-        <Button variant="ghost" onPress={() => openSettings('appearance')}>
-          Settings
-          {settingsHint && <span className="text-xs text-fg-muted">{settingsHint}</span>}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onPress={() => setPaletteOpen(true)}>
+            Commands
+            {paletteHint && <span className="text-xs text-fg-muted">{paletteHint}</span>}
+          </Button>
+          <Button variant="ghost" onPress={() => openSettings('appearance')}>
+            Settings
+            {settingsHint && <span className="text-xs text-fg-muted">{settingsHint}</span>}
+          </Button>
+        </div>
       </header>
 
       <UpdateBanner />
@@ -55,6 +67,7 @@ export function AppShell({ report }: { report: CapabilityReport }) {
       {route.name === 'preview' && <WorkspaceScreen kind={route.kind} />}
       {route.name === 'project' && <ProjectScreen key={route.id} id={route.id} />}
 
+      <CommandPalette isOpen={paletteOpen} onOpenChange={setPaletteOpen} />
       <SettingsDialog
         isOpen={settingsOpen}
         onOpenChange={setSettingsOpen}
