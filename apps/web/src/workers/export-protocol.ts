@@ -11,6 +11,8 @@ export interface ExportJob {
   range?: { start: number; end: number };
   /** Open the finished file again and check it against what was asked for (EXP-7). */
   verify?: boolean;
+  /** Make the export in parts of about this many seconds, kept on disk so it can be continued (EXP-4). */
+  parts?: { projectId: string; seconds: number };
   /** Write the file to this file on disk as it is made, instead of building it in memory (EXP-5). */
   save?: FileSystemFileHandle;
   settings: ExportSettings;

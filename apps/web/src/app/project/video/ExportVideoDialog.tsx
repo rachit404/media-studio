@@ -18,6 +18,13 @@ import {
 import { Button, Dialog } from '@media-studio/ui';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { diagnostics } from '../../diagnostics';
+import {
+  PARTS_BY_DEFAULT_ABOVE,
+  discardWaitingExport,
+  findWaitingExport,
+  partSeconds,
+  type WaitingExport,
+} from './export-job-state';
 import { LARGE_EXPORT_BYTES, startVideoExport, type RunningExport } from './export-video';
 import {
   AUDIO_KBPS,
@@ -128,11 +135,14 @@ export function ExportVideoDialog({
     range: useId(),
     verify: useId(),
     disk: useId(),
+    parts: useId(),
   };
   const [choices, setChoices] = useState<ExportChoices>(startingChoices);
   const [limitToRange, setLimitToRange] = useState(true);
   const [verify, setVerify] = useState(true);
   const [toDisk, setToDisk] = useState(false);
+  const [inParts, setInParts] = useState<boolean | null>(null);
+  const [waiting, setWaiting] = useState<WaitingExport | null>(null);
   const startedAt = useRef(0);
   const [phase, setPhase] = useState<Phase>({ name: 'settings' });
   const [support, setSupport] = useState<Record<ContainerFormat, FormatSupport> | null>(null);
@@ -148,6 +158,10 @@ export function ExportVideoDialog({
   const preset = matchingPreset(choices);
   const chosenSupport = support?.[choices.format];
   const blocked = chosenSupport?.supported === false;
+  // Long exports are made in parts by default; the box can be changed either way.
+  const framesInPart = Math.max(1, Math.round(fpsValue(settings.fps) * partSeconds()));
+  const partsByDefault = estimate.frames > framesInPart * PARTS_BY_DEFAULT_ABOVE;
+  const makeInParts = inParts ?? (partsByDefault || waiting !== null);
 
   // Ask the browser what it can encode at this size, whenever the size or the rates change.
   useEffect(() => {
@@ -175,6 +189,18 @@ export function ExportVideoDialog({
     settings.audioBitrate,
     hasAudio,
   ]);
+
+  // An export of this project that was made in parts and stopped can be continued.
+  useEffect(() => {
+    if (!isOpen) return;
+    let stale = false;
+    void findWaitingExport(projectId).then((found) => {
+      if (!stale) setWaiting(found);
+    });
+    return () => {
+      stale = true;
+    };
+  }, [isOpen, projectId, phase.name]);
 
   // Forget the finished file (and stop any export) when the dialog closes.
   useEffect(() => {
@@ -235,6 +261,7 @@ export function ExportVideoDialog({
             setPhase({ name: 'verifying' });
           },
           ...(save ? { save } : {}),
+          ...(makeInParts ? { partSeconds: partSeconds() } : {}),
         },
       );
       running.current = job;
@@ -434,6 +461,33 @@ export function ExportVideoDialog({
               />
               Save straight to a file on disk (for long or large exports; no memory limit)
             </label>
+          )}
+          <label htmlFor={ids.parts} className="flex items-center gap-2 text-sm">
+            <input
+              id={ids.parts}
+              type="checkbox"
+              checked={makeInParts}
+              onChange={(event) => {
+                setInParts(event.target.checked);
+              }}
+            />
+            Make it in parts, so a stopped export can continue (for long exports)
+          </label>
+          {waiting && (
+            <p role="status" className="text-sm text-fg-muted">
+              {`An earlier export of this project stopped after ${String(waiting.done)} of ${String(waiting.total)} parts. If nothing has changed, starting the export again continues from there.`}{' '}
+              <button
+                type="button"
+                className="underline"
+                onClick={() => {
+                  void discardWaitingExport(projectId).then(() => {
+                    setWaiting(null);
+                  });
+                }}
+              >
+                Start over instead
+              </button>
+            </p>
           )}
           <label htmlFor={ids.verify} className="flex items-center gap-2 text-sm">
             <input

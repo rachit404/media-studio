@@ -53,6 +53,14 @@ export {
 export type { ClipCorners, FramePoint } from './transform-handles';
 export { SHUTTLE_RATES, formatRate, shuttle } from './shuttle';
 export type { ShuttleKey, ShuttleResult } from './shuttle';
+export {
+  createAudioWriter,
+  exportFingerprint,
+  exportInParts,
+  framesPerPart,
+  planParts,
+} from './export-parts';
+export type { AudioWriter, FinishedPart, PartPlan, PartsDependencies } from './export-parts';
 export { Transport } from './transport';
 export type { PlaybackStats, TransportOptions } from './transport';
 export { FramePump } from './frame-pump';

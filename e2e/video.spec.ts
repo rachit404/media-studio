@@ -1229,3 +1229,85 @@ test.describe('saving straight to a file on disk', () => {
     await expect(dialog.getByRole('alert').filter({ hasText: /./ })).toHaveCount(0);
   });
 });
+
+test.describe('exporting in parts', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  /** One second per part, so a few seconds of video make several parts. */
+  async function shortParts(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+      localStorage.setItem('ms-export-part-seconds', '1');
+    });
+  }
+
+  async function leftovers(page: Page): Promise<number> {
+    return page.evaluate(async () => {
+      const root = await navigator.storage.getDirectory();
+      try {
+        const exports = await root.getDirectoryHandle('media-studio-export');
+        let count = 0;
+        for await (const entry of exports.values()) count += entry.kind === 'directory' ? 1 : 0;
+        return count;
+      } catch {
+        return 0;
+      }
+    });
+  }
+
+  test('a five second export in five parts joins into one correct file, and leaves nothing behind', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(150_000);
+    await shortParts(page);
+    await createVideoProject(page, 'Parts export');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4'); // 0 s .. 2 s, with a tone
+    await addToTimeline(page, 'blue.mp4'); // 2 s .. 5 s, silent
+
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Make it in parts/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    const link = dialog.getByRole('link', { name: /^Download/ });
+    await expect(link).toBeVisible({ timeout: 120_000 });
+    const downloading = page.waitForEvent('download');
+    await link.click();
+    const file = testInfo.outputPath('parts.mp4');
+    await (await downloading).saveAs(file);
+
+    const facts = probe(file);
+    expect(facts.video).toMatchObject({ codec_name: 'h264', width: 320, height: 240 });
+    expect(Number(facts.video?.nb_read_frames)).toBe(125);
+    expect(facts.audio?.codec_name).toBe('aac');
+    expect(facts.duration).toBeGreaterThan(4.9);
+    expect(facts.duration).toBeLessThan(5.3);
+    // Red, then blue, with the seams between parts (every second) invisible in the colours.
+    expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 1.5)[0]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 2.5)[2]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 4.5)[2]).toBeGreaterThan(200);
+    // The tone plays through the first part boundary without a gap, and the rest is silent.
+    expect(meanVolume(file, 0.2, 1.5)).toBeGreaterThan(-35);
+    expect(meanVolume(file, 2.5, 2)).toBeLessThan(-60);
+    expect(await leftovers(page)).toBe(0);
+  });
+
+  test('cancelling an export in parts removes its parts', async ({ page }) => {
+    test.setTimeout(150_000);
+    await shortParts(page);
+    await createVideoProject(page, 'Parts cancel');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4');
+    await addToTimeline(page, 'blue.mp4');
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Make it in parts/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    await expect(dialog.getByRole('button', { name: 'Cancel export' })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel export' }).click();
+    await expect(dialog.getByRole('button', { name: 'Start export' })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect.poll(() => leftovers(page), { timeout: 10_000 }).toBe(0);
+  });
+});

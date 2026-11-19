@@ -6,6 +6,8 @@ export {
   isAssetPath,
   readArchive,
 } from './archive';
+export { EXPORT_JOB_ROOT, ExportJobStore, segmentCount } from './export-job';
+export type { ExportJobInit, ExportJobState } from './export-job';
 export { decodeText, encodeText, folderSize } from './fs-port';
 export type { FileSystemPort, FsEntry } from './fs-port';
 export { MemoryFileSystem } from './memory-fs';

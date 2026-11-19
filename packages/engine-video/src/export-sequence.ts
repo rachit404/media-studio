@@ -60,6 +60,10 @@ export interface ExportOptions {
    * starts at 0: picture and sound are taken from `start` on and written as if it were the beginning.
    */
   range?: { start: number; end: number };
+  /** Write no sound at all (the sound of a long export is made separately, once, over all of its parts). */
+  audio?: boolean;
+  /** Make exactly this many frames from the start of the range (a part of a long export). */
+  frames?: number;
   /** Called after every frame with the frames done and the total. */
   onProgress?: (done: number, total: number) => void;
 }
@@ -110,7 +114,7 @@ export async function exportSequence<F extends ExportFrame>(
   const duration = range
     ? Math.min(range.end, sequenceDuration(content)) - offset
     : sequenceDuration(content);
-  const total = exportFrameCount(duration, fps);
+  const total = options.frames ?? exportFrameCount(duration, fps);
   if (total === 0) {
     throw new AppError({
       code: 'invalid-project',
@@ -118,7 +122,7 @@ export async function exportSequence<F extends ExportFrame>(
       hint: 'Add a video or audio file to the timeline first.',
     });
   }
-  const withAudio = hasExportAudio(content, assets);
+  const withAudio = options.audio !== false && hasExportAudio(content, assets);
   const totalSamples = timeToSamples(duration, sampleRate);
   const sampleOffset = timeToSamples(offset, sampleRate);
   const blockSamples = Math.round(AUDIO_BLOCK_SECONDS * sampleRate);

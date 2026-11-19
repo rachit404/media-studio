@@ -26,6 +26,8 @@ export type {
   VideoWriterOptions,
   WriteChunk,
 } from './video-writer';
+export { assembleParts } from './assemble-parts';
+export type { AssembleOptions } from './assemble-parts';
 export { probeFormats } from './codec-probe';
 export type { FormatSupport } from './codec-probe';
 export {

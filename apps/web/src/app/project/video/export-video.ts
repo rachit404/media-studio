@@ -24,6 +24,8 @@ export function startVideoExport(
     onVerifying?: () => void;
     /** Write to this file on disk instead of building the video in memory. */
     save?: FileSystemFileHandle;
+    /** Make the export in parts of about this many seconds, kept so a stopped export can continue. */
+    partSeconds?: number;
   } = {},
 ): RunningExport {
   const content = project.content;
@@ -81,6 +83,7 @@ export function startVideoExport(
       ...(range ? { range } : {}),
       ...(options.verify ? { verify: true } : {}),
       ...(options.save ? { save: options.save } : {}),
+      ...(options.partSeconds ? { parts: { projectId, seconds: options.partSeconds } } : {}),
       settings,
     };
     const request: ExportRequest = { type: 'start', job };
