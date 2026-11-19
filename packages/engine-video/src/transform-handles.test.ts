@@ -6,8 +6,10 @@ import {
   MIN_SCALE,
   clipCorners,
   moveTransform,
+  rotateBy,
   rotateKnob,
   rotateTransform,
+  scaleBy,
   scaleTransform,
   textCorners,
   transformPivot,
@@ -177,5 +179,35 @@ describe('rotateKnob', () => {
     const other = rotateKnob(flipped, 40);
     near(other.x, W / 2);
     near(other.y, H + 40);
+  });
+});
+
+describe('keyboard turning and resizing', () => {
+  const base = {
+    x: 0,
+    y: 0,
+    scale: 1,
+    rotation: 0,
+    crop: { left: 0, top: 0, right: 0, bottom: 0 },
+  };
+
+  it('turns by the given degrees and stays within the limits of the document', () => {
+    expect(rotateBy(base, 15).rotation).toBe(15);
+    expect(rotateBy({ ...base, rotation: 10 }, -15).rotation).toBe(-5);
+    expect(rotateBy({ ...base, rotation: 355 }, 15).rotation).toBe(360);
+    expect(rotateBy({ ...base, rotation: -355 }, -15).rotation).toBe(-360);
+  });
+
+  it('resizes by a factor and stays within the limits', () => {
+    expect(scaleBy(base, 1.05).scale).toBeCloseTo(1.05);
+    expect(scaleBy({ ...base, scale: 2 }, 0.5).scale).toBe(1);
+    expect(scaleBy({ ...base, scale: 15.9 }, 2).scale).toBe(16);
+    expect(scaleBy({ ...base, scale: 0.011 }, 0.1).scale).toBe(0.01);
+  });
+
+  it('changes nothing else', () => {
+    const turned = rotateBy({ ...base, x: 0.2, scale: 2 }, 5);
+    expect(turned).toMatchObject({ x: 0.2, scale: 2, rotation: 5 });
+    expect(scaleBy({ ...base, rotation: 30 }, 2)).toMatchObject({ rotation: 30, scale: 2 });
   });
 });

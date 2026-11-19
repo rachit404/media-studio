@@ -159,3 +159,13 @@ export function rotateKnob(corners: ClipCorners, distance: number): FramePoint {
   const length = Math.hypot(away.x, away.y) || 1;
   return { x: mid.x + (away.x / length) * distance, y: mid.y + (away.y / length) * distance };
 }
+
+/** Turn a clip by `degrees` (clockwise when positive), kept within the document's limits of -360 to 360. */
+export function rotateBy(transform: ClipTransform, degrees: number): ClipTransform {
+  return { ...transform, rotation: clamp(transform.rotation + degrees, -360, 360) };
+}
+
+/** Make a clip larger or smaller by a factor (1.05 is 5% larger), kept within the document's limits. */
+export function scaleBy(transform: ClipTransform, factor: number): ClipTransform {
+  return { ...transform, scale: clamp(transform.scale * factor, MIN_SCALE, MAX_SCALE) };
+}

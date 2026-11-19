@@ -10,10 +10,13 @@ import {
   type VideoContent,
 } from '@media-studio/core';
 import {
+  ROTATION_SNAP,
   clipCorners,
   moveTransform,
+  rotateBy,
   rotateKnob,
   rotateTransform,
+  scaleBy,
   scaleTransform,
   textCorners,
   type ClipCorners,
@@ -206,6 +209,25 @@ export function TransformHandles({
   };
 
   const nudge = (event: KeyboardEvent<SVGElement>) => {
+    // Turn and resize from the keyboard (the corners and the knob are pointer-only): [ and ] turn by 1 degree (Shift:
+    // 15), - and + make it smaller or larger by 5% (Shift: 25%).
+    const turn: Record<string, number> = { '[': -1, ']': 1 };
+    const grow: Record<string, number> = { '-': 1, _: 1, '=': -1, '+': -1 };
+    const turning = turn[event.key];
+    if (turning !== undefined) {
+      event.preventDefault();
+      event.stopPropagation();
+      apply(transform, rotateBy(transform, turning * (event.shiftKey ? ROTATION_SNAP : 1)));
+      return;
+    }
+    const resizing = grow[event.key];
+    if (resizing !== undefined) {
+      event.preventDefault();
+      event.stopPropagation();
+      const factor = event.shiftKey ? 1.25 : 1.05;
+      apply(transform, scaleBy(transform, resizing === -1 ? factor : 1 / factor));
+      return;
+    }
     const step = event.shiftKey ? NUDGE_LARGE : NUDGE;
     const delta: Record<string, [number, number]> = {
       ArrowLeft: [-step, 0],
@@ -239,7 +261,7 @@ export function TransformHandles({
         points={outline}
         role="button"
         tabIndex={0}
-        aria-label="Move the selected clip. Arrow keys nudge it by one pixel, with Shift by ten."
+        aria-label="Move the selected clip. Arrow keys nudge it by one pixel, with Shift by ten. Left and right square brackets turn it, minus and plus resize it."
         data-testid="transform-move"
         className="pointer-events-auto cursor-move fill-transparent stroke-accent outline-none focus-visible:stroke-ring"
         strokeWidth={2}

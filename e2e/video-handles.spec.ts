@@ -94,6 +94,29 @@ test.describe('on-canvas transform handles', () => {
     await expect.poll(async () => Number(await x.inputValue())).toBeLessThan(0);
   });
 
+  test('square brackets turn the clip and minus and plus resize it, from the keyboard (F3)', async ({
+    page,
+  }) => {
+    await selectRedClip(page);
+    const move = page.getByTestId('transform-move');
+    await expect(move).toBeVisible({ timeout: 20_000 });
+    await move.focus();
+    const rotation = page.getByRole('spinbutton', { name: /^Rotation/ });
+    const scale = page.getByRole('spinbutton', { name: /^Scale/ });
+    await page.keyboard.press(']');
+    await page.keyboard.press('Shift+]');
+    await expect.poll(async () => Number(await rotation.inputValue())).toBe(16);
+    await page.keyboard.press('[');
+    await expect.poll(async () => Number(await rotation.inputValue())).toBe(15);
+    await page.keyboard.press('Shift+=');
+    await expect.poll(async () => Number(await scale.inputValue())).toBeGreaterThan(100);
+    await page.keyboard.press('-');
+    await page.keyboard.press('Shift+_');
+    await expect.poll(async () => Number(await scale.inputValue())).toBeLessThan(100);
+    // The accessible name of the box says how.
+    await expect(move).toHaveAccessibleName(/square brackets turn it/);
+  });
+
   test('a locked track shows no handles', async ({ page }) => {
     await selectRedClip(page);
     await expect(page.getByTestId('transform-handles')).toBeVisible({ timeout: 20_000 });
