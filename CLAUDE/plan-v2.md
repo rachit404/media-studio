@@ -37,3 +37,28 @@ the spike results in step 11, not before.
 - [ ] Docs, `CHANGELOG.md`, `docs/v2/plan.md` item state and this table updated
 - [ ] Known limitations written down
 - [ ] Merged `--no-ff` into `claude-takeover`
+
+## Connected publishing (LLM, YouTube channel automation, Instagram Reels)
+
+Added 2026-11-19 at the owner's request. Design, platform facts, risks and the decisions still needed:
+[docs/v2/connected-publishing.md](../docs/v2/connected-publishing.md) and [ADR-0021](../docs/adr/0021-connected-publishing.md) (proposed).
+The editor stays private and offline; everything here is optional and goes through a small bridge service the owner runs.
+Steps C1 to C9 start only after C0 (the owner's answers) and are best done after the editor items they depend on (E1 vertical
+frames, E2 captions). No real account is used in automated tests.
+
+| #   | Step                                   | Branch                        | What it delivers                                                                                                                                                                                                                                                       | Depends on | Status  |
+| --- | -------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- |
+| C0  | Decisions and ADR                      | `docs/` on `feat/v2-frontend` | Owner answers the six questions; ADR-0021 accepted; `SEC-1` amended for the connected build only                                                                                                                                                                       | owner      | planned |
+| C1  | LLM wrappers (`packages/llm`)          | `feat/v2-c1-llm`              | `LlmProvider` interface; adapters `openai-compatible` (OpenAI, Ollama, LM Studio, vLLM, OpenRouter...), `anthropic`, `gemini`, `mock`; timeouts, retries, cancel, JSON-schema output with one repair retry, usage log, budget limit; tests against a mock HTTP server  | C0         | planned |
+| C2  | Bridge skeleton (`apps/bridge`)        | `feat/v2-c2-bridge`           | Node service on 127.0.0.1, bridge token, CORS for the app origin only, encrypted secret store, health route, LLM proxy route, audit log; tests                                                                                                                         | C1         | planned |
+| C3  | Connections UI and the SEC-1 amendment | `feat/v2-c3-connections`      | Settings "Connections": bridge address and token, connect an LLM and test it, status of each account; connected-build CSP with the one bridge origin; e2e that the default build makes no outside request and the connected build only talks to the bridge             | C2         | planned |
+| C4  | Metadata assistant                     | `feat/v2-c4-metadata`         | Suggest titles, descriptions, tags, hashtags and chapters from text (captions from E2, clip names, the person's brief); editable, versioned prompts, text only                                                                                                         | C3, E2     | planned |
+| C5  | YouTube connector (spike, then code)   | `feat/v2-c5-youtube`          | Spike: current quota, private-upload rule, refresh-token lifetime. Then OAuth (code flow, PKCE, offline) in the bridge, channel info, resumable upload, scheduled publish, thumbnail, "YouTube video / Short" export presets; mock YouTube server for tests            | C3         | planned |
+| C6  | Instagram connector (spike, then code) | `feat/v2-c6-instagram`        | Spike: account type, login route, review needs, limits and video specs. Then OAuth and long-lived token refresh in the bridge, Reel container, resumable upload, status polling, publish, limit check; "Instagram Reel" export preset; mock Instagram server for tests | C3, E1     | planned |
+| C7  | Publishing queue and scheduler         | `feat/v2-c7-queue`            | Queue UI and bridge job runner: items (file, text, platform, time), Approve step, retries, rate-limit display, audit log, safe restart                                                                                                                                 | C5 or C6   | planned |
+| C8  | Automation recipes                     | `feat/v2-c8-recipes`          | "Weekly upload" style recipes: pick a project, export with a preset, LLM metadata, queue for approval; analytics read-only later                                                                                                                                       | C4, C7     | planned |
+| C9  | Hardening and docs                     | `feat/v2-c9-release`          | Security review of the bridge and token handling, revoke on disconnect, ToS checklist, manual smoke checklist for real test accounts, user guide section, changelog                                                                                                    | C8         | planned |
+
+Rules for all C steps: no `any`; secrets never reach the browser or logs; every post needs Approve by default; publishing only
+(no automated likes, follows, comments, messages); `pnpm check` and the full end-to-end suite stay green; manual smoke tests with
+real test accounts are done by the owner and never run in CI.
