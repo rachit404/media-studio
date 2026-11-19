@@ -12,6 +12,7 @@ import {
   joinClips,
   linkedGroup,
   moveClips,
+  moveKeyframesAt,
   nextMarker,
   previousMarker,
   setInOut,
@@ -260,6 +261,63 @@ export function Timeline({
       session.history.execute(deleteClips([selectedId], ripple));
       onSelect(null);
     });
+  // Keyframe diamonds: drag one along the clip, or press Alt+Left and Alt+Right on it (Shift: a second at a time).
+  const diamondDrag = useRef<{
+    pointerId: number;
+    startX: number;
+    time: number;
+    at: number;
+  } | null>(null);
+  const diamondMoved = useRef(false);
+  const frameUs = () => Math.round((US_PER_SECOND * fps.den) / fps.num);
+  const moveDiamond = (clip: Clip, from: number, to: number): number => {
+    const target = Math.min(clip.duration, Math.max(0, snapToFrame(to, fps)));
+    if (target === from) return from;
+    let moved = from;
+    run(() => {
+      session.history.execute(moveKeyframesAt(clip.id, from, target));
+      moved = target;
+    });
+    return moved;
+  };
+  const beginDiamondDrag = (event: PointerEvent<HTMLButtonElement>, clip: Clip, time: number) => {
+    if (event.button !== 0 || clip.start < 0) return;
+    diamondMoved.current = false;
+    diamondDrag.current = { pointerId: event.pointerId, startX: event.clientX, time, at: time };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const dragDiamond = (event: PointerEvent<HTMLButtonElement>, clip: Clip) => {
+    const drag = diamondDrag.current;
+    if (drag?.pointerId !== event.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    if (!diamondMoved.current && Math.abs(dx) < 4) return;
+    diamondMoved.current = true;
+    const wanted = drag.time + (dx / pxPerSecond) * US_PER_SECOND;
+    drag.at = moveDiamond(clip, drag.at, wanted);
+  };
+  const endDiamondDrag = (event: PointerEvent<HTMLButtonElement>) => {
+    if (diamondDrag.current?.pointerId !== event.pointerId) return;
+    diamondDrag.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    // The click that follows a drag is ignored; clear the flag once it has passed.
+    setTimeout(() => {
+      diamondMoved.current = false;
+    }, 0);
+  };
+  const moveDiamondWithKeys = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    clip: Clip,
+    time: number,
+  ) => {
+    if (!event.altKey || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const step = event.shiftKey ? US_PER_SECOND : frameUs();
+    moveDiamond(clip, time, time + (event.key === 'ArrowLeft' ? -step : step));
+  };
+
   const pickMarker = (marker: Marker | null) => {
     setSelectedMarkerId(marker?.id ?? null);
     if (marker) seekTo(marker.time);
@@ -821,14 +879,32 @@ export function Timeline({
                           </span>
                         </button>
                         {selectedId === clip.id &&
-                          keyframeTimes(clip).map(({ time, properties }) => (
+                          keyframeTimes(clip).map(({ time, properties }, diamondIndex) => (
                             <button
-                              key={time}
+                              key={`${properties.join('+')}:${String(diamondIndex)}`}
                               type="button"
                               data-testid="keyframe-diamond"
+                              onKeyDown={(event) => {
+                                moveDiamondWithKeys(event, clip, time);
+                              }}
+                              onPointerDown={(event) => {
+                                beginDiamondDrag(event, clip, time);
+                              }}
+                              onPointerMove={(event) => {
+                                dragDiamond(event, clip);
+                              }}
+                              onPointerUp={(event) => {
+                                endDiamondDrag(event);
+                              }}
+                              onPointerCancel={(event) => {
+                                endDiamondDrag(event);
+                              }}
                               aria-label={`Keyframe at ${formatTimecode(clip.start + time, fps)}: ${properties.join(', ')}`}
-                              onClick={() => seekTo(clip.start + time)}
-                              className="absolute z-10 grid size-6 -translate-x-1/2 place-items-center"
+                              onClick={() => {
+                                // A drag ends in a click: only a plain press moves the playhead.
+                                if (!diamondMoved.current) seekTo(clip.start + time);
+                              }}
+                              className="absolute z-10 grid size-6 -translate-x-1/2 touch-none place-items-center"
                               style={{
                                 left: left + (time / US_PER_SECOND) * pxPerSecond,
                                 top: ROW_HEIGHT - 28,

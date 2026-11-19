@@ -180,3 +180,57 @@ test.describe('keyframes (VID-12)', () => {
     await expect(timelineDiamonds(page)).toHaveCount(2);
   });
 });
+
+test.describe('moving keyframes on the timeline (F4)', () => {
+  test('a diamond moves with Alt+arrows by a frame and with Shift by a second, and one undo puts it back', async ({
+    page,
+  }) => {
+    await selectRedClip(page, 'Diamond keys');
+    await goToFrame(page, 25); // 1 s into the 2 s clip
+    await diamondX(page).click();
+    await expect(timelineDiamonds(page)).toHaveCount(1);
+    const diamond = timelineDiamonds(page).first();
+    await expect(diamond).toHaveAccessibleName(/Keyframe at 00:00:01:00/);
+    await diamond.focus();
+    await page.keyboard.press('Alt+ArrowRight');
+    await expect(timelineDiamonds(page).first()).toHaveAccessibleName(/Keyframe at 00:00:01:01/);
+    await page.keyboard.press('Alt+ArrowRight');
+    await page.keyboard.press('Alt+ArrowLeft');
+    await page.keyboard.press('Alt+ArrowLeft');
+    await page.keyboard.press('Alt+ArrowLeft');
+    await expect(timelineDiamonds(page).first()).toHaveAccessibleName(/Keyframe at 00:00:00:24/);
+    await page.keyboard.press('Alt+Shift+ArrowRight');
+    await expect(timelineDiamonds(page).first()).toHaveAccessibleName(/Keyframe at 00:00:01:24/);
+    // It stops at the end of the clip (2 s) instead of leaving it.
+    await page.keyboard.press('Alt+Shift+ArrowRight');
+    await expect(timelineDiamonds(page).first()).toHaveAccessibleName(/Keyframe at 00:00:02:00/);
+    await page.keyboard.press('Alt+Shift+ArrowRight');
+    await expect(timelineDiamonds(page).first()).toHaveAccessibleName(/Keyframe at 00:00:02:00/);
+    // All those moves were one undo step.
+    await page.getByRole('button', { name: /^Undo/ }).click();
+    await expect(timelineDiamonds(page).first()).toHaveAccessibleName(/Keyframe at 00:00:01:00/);
+  });
+
+  test('dragging a diamond with the pointer moves it, and a plain press still moves the playhead', async ({
+    page,
+  }) => {
+    await selectRedClip(page, 'Diamond drag');
+    await goToFrame(page, 10);
+    await diamondX(page).click();
+    const diamond = timelineDiamonds(page).first();
+    const box = await diamond.boundingBox();
+    if (!box) throw new Error('no diamond');
+    const y = box.y + box.height / 2;
+    const startX = box.x + box.width / 2;
+    await page.mouse.move(startX, y);
+    await page.mouse.down();
+    await page.mouse.move(startX + 30, y, { steps: 6 });
+    await page.mouse.up();
+    // It moved later than frame 10, and the playhead did not follow the drag.
+    const name = (await timelineDiamonds(page).first().getAttribute('aria-label')) ?? '';
+    expect(name).not.toContain('00:00:00:10');
+    await goToFrame(page, 0);
+    await timelineDiamonds(page).first().click();
+    await expect(page.getByTestId('clock')).not.toHaveText('00:00:00:00');
+  });
+});

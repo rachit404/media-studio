@@ -17,6 +17,7 @@ import {
   clearKeyframes,
   joinClips,
   moveKeyframe,
+  moveKeyframesAt,
   removeKeyframe,
   setClipLook,
   setClipSpeed,
@@ -448,5 +449,53 @@ describe('changing values at a moment of the clip', () => {
     expect(() => history.execute(setValuesAt('pic', 11 * S, { x: 0.5 }))).toThrow(
       /inside the clip/i,
     );
+  });
+});
+
+describe('moving the keyframes at one time together (F4)', () => {
+  it('moves the keyframes of every property at that time in one undo step', () => {
+    const history = setup();
+    history.execute(setKeyframe('pic', 'x', 2 * S, 0.5));
+    history.execute(setKeyframe('pic', 'opacity', 2 * S, 0.4));
+    history.execute(setKeyframe('pic', 'x', 6 * S, 1));
+    history.execute(moveKeyframesAt('pic', 2 * S, 3 * S));
+    const clip = clipOf(history, 'pic');
+    expect(clip.keyframes?.x?.map((f) => f.time)).toEqual([3 * S, 6 * S]);
+    expect(clip.keyframes?.opacity?.map((f) => f.time)).toEqual([3 * S]);
+    history.undo();
+    expect(clipOf(history, 'pic').keyframes?.x?.map((f) => f.time)).toEqual([2 * S, 6 * S]);
+    expect(clipOf(history, 'pic').keyframes?.opacity?.map((f) => f.time)).toEqual([2 * S]);
+  });
+
+  it('merges a drag into one undo step and keeps values and easings', () => {
+    const history = setup();
+    history.execute(setKeyframe('pic', 'scale', S, 2, 'ease-in'));
+    for (const to of [1.1 * S, 1.2 * S, 1.3 * S])
+      history.execute(moveKeyframesAt('pic', to - 0.1 * S, to));
+    expect(clipOf(history, 'pic').keyframes?.scale).toEqual([frame(1.3 * S, 2, 'ease-in')]);
+    history.undo();
+    expect(clipOf(history, 'pic').keyframes?.scale).toEqual([frame(S, 2, 'ease-in')]);
+  });
+
+  it('can pass other keyframes of other properties, but never land on one of the same property', () => {
+    const history = setup();
+    history.execute(setKeyframe('pic', 'x', S, 0));
+    history.execute(setKeyframe('pic', 'x', 2 * S, 1));
+    history.execute(setKeyframe('pic', 'opacity', S, 1));
+    history.execute(moveKeyframesAt('pic', S, 3 * S)); // x passes its own 2 s keyframe? no: x lands after it
+    expect(clipOf(history, 'pic').keyframes?.x?.map((f) => f.time)).toEqual([2 * S, 3 * S]);
+    expect(() => history.execute(moveKeyframesAt('pic', 3 * S, 2 * S))).toThrow(/already/i);
+  });
+
+  it('refuses a time outside the clip, a time with nothing to move, and a locked track', () => {
+    const history = setup();
+    history.execute(setKeyframe('pic', 'x', S, 0));
+    expect(() => history.execute(moveKeyframesAt('pic', S, 11 * S))).toThrow(/inside the clip/i);
+    expect(() => history.execute(moveKeyframesAt('pic', S, -1))).toThrow();
+    expect(() => history.execute(moveKeyframesAt('pic', 5 * S, 6 * S))).toThrow(/no keyframe/i);
+    expect(() => history.execute(moveKeyframesAt('nope', S, 2 * S))).toThrow();
+    history.execute(moveKeyframesAt('pic', S, S)); // to the same place: nothing happens
+    history.execute(setTrackState('V1', { locked: true }));
+    expect(() => history.execute(moveKeyframesAt('pic', S, 2 * S))).toThrow(/locked/i);
   });
 });

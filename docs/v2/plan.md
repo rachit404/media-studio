@@ -24,8 +24,8 @@ Ordered by value for effort. "Done" means built, tested and merged on `feat/v2-f
 | --- | --- | --- | --- | --- |
 | F1 | Tooltips that show shortcuts on the timeline and playback buttons | People find the keys while using the app | UX-5, UX-1 | done |
 | F2 | Helpful empty states: an empty timeline says what to do first | New users do not know where to start | UX-5 | done |
-| F3 | Keyboard control of the preview box: rotate and scale with keys, not only arrows to move | Closes the pointer-only gap | A11Y-3 | planned |
-| F4 | Keyboard and pointer moving of keyframes on the timeline | Closes the other pointer-only gap | A11Y-3, VID-12 | planned |
+| F3 | Keyboard control of the preview box: rotate and scale with keys, not only arrows to move | Closes the pointer-only gap | A11Y-3 | done |
+| F4 | Keyboard and pointer moving of keyframes on the timeline | Closes the other pointer-only gap | A11Y-3, VID-12 | done |
 | F5 | Command palette (Ctrl+K): search every command by name, run it, see its key | Reaches any command without knowing the key | A11Y-2, UX-1 | planned |
 | F6 | First-run walkthrough: three dismissible steps on the start screen and in each editor | Onboarding | UX-5 | planned |
 | F7 | Export dialog: a summary line ("MP4, 1920 x 1080, 30 fps, about 120 MB, about 3 minutes") and a "test export" of the first five seconds | Long exports are a commitment | EXP-2, EXP-4 | planned |

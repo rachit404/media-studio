@@ -302,6 +302,7 @@ export {
   addMarker,
   clearKeyframes,
   moveKeyframe,
+  moveKeyframesAt,
   removeKeyframe,
   setKeyframe,
   setValuesAt,

@@ -834,6 +834,49 @@ export function moveKeyframe(
   };
 }
 
+/**
+ * Move every keyframe that sits at `from` (on any property of the clip) to `to`, in one undo step: the diamond on the
+ * timeline stands for all of them. Refused when `to` is outside the clip or already has a keyframe on one of the same
+ * properties. Dragging merges into one undo step.
+ */
+export function moveKeyframesAt(
+  clipId: string,
+  from: number,
+  to: number,
+): Command<ProjectDocument> {
+  return {
+    label: 'Move keyframe',
+    coalesceKey: `keyframes-move:${clipId}`,
+    apply(draft) {
+      const content = videoDraft(draft);
+      const snapshot = before(content);
+      const clip = snapshot.clips[clipId];
+      if (!clip) throw new RangeError(`Clip ${clipId} does not exist`);
+      assertEditable(snapshot, [clip]);
+      if (!Number.isSafeInteger(to) || to < 0 || to > clip.duration) {
+        throw invalid('A keyframe has to be inside the clip.');
+      }
+      const moving = KEYFRAME_PROPERTIES.filter((property) => keyframeAt(clip, property, from));
+      if (moving.length === 0) throw invalid('There is no keyframe there.');
+      if (to === from) return;
+      const target = clipDraft(content, clipId);
+      for (const property of moving) {
+        const frames = clip.keyframes?.[property] ?? [];
+        if (frames.some((frame) => frame.time === to)) {
+          throw invalid('There is already a keyframe there.');
+        }
+        storeKeyframes(
+          target,
+          property,
+          frames
+            .map((frame) => (frame.time === from ? { ...frame, time: to } : frame))
+            .sort((a, b) => a.time - b.time),
+        );
+      }
+    },
+  };
+}
+
 /** Remove every keyframe of a property; it stays fixed at the value of the first one. */
 export function clearKeyframes(
   clipId: string,
