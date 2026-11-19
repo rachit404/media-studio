@@ -16,20 +16,31 @@ export {
 } from './preview';
 export type { AudioClipPlan, LayerTransition, PreviewPlan, VideoLayerPlan } from './preview';
 export {
+  COLLAPSED_ROW_HEIGHT,
   MAX_PX_PER_SECOND,
   MIN_PX_PER_SECOND,
+  TRACK_HEIGHTS,
   clampScale,
+  fitRange,
   fitScale,
+  rowIndexAt,
   rulerTicks,
   snapClipStart,
   snapEdge,
   snapPoints,
   snapTime,
   timeToX,
+  trackLayout,
   xToTime,
   zoomAround,
 } from './timeline-view';
-export type { RulerTick, SnapResult, TimelineScale } from './timeline-view';
+export type {
+  RulerTick,
+  SnapResult,
+  TimelineScale,
+  TrackHeight,
+  TrackLayout,
+} from './timeline-view';
 export {
   DEFAULT_BACKDROP,
   DEFAULT_TEXT_DURATION_US,

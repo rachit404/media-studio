@@ -131,3 +131,50 @@ export function snapEdge(
   if (result.to !== null) return result;
   return { time: frameToTime(timeToFrame(time, fps), fps), to: null };
 }
+
+/** The zoom and scroll at which a range of time fills `widthPx` (with a little room each side). */
+export function fitRange(start: number, duration: number, widthPx: number): TimelineScale {
+  const seconds = Math.max(0.1, duration / US_PER_SECOND) * 1.1;
+  const pxPerSecond = clampScale(widthPx / seconds);
+  const margin = Math.round(duration * 0.05);
+  return { pxPerSecond, originUs: Math.max(0, start - margin) };
+}
+
+/** The heights a track row can have (px): the choice for all of them, and the thin strip of a collapsed one. */
+export const TRACK_HEIGHTS = { compact: 40, normal: 56, tall: 88 } as const;
+export type TrackHeight = keyof typeof TRACK_HEIGHTS;
+export const COLLAPSED_ROW_HEIGHT = 22;
+
+export interface TrackLayout {
+  /** Top of each row, below the ruler's own space (0 for the first). */
+  tops: number[];
+  heights: number[];
+  total: number;
+}
+
+/** Stack the rows: each is the chosen height, or the thin strip when its track is collapsed. */
+export function trackLayout(
+  tracks: readonly { id: string }[],
+  height: number,
+  collapsed: ReadonlySet<string>,
+): TrackLayout {
+  const tops: number[] = [];
+  const heights: number[] = [];
+  let total = 0;
+  for (const track of tracks) {
+    const h = collapsed.has(track.id) ? COLLAPSED_ROW_HEIGHT : height;
+    tops.push(total);
+    heights.push(h);
+    total += h;
+  }
+  return { tops, heights, total };
+}
+
+/** The index of the row at `y` (px below the first row's top), or -1 outside all of them. */
+export function rowIndexAt(layout: TrackLayout, y: number): number {
+  if (y < 0 || y >= layout.total) return -1;
+  for (let index = layout.tops.length - 1; index >= 0; index -= 1) {
+    if (y >= (layout.tops[index] ?? 0)) return index;
+  }
+  return -1;
+}

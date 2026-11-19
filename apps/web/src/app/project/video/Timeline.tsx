@@ -34,16 +34,21 @@ import {
 import {
   MAX_PX_PER_SECOND,
   MIN_PX_PER_SECOND,
+  TRACK_HEIGHTS,
   clampScale,
+  fitRange,
   fitScale,
   isTrimChange,
+  rowIndexAt,
   rulerTicks,
   snapClipStart,
   snapEdge,
   snapPoints,
   timeToX,
+  trackLayout,
   trimRange,
   xToTime,
+  type TrackHeight,
 } from '@media-studio/engine-video';
 import { Button } from '@media-studio/ui';
 import {
@@ -67,7 +72,6 @@ import { ShortcutTip } from '../../ShortcutTip';
 import { Waveform } from './waveform';
 
 const HEADER_WIDTH = 168;
-const ROW_HEIGHT = 56;
 const RULER_HEIGHT = 28;
 const EDGE_PX = 7;
 const SNAP_PX = 8;
@@ -138,6 +142,17 @@ export function Timeline({
   const fps = content.sequence.fps;
   const scale = { pxPerSecond, originUs: 0 };
   const rows = trackRows(content);
+  // Track height is one choice for all rows; a collapsed track shows a thin strip (F10).
+  const [trackHeight, setTrackHeight] = useState<TrackHeight>('normal');
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const rowHeight = TRACK_HEIGHTS[trackHeight];
+  const layout = trackLayout(rows, rowHeight, collapsed);
+  const toggleCollapsed = (trackId: string) =>
+    setCollapsed((previous) => {
+      const next = new Set(previous);
+      if (!next.delete(trackId)) next.add(trackId);
+      return next;
+    });
 
   let lastEnd = 0;
   for (const clip of Object.values(content.clips)) lastEnd = Math.max(lastEnd, clipEnd(clip));
@@ -233,6 +248,18 @@ export function Timeline({
         );
       });
     }
+  };
+
+  /** Zoom and scroll so the selected clip fills the view. */
+  const zoomToSelection = () => {
+    const clip = selectedId ? current().clips[selectedId] : undefined;
+    const scroller = scrollRef.current;
+    if (!clip || !scroller) return;
+    const fitted = fitRange(clip.start, clip.duration, scroller.clientWidth);
+    setPxPerSecond(fitted.pxPerSecond);
+    requestAnimationFrame(() => {
+      scroller.scrollLeft = Math.max(0, timeToX({ ...fitted, originUs: 0 }, fitted.originUs));
+    });
   };
 
   // Editing commands ---------------------------------------------------------------------------------------
@@ -372,7 +399,7 @@ export function Timeline({
     const scroller = scrollRef.current;
     if (!scroller) return undefined;
     const top = scroller.getBoundingClientRect().top + RULER_HEIGHT;
-    return rows[Math.floor((clientY - top) / ROW_HEIGHT)];
+    return rows[rowIndexAt(layout, clientY - top)];
   };
 
   /** A file dragged from the media library and dropped on the timeline: placed at the drop time, on the lane under it. */
@@ -644,6 +671,21 @@ export function Timeline({
         >
           +
         </Button>
+        <Button variant="ghost" isDisabled={selectedId === null} onPress={zoomToSelection}>
+          Zoom to clip
+        </Button>
+        <label className="flex items-center gap-1 text-xs text-fg-muted">
+          Track height
+          <select
+            value={trackHeight}
+            onChange={(event) => setTrackHeight(event.target.value as TrackHeight)}
+            className="rounded-md border border-line-strong bg-surface px-1 py-1 text-sm text-fg"
+          >
+            <option value="compact">Compact</option>
+            <option value="normal">Normal</option>
+            <option value="tall">Tall</option>
+          </select>
+        </label>
         <Button
           variant="ghost"
           onPress={() =>
@@ -660,53 +702,65 @@ export function Timeline({
           className="shrink-0 border-r border-line"
           style={{ width: HEADER_WIDTH, paddingTop: RULER_HEIGHT }}
         >
-          {rows.map((track) => (
+          {rows.map((track, index) => (
             <div
               key={track.id}
-              className="flex items-center gap-1 border-b border-line px-2"
-              style={{ height: ROW_HEIGHT }}
+              className="flex items-center gap-1 overflow-hidden border-b border-line px-2"
+              style={{ height: layout.heights[index] }}
             >
+              <Button
+                variant="ghost"
+                aria-pressed={collapsed.has(track.id)}
+                aria-label={`${collapsed.has(track.id) ? 'Expand' : 'Collapse'} ${track.name}`}
+                onPress={() => toggleCollapsed(track.id)}
+              >
+                {collapsed.has(track.id) ? '▸' : '▾'}
+              </Button>
               <span className="min-w-0 flex-1 truncate text-xs">{track.name}</span>
-              <Button
-                variant="ghost"
-                aria-pressed={track.muted}
-                aria-label={`${track.kind === 'video' ? 'Hide' : 'Mute'} ${track.name}`}
-                onPress={() =>
-                  run(() =>
-                    session.history.execute(setTrackState(track.id, { muted: !track.muted })),
-                  )
-                }
-              >
-                {track.kind === 'video' ? 'Hide' : 'Mute'}
-              </Button>
-              {track.kind === 'audio' && (
-                <Button
-                  variant="ghost"
-                  aria-pressed={track.solo === true}
-                  aria-label={`Solo ${track.name}`}
-                  onPress={() =>
-                    run(() =>
-                      session.history.execute(
-                        setTrackState(track.id, { solo: track.solo !== true }),
-                      ),
-                    )
-                  }
-                >
-                  Solo
-                </Button>
+              {!collapsed.has(track.id) && (
+                <>
+                  <Button
+                    variant="ghost"
+                    aria-pressed={track.muted}
+                    aria-label={`${track.kind === 'video' ? 'Hide' : 'Mute'} ${track.name}`}
+                    onPress={() =>
+                      run(() =>
+                        session.history.execute(setTrackState(track.id, { muted: !track.muted })),
+                      )
+                    }
+                  >
+                    {track.kind === 'video' ? 'Hide' : 'Mute'}
+                  </Button>
+                  {track.kind === 'audio' && (
+                    <Button
+                      variant="ghost"
+                      aria-pressed={track.solo === true}
+                      aria-label={`Solo ${track.name}`}
+                      onPress={() =>
+                        run(() =>
+                          session.history.execute(
+                            setTrackState(track.id, { solo: track.solo !== true }),
+                          ),
+                        )
+                      }
+                    >
+                      Solo
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    aria-pressed={track.locked}
+                    aria-label={`Lock ${track.name}`}
+                    onPress={() =>
+                      run(() =>
+                        session.history.execute(setTrackState(track.id, { locked: !track.locked })),
+                      )
+                    }
+                  >
+                    Lock
+                  </Button>
+                </>
               )}
-              <Button
-                variant="ghost"
-                aria-pressed={track.locked}
-                aria-label={`Lock ${track.name}`}
-                onPress={() =>
-                  run(() =>
-                    session.history.execute(setTrackState(track.id, { locked: !track.locked })),
-                  )
-                }
-              >
-                Lock
-              </Button>
             </div>
           ))}
         </div>
@@ -743,7 +797,7 @@ export function Timeline({
         >
           <div
             className="relative"
-            style={{ width: contentWidth, height: RULER_HEIGHT + rows.length * ROW_HEIGHT }}
+            style={{ width: contentWidth, height: RULER_HEIGHT + layout.total }}
           >
             <div
               data-seek="ruler"
@@ -790,136 +844,140 @@ export function Timeline({
                 aria-label={track.name}
                 data-seek="lane"
                 className={`absolute inset-x-0 border-b border-line ${track.locked ? 'bg-surface-sunken' : ''}`}
-                style={{ top: RULER_HEIGHT + index * ROW_HEIGHT, height: ROW_HEIGHT }}
+                style={{
+                  top: RULER_HEIGHT + (layout.tops[index] ?? 0),
+                  height: layout.heights[index],
+                }}
               >
-                {Object.values(content.clips)
-                  .filter((clip) => shown(clip).trackId === track.id)
-                  .map((clip) => ({ clip, at: shown(clip) }))
-                  .filter(
-                    ({ at }) => at.start + at.duration >= visibleFrom && at.start <= visibleTo,
-                  )
-                  .map(({ clip, at }) => {
-                    const asset = clip.assetId === null ? undefined : assets[clip.assetId];
-                    const left = timeToX(scale, at.start);
-                    const width = Math.max(2, (at.duration / US_PER_SECOND) * pxPerSecond);
-                    const selected =
-                      selectedId === clip.id ||
-                      (selectedId !== null && drag?.group.includes(clip.id) === true);
-                    const linked =
-                      selectedId !== null &&
-                      content.clips[selectedId]?.linkId != null &&
-                      content.clips[selectedId]?.linkId === clip.linkId;
-                    const label = clip.text
-                      ? `Text: ${clip.text.text.split('\n')[0] ?? ''}`
-                      : (asset?.name ?? 'Missing media');
-                    const transition = clip.transitionIn
-                      ? activeTransition(content, clip)
-                      : undefined;
-                    return (
-                      <Fragment key={clip.id}>
-                        <button
-                          type="button"
-                          data-clip-id={clip.id}
-                          aria-pressed={selectedId === clip.id}
-                          aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}${clipSpeed(clip) === 1 ? '' : `, speed ${String(clipSpeed(clip))} times`}`}
-                          onPointerDown={(event) => onClipPointerDown(event, clip)}
-                          onPointerMove={(event) => onClipPointerMove(event, clip)}
-                          onPointerUp={(event) => onClipPointerUp(event, clip)}
-                          onPointerCancel={() => setDrag(null)}
-                          onKeyDown={(event) => onClipKeyDown(event, clip)}
-                          onClick={() => onSelect(clip.id)}
-                          className={`absolute top-1 overflow-hidden rounded-sm border text-left text-xs ${
-                            selected || linked
-                              ? 'border-ring bg-selection'
-                              : 'border-line-strong bg-surface-raised'
-                          } ${at.dragging ? 'opacity-80' : ''} ${track.locked ? 'cursor-not-allowed' : 'cursor-grab'}`}
-                          style={{ left, width, height: ROW_HEIGHT - 8, touchAction: 'none' }}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className={`absolute inset-x-0 top-0 h-1 ${track.kind === 'video' ? 'bg-track-video' : 'bg-track-audio'}`}
-                          />
-                          {asset?.kind === 'video' && track.kind === 'video' && (
-                            <AssetThumb
-                              projectId={session.id}
-                              path={asset.thumb}
-                              className="pointer-events-none absolute left-0 top-1 h-[calc(100%-0.25rem)] w-16 opacity-60"
-                            />
-                          )}
-                          {asset && track.kind === 'audio' && (
-                            <Waveform
-                              projectId={session.id}
-                              asset={asset}
-                              sourceInSeconds={clip.sourceIn / US_PER_SECOND}
-                              seconds={(at.duration * clipSpeed(clip)) / US_PER_SECOND}
-                              width={width}
-                              height={ROW_HEIGHT - 12}
-                            />
-                          )}
-                          {transition && (
+                {!collapsed.has(track.id) &&
+                  Object.values(content.clips)
+                    .filter((clip) => shown(clip).trackId === track.id)
+                    .map((clip) => ({ clip, at: shown(clip) }))
+                    .filter(
+                      ({ at }) => at.start + at.duration >= visibleFrom && at.start <= visibleTo,
+                    )
+                    .map(({ clip, at }) => {
+                      const asset = clip.assetId === null ? undefined : assets[clip.assetId];
+                      const left = timeToX(scale, at.start);
+                      const width = Math.max(2, (at.duration / US_PER_SECOND) * pxPerSecond);
+                      const selected =
+                        selectedId === clip.id ||
+                        (selectedId !== null && drag?.group.includes(clip.id) === true);
+                      const linked =
+                        selectedId !== null &&
+                        content.clips[selectedId]?.linkId != null &&
+                        content.clips[selectedId]?.linkId === clip.linkId;
+                      const label = clip.text
+                        ? `Text: ${clip.text.text.split('\n')[0] ?? ''}`
+                        : (asset?.name ?? 'Missing media');
+                      const transition = clip.transitionIn
+                        ? activeTransition(content, clip)
+                        : undefined;
+                      return (
+                        <Fragment key={clip.id}>
+                          <button
+                            type="button"
+                            data-clip-id={clip.id}
+                            aria-pressed={selectedId === clip.id}
+                            aria-label={`${label}, ${track.name}, starts ${formatTimecode(at.start, fps)}, length ${formatTimecode(at.duration, fps)}${transition ? `, ${transition.kind} transition in` : ''}${clipSpeed(clip) === 1 ? '' : `, speed ${String(clipSpeed(clip))} times`}`}
+                            onPointerDown={(event) => onClipPointerDown(event, clip)}
+                            onPointerMove={(event) => onClipPointerMove(event, clip)}
+                            onPointerUp={(event) => onClipPointerUp(event, clip)}
+                            onPointerCancel={() => setDrag(null)}
+                            onKeyDown={(event) => onClipKeyDown(event, clip)}
+                            onClick={() => onSelect(clip.id)}
+                            className={`absolute top-1 overflow-hidden rounded-sm border text-left text-xs ${
+                              selected || linked
+                                ? 'border-ring bg-selection'
+                                : 'border-line-strong bg-surface-raised'
+                            } ${at.dragging ? 'opacity-80' : ''} ${track.locked ? 'cursor-not-allowed' : 'cursor-grab'}`}
+                            style={{ left, width, height: rowHeight - 8, touchAction: 'none' }}
+                          >
                             <span
                               aria-hidden="true"
-                              data-testid="transition-marker"
-                              className="pointer-events-none absolute inset-y-0 left-0 border-r border-warning bg-warning opacity-40"
-                              style={{
-                                width: Math.min(
-                                  width,
-                                  (transition.duration / US_PER_SECOND) * pxPerSecond,
-                                ),
-                              }}
+                              className={`absolute inset-x-0 top-0 h-1 ${track.kind === 'video' ? 'bg-track-video' : 'bg-track-audio'}`}
                             />
-                          )}
-                          <span className="relative block truncate px-1.5 pt-1.5 text-fg">
-                            {label}
-                            {clipSpeed(clip) !== 1 && (
-                              <span data-testid="speed-badge" className="ml-1 text-fg-muted">
-                                {`${String(clipSpeed(clip))}×`}
-                              </span>
+                            {asset?.kind === 'video' && track.kind === 'video' && (
+                              <AssetThumb
+                                projectId={session.id}
+                                path={asset.thumb}
+                                className="pointer-events-none absolute left-0 top-1 h-[calc(100%-0.25rem)] w-16 opacity-60"
+                              />
                             )}
-                          </span>
-                        </button>
-                        {selectedId === clip.id &&
-                          keyframeTimes(clip).map(({ time, properties }, diamondIndex) => (
-                            <button
-                              key={`${properties.join('+')}:${String(diamondIndex)}`}
-                              type="button"
-                              data-testid="keyframe-diamond"
-                              onKeyDown={(event) => {
-                                moveDiamondWithKeys(event, clip, time);
-                              }}
-                              onPointerDown={(event) => {
-                                beginDiamondDrag(event, clip, time);
-                              }}
-                              onPointerMove={(event) => {
-                                dragDiamond(event, clip);
-                              }}
-                              onPointerUp={(event) => {
-                                endDiamondDrag(event);
-                              }}
-                              onPointerCancel={(event) => {
-                                endDiamondDrag(event);
-                              }}
-                              aria-label={`Keyframe at ${formatTimecode(clip.start + time, fps)}: ${properties.join(', ')}`}
-                              onClick={() => {
-                                // A drag ends in a click: only a plain press moves the playhead.
-                                if (!diamondMoved.current) seekTo(clip.start + time);
-                              }}
-                              className="absolute z-10 grid size-6 -translate-x-1/2 touch-none place-items-center"
-                              style={{
-                                left: left + (time / US_PER_SECOND) * pxPerSecond,
-                                top: ROW_HEIGHT - 28,
-                              }}
-                            >
-                              {/* The button is 24 px (the smallest comfortable target); the diamond drawn in it is smaller. */}
+                            {asset && track.kind === 'audio' && (
+                              <Waveform
+                                projectId={session.id}
+                                asset={asset}
+                                sourceInSeconds={clip.sourceIn / US_PER_SECOND}
+                                seconds={(at.duration * clipSpeed(clip)) / US_PER_SECOND}
+                                width={width}
+                                height={rowHeight - 12}
+                              />
+                            )}
+                            {transition && (
                               <span
                                 aria-hidden="true"
-                                className="block size-3 rotate-45 border border-ring bg-warning"
+                                data-testid="transition-marker"
+                                className="pointer-events-none absolute inset-y-0 left-0 border-r border-warning bg-warning opacity-40"
+                                style={{
+                                  width: Math.min(
+                                    width,
+                                    (transition.duration / US_PER_SECOND) * pxPerSecond,
+                                  ),
+                                }}
                               />
-                            </button>
-                          ))}
-                      </Fragment>
-                    );
-                  })}
+                            )}
+                            <span className="relative block truncate px-1.5 pt-1.5 text-fg">
+                              {label}
+                              {clipSpeed(clip) !== 1 && (
+                                <span data-testid="speed-badge" className="ml-1 text-fg-muted">
+                                  {`${String(clipSpeed(clip))}×`}
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                          {selectedId === clip.id &&
+                            keyframeTimes(clip).map(({ time, properties }, diamondIndex) => (
+                              <button
+                                key={`${properties.join('+')}:${String(diamondIndex)}`}
+                                type="button"
+                                data-testid="keyframe-diamond"
+                                onKeyDown={(event) => {
+                                  moveDiamondWithKeys(event, clip, time);
+                                }}
+                                onPointerDown={(event) => {
+                                  beginDiamondDrag(event, clip, time);
+                                }}
+                                onPointerMove={(event) => {
+                                  dragDiamond(event, clip);
+                                }}
+                                onPointerUp={(event) => {
+                                  endDiamondDrag(event);
+                                }}
+                                onPointerCancel={(event) => {
+                                  endDiamondDrag(event);
+                                }}
+                                aria-label={`Keyframe at ${formatTimecode(clip.start + time, fps)}: ${properties.join(', ')}`}
+                                onClick={() => {
+                                  // A drag ends in a click: only a plain press moves the playhead.
+                                  if (!diamondMoved.current) seekTo(clip.start + time);
+                                }}
+                                className="absolute z-10 grid size-6 -translate-x-1/2 touch-none place-items-center"
+                                style={{
+                                  left: left + (time / US_PER_SECOND) * pxPerSecond,
+                                  top: Math.max(0, rowHeight - 28),
+                                }}
+                              >
+                                {/* The button is 24 px (the smallest comfortable target); the diamond drawn in it is smaller. */}
+                                <span
+                                  aria-hidden="true"
+                                  className="block size-3 rotate-45 border border-ring bg-warning"
+                                />
+                              </button>
+                            ))}
+                        </Fragment>
+                      );
+                    })}
               </div>
             ))}
 
@@ -927,7 +985,7 @@ export function Timeline({
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute top-0 w-px bg-warning"
-                style={{ left: snapLineX, height: RULER_HEIGHT + rows.length * ROW_HEIGHT }}
+                style={{ left: snapLineX, height: RULER_HEIGHT + layout.total }}
               />
             )}
 
@@ -936,7 +994,7 @@ export function Timeline({
               data-testid="playhead"
               aria-hidden="true"
               className="pointer-events-none absolute left-0 top-0 w-px bg-danger"
-              style={{ height: RULER_HEIGHT + rows.length * ROW_HEIGHT, willChange: 'transform' }}
+              style={{ height: RULER_HEIGHT + layout.total, willChange: 'transform' }}
             />
           </div>
         </div>
