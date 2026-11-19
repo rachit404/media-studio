@@ -35,9 +35,12 @@ import {
   nearestAudioKbps,
   QUALITIES,
   SIZES,
+  TEST_EXPORT_SECONDS,
   estimateExport,
+  exportSummary,
   matchingPreset,
   resolveSettings,
+  testRange,
   type ExportChoices,
 } from './export-settings';
 
@@ -45,18 +48,18 @@ type Phase =
   | { name: 'settings' }
   | { name: 'working'; done: number; total: number }
   | { name: 'verifying' }
-  | { name: 'finished'; url: string; bytes: number }
+  | { name: 'finished'; url: string; bytes: number; test: boolean }
   | { name: 'saved'; fileName: string; bytes: number }
   | { name: 'failed'; error: AppError };
 
 /** A file name that is safe on every system, from the project name. */
-function fileName(projectName: string, format: ContainerFormat): string {
+function fileName(projectName: string, format: ContainerFormat, suffix = ''): string {
   const base = [...projectName]
     .map((character) => (/[\p{L}\p{N} _.-]/u.test(character) ? character : '_'))
     .join('')
     .trim()
     .slice(0, 80);
-  return `${base || 'video'}.${FORMATS[format].extension}`;
+  return `${base || 'video'}${suffix}.${FORMATS[format].extension}`;
 }
 
 /** The browser's "save as" window, where it has one (Chrome and Edge): lets export write straight to a file on disk. */
@@ -156,6 +159,7 @@ export function ExportVideoDialog({
   const hasAudio = hasExportAudio(content, project.assets.byId);
   const settings = resolveSettings(content.sequence, choices);
   const estimate = estimateExport(settings, duration, hasAudio);
+  const summary = exportSummary(settings, duration, hasAudio);
   const preset = matchingPreset(choices);
   const chosenSupport = support?.[choices.format];
   const blocked = chosenSupport?.supported === false;
@@ -248,9 +252,20 @@ export function ExportVideoDialog({
     run(undefined);
   };
 
-  const run = (save: FileSystemFileHandle | undefined) => {
+  /** A short trial run of the normal export: the first few seconds, kept in memory, never in parts and never to disk. */
+  const startTest = () => {
+    run(undefined, true);
+  };
+
+  const run = (save: FileSystemFileHandle | undefined, test = false) => {
+    const part = test ? testRange(range, sequenceDuration(content)) : range;
+    if (test && !part) return;
     startedAt.current = performance.now();
-    setPhase({ name: 'working', done: 0, total: estimate.frames });
+    const frames =
+      test && part
+        ? estimateExport(settings, part.end - part.start, hasAudio).frames
+        : estimate.frames;
+    setPhase({ name: 'working', done: 0, total: frames });
     try {
       const job = startVideoExport(
         projectId,
@@ -259,21 +274,23 @@ export function ExportVideoDialog({
         (done, total) => {
           setPhase({ name: 'working', done, total });
         },
-        range,
+        part,
         {
           verify,
           onVerifying: () => {
             setPhase({ name: 'verifying' });
           },
-          ...(save ? { save } : {}),
-          ...(makeInParts ? { partSeconds: partSeconds() } : {}),
+          ...(save && !test ? { save } : {}),
+          ...(makeInParts && !test ? { partSeconds: partSeconds() } : {}),
         },
       );
       running.current = job;
       job.result
         .then((blob) => {
-          if (save) setPhase({ name: 'saved', fileName: save.name, bytes: blob.size });
-          else setPhase({ name: 'finished', url: URL.createObjectURL(blob), bytes: blob.size });
+          if (save && !test) setPhase({ name: 'saved', fileName: save.name, bytes: blob.size });
+          else {
+            setPhase({ name: 'finished', url: URL.createObjectURL(blob), bytes: blob.size, test });
+          }
         })
         .catch((error: unknown) => {
           const appError = toAppError(error);
@@ -552,9 +569,21 @@ export function ExportVideoDialog({
               {phase.error.message} {phase.error.hint}
             </p>
           )}
-          <div className="flex justify-end gap-2">
+          {summary && (
+            <p data-testid="export-summary" className="text-sm text-fg-muted">
+              {summary}
+            </p>
+          )}
+          <div className="flex flex-wrap justify-end gap-2">
             <Button variant="secondary" onPress={onClose}>
               Close
+            </Button>
+            <Button
+              variant="secondary"
+              isDisabled={estimate.frames === 0 || blocked}
+              onPress={startTest}
+            >
+              {`Test export (first ${String(TEST_EXPORT_SECONDS)} seconds)`}
             </Button>
             <Button variant="primary" isDisabled={estimate.frames === 0 || blocked} onPress={start}>
               Start export
@@ -617,7 +646,9 @@ export function ExportVideoDialog({
       {phase.name === 'finished' && (
         <div className="space-y-4">
           <p role="status" className="text-sm">
-            The video is ready ({megabytes(phase.bytes)}).
+            {phase.test
+              ? `The test video is ready (${megabytes(phase.bytes)}). It has only the first ${String(TEST_EXPORT_SECONDS)} seconds, to check how the export looks.`
+              : `The video is ready (${megabytes(phase.bytes)}).`}
           </p>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onPress={onClose}>
@@ -625,10 +656,10 @@ export function ExportVideoDialog({
             </Button>
             <a
               href={phase.url}
-              download={fileName(project.name, choices.format)}
+              download={fileName(project.name, choices.format, phase.test ? '-test' : '')}
               className="inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-on-accent"
             >
-              Download {fileName(project.name, choices.format)}
+              Download {fileName(project.name, choices.format, phase.test ? '-test' : '')}
             </a>
           </div>
         </div>

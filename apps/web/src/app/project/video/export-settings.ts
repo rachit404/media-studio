@@ -228,3 +228,76 @@ export function estimateExport(
     bytes: Math.round((rate / 8) * seconds),
   };
 }
+
+/** How much picture export gets through: one second of 1080p at 30 fps per second, a cautious software-friendly guess. */
+const EXPORT_PIXELS_PER_SECOND = 1920 * 1080 * 30;
+
+/** About how long an export takes, in seconds, from the size, frame rate and length (a rough guess, not a promise). */
+export function estimateExportSeconds(
+  settings: Pick<ExportSettings, 'width' | 'height' | 'fps'>,
+  duration: number,
+): number {
+  const frames = exportFrameCount(duration, settings.fps);
+  return (frames * settings.width * settings.height) / EXPORT_PIXELS_PER_SECOND;
+}
+
+/** A file size in words, rounded the way people say it: "about 120 MB", "about 1.5 GB", "under 1 MB". */
+export function describeSize(bytes: number): string {
+  const megabytes = bytes / (1024 * 1024);
+  if (megabytes < 1) return 'under 1 MB';
+  if (megabytes >= 1024) return `about ${(megabytes / 1024).toFixed(1)} GB`;
+  const step = megabytes < 10 ? 1 : megabytes < 100 ? 5 : 10;
+  return `about ${String(Math.max(1, Math.round(megabytes / step) * step))} MB`;
+}
+
+/** A length of time in words: "a few seconds", "about 40 seconds", "about 3 minutes", "about 1.5 hours". */
+export function describeTime(seconds: number): string {
+  if (seconds < 10) return 'a few seconds';
+  if (seconds < 90) return `about ${String(Math.round(seconds / 5) * 5)} seconds`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 90) return `about ${String(minutes)} minutes`;
+  return `about ${(minutes / 60).toFixed(1)} hours`;
+}
+
+const FORMAT_NAMES: Readonly<Record<ContainerFormat, string>> = { mp4: 'MP4', webm: 'WebM' };
+
+/**
+ * The one line under the settings that says what the export will make, from the resolved settings:
+ * "MP4, 1920 x 1080, 30 fps, about 120 MB, about 3 minutes". Null when there is nothing to export.
+ */
+export function exportSummary(
+  settings: ExportSettings,
+  duration: number,
+  hasAudio: boolean,
+): string | null {
+  const estimate = estimateExport(settings, duration, hasAudio);
+  if (estimate.frames === 0) return null;
+  const rate = Number(fpsValue(settings.fps).toFixed(2));
+  return [
+    FORMAT_NAMES[settings.format],
+    `${String(settings.width)} x ${String(settings.height)}`,
+    `${String(rate)} fps`,
+    describeSize(estimate.bytes),
+    describeTime(estimateExportSeconds(settings, duration)),
+  ].join(', ');
+}
+
+/** How much a test export makes: the first five seconds. */
+export const TEST_EXPORT_SECONDS = 5;
+
+/**
+ * The part a test export covers: the first five seconds of what would be exported (the in and out points when they
+ * are set and used, otherwise the sequence), or all of it when that is shorter. Null when there is nothing to export.
+ */
+export function testRange(
+  marked: { start: number; end: number } | null,
+  sequenceLength: number,
+): { start: number; end: number } | null {
+  const start = marked?.start ?? 0;
+  const end = Math.min(
+    marked?.end ?? sequenceLength,
+    sequenceLength,
+    start + TEST_EXPORT_SECONDS * 1_000_000,
+  );
+  return end > start ? { start, end } : null;
+}

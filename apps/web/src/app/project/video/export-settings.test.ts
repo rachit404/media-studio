@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   AUDIO_KBPS,
   EXPORT_PRESETS,
+  describeSize,
+  describeTime,
+  estimateExportSeconds,
+  exportSummary,
+  testRange,
   nearestAudioKbps,
   estimateExport,
   exportSize,
@@ -116,5 +121,86 @@ describe('estimate', () => {
     // 60 fps export of a 25 fps sequence: twice as many frames as a 30 fps one.
     const sixty = resolveSettings(SEQUENCE, { ...preset('web'), fpsId: '60' });
     expect(estimateExport(sixty, 2_000_000, true).frames).toBe(120);
+  });
+});
+
+describe('the summary line', () => {
+  const MINUTE = 60 * 1_000_000;
+
+  it('says format, size, frame rate, file size and time, from the resolved settings', () => {
+    const settings = resolveSettings(SEQUENCE, preset('web'));
+    expect(exportSummary(settings, 3 * MINUTE, true)).toBe(
+      'MP4, 1920 x 1080, 30 fps, about 140 MB, about 3 minutes',
+    );
+  });
+
+  it('follows the choices: WebM, a smaller size and another frame rate', () => {
+    const webm = resolveSettings(SEQUENCE, { ...preset('webm'), sizeId: '720', fpsId: '60' });
+    expect(exportSummary(webm, MINUTE, true)).toMatch(
+      /^WebM, 1280 x 720, 60 fps, about \d+ MB, about /,
+    );
+    const ntsc = resolveSettings({ ...SEQUENCE, fps: { num: 30000, den: 1001 } }, preset('web'));
+    expect(exportSummary(ntsc, MINUTE, false)).toContain('29.97 fps');
+  });
+
+  it('has nothing to say when there is nothing to export', () => {
+    expect(exportSummary(resolveSettings(SEQUENCE, preset('web')), 0, true)).toBeNull();
+  });
+
+  it('describes sizes the way people say them', () => {
+    expect(describeSize(300_000)).toBe('under 1 MB');
+    expect(describeSize(4.4 * 1024 * 1024)).toBe('about 4 MB');
+    expect(describeSize(47 * 1024 * 1024)).toBe('about 45 MB');
+    expect(describeSize(123 * 1024 * 1024)).toBe('about 120 MB');
+    expect(describeSize(1.5 * 1024 * 1024 * 1024)).toBe('about 1.5 GB');
+  });
+
+  it('describes times the way people say them', () => {
+    expect(describeTime(3)).toBe('a few seconds');
+    expect(describeTime(42)).toBe('about 40 seconds');
+    expect(describeTime(180)).toBe('about 3 minutes');
+    expect(describeTime(90 * 60)).toBe('about 1.5 hours');
+  });
+
+  it('takes longer for bigger pictures, more frames and longer videos', () => {
+    const hd = resolveSettings(SEQUENCE, preset('web'));
+    const small = resolveSettings(SEQUENCE, preset('small'));
+    expect(estimateExportSeconds(hd, 60 * 1_000_000)).toBeCloseTo(60, 0); // 1080p30 runs at real time
+    expect(estimateExportSeconds(small, 60 * 1_000_000)).toBeLessThan(
+      estimateExportSeconds(hd, 60 * 1_000_000),
+    );
+    expect(estimateExportSeconds(hd, 120 * 1_000_000)).toBeCloseTo(
+      2 * estimateExportSeconds(hd, 60 * 1_000_000),
+      0,
+    );
+  });
+});
+
+describe('the test export range', () => {
+  const S = 1_000_000;
+
+  it('is the first five seconds of the sequence', () => {
+    expect(testRange(null, 90 * S)).toEqual({ start: 0, end: 5 * S });
+  });
+
+  it('is the whole sequence when that is shorter', () => {
+    expect(testRange(null, 3 * S)).toEqual({ start: 0, end: 3 * S });
+  });
+
+  it('uses the in and out points when they are shorter, or their first five seconds when longer', () => {
+    expect(testRange({ start: 10 * S, end: 12 * S }, 90 * S)).toEqual({
+      start: 10 * S,
+      end: 12 * S,
+    });
+    expect(testRange({ start: 10 * S, end: 60 * S }, 90 * S)).toEqual({
+      start: 10 * S,
+      end: 15 * S,
+    });
+  });
+
+  it('never goes past the end of the sequence, and is null when there is nothing', () => {
+    expect(testRange({ start: 8 * S, end: 20 * S }, 10 * S)).toEqual({ start: 8 * S, end: 10 * S });
+    expect(testRange(null, 0)).toBeNull();
+    expect(testRange({ start: 10 * S, end: 10 * S }, 20 * S)).toBeNull();
   });
 });
