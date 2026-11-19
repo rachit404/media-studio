@@ -12,11 +12,12 @@ import { chromium } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { cpus, platform, release, tmpdir, totalmem } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://127.0.0.1:4273';
 const OUT = process.env.OUT ?? 'spikes/results/m7-export.json';
-const SECONDS = 10;
+const SECONDS = Number(process.env.SECONDS ?? 10);
+const SIZE = process.env.SIZE ?? '1920x1080'; // for example 3840x2160 for the 4K check
 const HARD_LIMIT_MS = 9 * 60 * 1000;
 
 setTimeout(() => {
@@ -26,13 +27,13 @@ setTimeout(() => {
 
 const DIR = join(tmpdir(), 'media-studio-m7-export');
 mkdirSync(DIR, { recursive: true });
-const clip = join(DIR, 'ref.mp4');
+const clip = join(DIR, `ref-${SIZE}-${String(SECONDS)}s.mp4`);
 if (!existsSync(clip)) {
   execFileSync(
     'ffmpeg',
     [
       ...['-y', '-loglevel', 'error'],
-      ...['-f', 'lavfi', '-i', `testsrc2=s=1920x1080:r=30:d=${String(SECONDS)}`],
+      ...['-f', 'lavfi', '-i', `testsrc2=s=${SIZE}:r=30:d=${String(SECONDS)}`],
       ...['-f', 'lavfi', '-i', `sine=frequency=330:duration=${String(SECONDS)}`],
       ...['-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-g', '30'],
       ...['-c:a', 'aac', '-shortest', clip],
@@ -41,6 +42,7 @@ if (!existsSync(clip)) {
   );
 }
 
+const clipName = basename(clip);
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
 page.setDefaultTimeout(60_000);
@@ -53,9 +55,9 @@ await page.getByRole('textbox', { name: 'Project name' }).waitFor();
 await page.getByTestId('import-media-input').setInputFiles([clip]);
 await page
   .getByRole('list', { name: 'Project media' })
-  .getByText('ref.mp4', { exact: true })
+  .getByText(clipName, { exact: true })
   .waitFor({ timeout: 180_000 });
-await page.getByRole('button', { name: 'Add to timeline: ref.mp4' }).click();
+await page.getByRole('button', { name: `Add to timeline: ${clipName}` }).click();
 await page.getByRole('button', { name: 'Add text' }).click();
 
 const results = [];
@@ -95,7 +97,7 @@ const report = {
     memoryGb: Math.round(totalmem() / 1024 ** 3),
     os: `${platform()} ${release()}`,
   },
-  project: '1920x1080 30 fps, 10 s, one video layer and a title, sound; preset "Best quality, sequence size"',
+  project: `${SIZE} 30 fps, ${String(SECONDS)} s, one video layer and a title, sound; preset "Best quality, sequence size"`,
   results,
 };
 writeFileSync(OUT, `${JSON.stringify(report, null, 2)}\n`);

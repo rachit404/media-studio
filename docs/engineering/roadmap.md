@@ -180,6 +180,14 @@
 **Known limitations:** hardware encode paths other than Intel QSV unverified locally; Safari/Firefox export capabilities vary.
 
 ## M8: Performance and hardening (M)
+**Status: done, with the items below left open** (branch `feat/m8-performance`). Delivered:
+- **Worker crash recovery:** the storage and analysis workers are supervised (`createSupervisedRpc`). A worker that dies, with an error event or silently (the browser killing it for memory raises no event), is noticed because the worker holds a Web Lock for its whole life and the page waits for that lock; waiting calls fail with a `worker-crashed` error (no endless waiting) and the next call starts a new worker. An e2e kills the storage worker and the app goes on working; unit tests cover both ways of noticing.
+- **Adaptive limits:** the number of clips decoded at once now follows the computer (`decoderLimit`: 2 to 6 from memory and cores, 4 when unknown; the measured limit on the reference machine is 16).
+- **Performance budgets in `pnpm test`** for the hot paths of the video editor ([perf-budgets.md](perf-budgets.md)); found and fixed a slow keyframe lookup (linear scan to bisection, 7 times faster).
+- **Memory-bounded export:** a long export is made in parts that go to disk, and can be written straight to a file, so its memory use does not grow with its length (M7).
+- **4K best effort:** 4K sources and exports work (about a third of real time here, [m7-export-measurement.md](m7-export-measurement.md)).
+- **Tier 2 browsers:** the capability probe and the "Browser limitations" banner already tell Firefox and Safari users what is missing (no WebCodecs encoder, no fast file storage); the export dialog refuses formats the browser cannot encode.
+- **Left open (written down, not hidden):** the 60-minute soak (a 30-minute one was run in M5; see the status for a longer run), automatic proxy tuning (there are no proxies yet), large-document tiling warnings beyond the existing 100 MP and clip-count limits, a real Safari and Firefox test pass (neither is installed here), CI perf jobs on other machines (the budget tests run wherever `pnpm test` runs).
 **Scope:** meet budgets with margin and survive abuse.
 **Files/modules:** all engines, workers supervision, diagnostics, CI perf jobs.
 **Implementation plan:** profile and optimise on Iris Xe; process-wide memory guards and adaptive cache sizing; automatic proxy tuning; large-document tiling limits and warnings; worker crash recovery; performance budgets in CI; bundle-size and lazy loading; 4K best-effort validation; tier-2 browser pass (Safari, Firefox).
