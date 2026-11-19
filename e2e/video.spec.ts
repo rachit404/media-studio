@@ -1311,3 +1311,89 @@ test.describe('exporting in parts', () => {
     await expect.poll(() => leftovers(page), { timeout: 10_000 }).toBe(0);
   });
 });
+
+test.describe('continuing a stopped export', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  test('reloading the page in the middle of an export in parts lets the next export continue', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(180_000);
+    await page.addInitScript(() => {
+      localStorage.setItem('ms-export-part-seconds', '1');
+    });
+    await createVideoProject(page, 'Parts resume');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4');
+    await addToTimeline(page, 'blue.mp4');
+    await expect(page.getByRole('status').filter({ hasText: 'All changes saved' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Export…' }).click();
+    let dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('checkbox', { name: /^Make it in parts/ }).check();
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    // Stop it like a crash would: after a few parts are on disk but before the end.
+    await page.waitForFunction(
+      () => /Frame (5[0-9]|[6-9][0-9]|1[01][0-9]) of 125/.test(document.body.innerText),
+      undefined,
+      { timeout: 60_000, polling: 20 },
+    );
+    await page.reload();
+    await page
+      .getByRole('alertdialog', { name: 'Restore unsaved changes?' })
+      .getByRole('button', { name: 'Restore changes' })
+      .click();
+
+    await page.getByRole('button', { name: 'Export…' }).click();
+    dialog = page.getByRole('dialog', { name: 'Export video' });
+    await expect(
+      dialog.getByRole('status').filter({ hasText: /stopped after \d+ of 5 parts/ }),
+    ).toBeVisible({
+      timeout: 20_000,
+    });
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    const link = dialog.getByRole('link', { name: /^Download/ });
+    await expect(link).toBeVisible({ timeout: 120_000 });
+    const downloading = page.waitForEvent('download');
+    await link.click();
+    const file = testInfo.outputPath('resumed.mp4');
+    await (await downloading).saveAs(file);
+    const facts = probe(file);
+    expect(Number(facts.video?.nb_read_frames)).toBe(125);
+    expect(facts.duration).toBeGreaterThan(4.9);
+    expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 4.5)[2]).toBeGreaterThan(200);
+  });
+});
+
+test.describe('export in a background tab', () => {
+  test.skip(!ffprobeAvailable(), 'ffprobe is not installed, so exported files cannot be checked');
+
+  test('an export carries on and finishes correctly while another tab is in front', async ({
+    page,
+    context,
+  }, testInfo) => {
+    test.setTimeout(150_000);
+    await createVideoProject(page, 'Background export');
+    await importMedia(page, [media.red, media.blue]);
+    await addToTimeline(page, 'red.mp4');
+    await addToTimeline(page, 'blue.mp4');
+    await page.getByRole('button', { name: 'Export…' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Export video' });
+    await dialog.getByRole('button', { name: 'Start export' }).click();
+    // Put another tab in front, so this one is in the background.
+    const other = await context.newPage();
+    await other.goto('about:blank');
+    await other.bringToFront();
+    const link = dialog.getByRole('link', { name: /^Download/ });
+    await expect(link).toBeVisible({ timeout: 120_000 });
+    await page.bringToFront();
+    const downloading = page.waitForEvent('download');
+    await link.click();
+    const file = testInfo.outputPath('background.mp4');
+    await (await downloading).saveAs(file);
+    expect(Number(probe(file).video?.nb_read_frames)).toBe(125);
+    expect(pixelAtSecond(file, 0.5)[0]).toBeGreaterThan(200);
+    expect(pixelAtSecond(file, 4)[2]).toBeGreaterThan(200);
+  });
+});

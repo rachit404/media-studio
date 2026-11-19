@@ -128,6 +128,13 @@ for (const colorScheme of ['dark', 'light'] as const) {
       await expect(page.getByRole('button', { name: 'Remove X animation' })).toBeVisible();
       await expect(page.getByTestId('keyframe-diamond')).toBeVisible();
       await expectNoViolations(page);
+
+      // The export dialog with its details open.
+      await page.getByRole('button', { name: 'Export…' }).click();
+      const exporting = page.getByRole('dialog', { name: 'Export video' });
+      await exporting.getByText('More settings').click();
+      await expect(exporting.getByLabel('Encoder')).toBeVisible();
+      await expectNoViolations(page);
     });
   });
 }

@@ -1,4 +1,5 @@
 import { toAppError } from '@media-studio/core';
+import { discardAllWaitingExports } from '../project/video/export-job-state';
 import type { StoreStats } from '@media-studio/storage';
 import { Button, Dialog } from '@media-studio/ui';
 import { useEffect, useState } from 'react';
@@ -42,6 +43,7 @@ export function StoragePanel() {
     setConfirming(false);
     try {
       await getStorage().clearAll();
+      await discardAllWaitingExports();
       bumpDataVersion();
       navigate({ name: 'home' });
       setMessage('All local projects and files were deleted.');

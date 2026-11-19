@@ -68,3 +68,13 @@ export async function discardWaitingExport(projectId: string): Promise<void> {
     // Nothing there: nothing to discard.
   }
 }
+
+/** Throw away the parts of every unfinished export (part of "clear all local data"). */
+export async function discardAllWaitingExports(): Promise<void> {
+  try {
+    const root = await navigator.storage.getDirectory();
+    await root.removeEntry(EXPORT_JOB_ROOT, { recursive: true });
+  } catch {
+    // Nothing there: nothing to discard.
+  }
+}

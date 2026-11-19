@@ -32,6 +32,7 @@ import {
   EXPORT_PRESETS,
   FRAME_RATES,
   HARDWARE_CHOICES,
+  nearestAudioKbps,
   QUALITIES,
   SIZES,
   estimateExport,
@@ -213,7 +214,11 @@ export function ExportVideoDialog({
   }, [isOpen]);
 
   const change = (patch: Partial<ExportChoices>) => {
-    setChoices((old) => ({ ...old, ...patch }));
+    setChoices((old) => {
+      const next = { ...old, ...patch };
+      // Each format offers its own sound bitrates: keep the nearest one when the format changes.
+      return { ...next, audioKbps: nearestAudioKbps(next.format, next.audioKbps) };
+    });
   };
 
   const start = () => {
@@ -409,7 +414,7 @@ export function ExportVideoDialog({
                   }}
                   className={SELECT}
                 >
-                  {AUDIO_KBPS.map((kbps) => (
+                  {AUDIO_KBPS[choices.format].map((kbps) => (
                     <option key={kbps} value={kbps}>
                       {kbps} kbps
                     </option>

@@ -1,0 +1,26 @@
+{
+  "when": "2026-11-19T03:22:36.934Z",
+  "machine": {
+    "cpu": "13th Gen Intel(R) Core(TM) i7-1360P",
+    "cores": 16,
+    "memoryGb": 16,
+    "os": "win32 10.0.26300"
+  },
+  "project": "1920x1080 30 fps, 10 s, one video layer and a title, sound; preset \"Best quality, sequence size\"",
+  "results": [
+    {
+      "encoder": "automatic",
+      "videoSeconds": 10,
+      "wallSeconds": 7.6,
+      "timesRealTime": 1.31,
+      "note": "The video is ready (15 MB)."
+    },
+    {
+      "encoder": "software",
+      "videoSeconds": 10,
+      "wallSeconds": 6.6,
+      "timesRealTime": 1.52,
+      "note": "The video is ready (14 MB)."
+    }
+  ]
+}

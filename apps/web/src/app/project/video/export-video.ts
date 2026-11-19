@@ -98,6 +98,19 @@ export function startVideoExport(
     })
     .finally(() => worker.terminate());
 
+  // While the export runs, hold a lock that tells the browser this page is busy: pages that hold a Web Lock are not
+  // frozen when they go to the background. The lock is released when the export ends, however it ends.
+  if (typeof navigator !== 'undefined' && 'locks' in navigator) {
+    void navigator.locks
+      .request('media-studio-export', () =>
+        result.then(
+          () => undefined,
+          () => undefined,
+        ),
+      )
+      .catch(() => undefined);
+  }
+
   return {
     result,
     cancel: () => {

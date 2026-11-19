@@ -1,7 +1,9 @@
 import { FPS_30 } from '@media-studio/core';
 import { describe, expect, it } from 'vitest';
 import {
+  AUDIO_KBPS,
   EXPORT_PRESETS,
+  nearestAudioKbps,
   estimateExport,
   exportSize,
   matchingPreset,
@@ -45,7 +47,7 @@ describe('turning choices into encoder settings', () => {
     expect(small).toMatchObject({ width: 1280, height: 720 });
     expect(small.videoBitrate).toBeLessThan(web.videoBitrate);
     expect(best.videoBitrate).toBeGreaterThan(web.videoBitrate);
-    expect(best.audioBitrate).toBe(256_000);
+    expect(best.audioBitrate).toBe(192_000);
   });
 
   it('WebM uses fewer bits for the same picture and mixes sound at 48 kHz', () => {
@@ -76,6 +78,22 @@ describe('turning choices into encoder settings', () => {
       preset('best'),
     );
     expect(huge.videoBitrate).toBeLessThanOrEqual(100_000_000);
+  });
+});
+
+describe('sound bitrates', () => {
+  it('every preset uses a bitrate its own format offers', () => {
+    for (const entry of EXPORT_PRESETS) {
+      expect(AUDIO_KBPS[entry.choices.format]).toContain(entry.choices.audioKbps);
+    }
+  });
+
+  it('moves to the nearest offered bitrate when the format changes', () => {
+    expect(nearestAudioKbps('mp4', 256)).toBe(192);
+    expect(nearestAudioKbps('webm', 170)).toBe(192);
+    expect(nearestAudioKbps('webm', 160)).toBe(128); // halfway: the lower one
+    expect(nearestAudioKbps('mp4', 128)).toBe(128);
+    expect(nearestAudioKbps('webm', 64)).toBe(64);
   });
 });
 

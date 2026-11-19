@@ -28,7 +28,23 @@ export const QUALITIES: readonly { id: QualityId; label: string; factor: number 
   { id: 'high', label: 'High quality', factor: 1.8 },
 ];
 
-export const AUDIO_KBPS = [96, 128, 192, 256, 320] as const;
+/**
+ * Sound bitrates each format offers. AAC encoders in browsers take only a few (Chrome on Windows refuses 256 kbps),
+ * so MP4 offers those; Opus takes any.
+ */
+export const AUDIO_KBPS: Readonly<Record<ContainerFormat, readonly number[]>> = {
+  mp4: [96, 128, 160, 192],
+  webm: [64, 96, 128, 192, 256, 320],
+};
+
+/** The offered bitrate nearest to `kbps` for a format. */
+export function nearestAudioKbps(format: ContainerFormat, kbps: number): number {
+  const offered = AUDIO_KBPS[format];
+  return offered.reduce(
+    (best, candidate) => (Math.abs(candidate - kbps) < Math.abs(best - kbps) ? candidate : best),
+    offered[0] ?? kbps,
+  );
+}
 
 export const HARDWARE_CHOICES: readonly { id: HardwarePreference; label: string }[] = [
   { id: 'no-preference', label: 'Automatic' },
@@ -101,7 +117,7 @@ export const EXPORT_PRESETS: readonly ExportPreset[] = [
       sizeId: 'sequence',
       fpsId: 'sequence',
       quality: 'high',
-      audioKbps: 256,
+      audioKbps: 192,
       hardware: 'no-preference',
     },
   },
